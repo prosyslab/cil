@@ -119,6 +119,7 @@ let init_lexicon _ =
       ("const", fun loc -> CONST loc);
       ("__const", fun loc -> CONST loc);
       ("__const__", fun loc -> CONST loc);
+      ("_Complex", fun loc -> COMPLEX loc);
       ("static", fun loc -> STATIC loc);
       ("extern", fun loc -> EXTERN loc);
       ("long", fun loc -> LONG loc);
@@ -135,6 +136,7 @@ let init_lexicon _ =
       ("char", fun loc -> CHAR loc);
       ("int", fun loc -> INT loc);
       ("float", fun loc -> FLOAT loc);
+      ("__float128", fun loc -> FLOAT loc);
       ("double", fun loc -> DOUBLE loc);
       ("void", fun loc -> VOID loc);
       ("enum", fun loc -> ENUM loc);

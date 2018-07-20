@@ -257,7 +257,7 @@ let transformOffsetOf (speclist, dtype) member =
 %token<Cabs.cabsloc> CHAR INT BOOL DOUBLE FLOAT VOID INT64 INT32
 %token<Cabs.cabsloc> ENUM STRUCT TYPEDEF UNION
 %token<Cabs.cabsloc> SIGNED UNSIGNED LONG SHORT
-%token<Cabs.cabsloc> VOLATILE EXTERN STATIC CONST RESTRICT AUTO REGISTER
+%token<Cabs.cabsloc> VOLATILE EXTERN STATIC CONST RESTRICT AUTO REGISTER COMPLEX
 %token<Cabs.cabsloc> THREAD
 
 %token<Cabs.cabsloc> SIZEOF ALIGNOF
@@ -324,7 +324,7 @@ let transformOffsetOf (speclist, dtype) member =
 %left	INF SUP INF_EQ SUP_EQ
 %left	INF_INF SUP_SUP
 %left	PLUS MINUS
-%left	STAR SLASH PERCENT CONST RESTRICT VOLATILE
+%left	STAR SLASH PERCENT CONST RESTRICT VOLATILE COMPLEX
 %right	EXCLAM TILDE PLUS_PLUS MINUS_MINUS CAST RPAREN ADDROF SIZEOF ALIGNOF
 %left 	LBRACKET
 %left	DOT ARROW LPAREN LBRACE
@@ -1280,6 +1280,7 @@ cvspec:
     CONST                               { SpecCV(CV_CONST), $1 }
 |   VOLATILE                            { SpecCV(CV_VOLATILE), $1 }
 |   RESTRICT                            { SpecCV(CV_RESTRICT), $1 }
+|   COMPLEX                             { SpecCV(CV_COMPLEX), $1 }
 ;
 
 /*** GCC attributes ***/

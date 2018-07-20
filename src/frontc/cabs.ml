@@ -85,7 +85,7 @@ and funspec =
     INLINE | VIRTUAL | EXPLICIT
 
 and cvspec =
-    CV_CONST | CV_VOLATILE | CV_RESTRICT
+    CV_CONST | CV_VOLATILE | CV_RESTRICT | CV_COMPLEX
 
 (* Type specifier elements. These appear at the start of a declaration *)
 (* Everywhere they appear in this file, they appear as a 'spec_elem list', *)
@@ -94,7 +94,7 @@ and cvspec =
 (* though the compiler will of course choke. *)
 and spec_elem =
     SpecTypedef
-  | SpecCV of cvspec            (* const/volatile *)
+  | SpecCV of cvspec            (* const/volatile/_Complex *)
   | SpecAttr of attribute       (* __attribute__ *)
   | SpecStorage of storage
   | SpecInline
