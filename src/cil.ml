@@ -63,7 +63,7 @@ let msvcMode = ref false              (* Whether the pretty printer should
                                        * print output for the MS VC
                                        * compiler. Default is GCC *)
 let c99Mode = ref false (* True to handle ISO C 99 vs 90 changes.
-			   So far only affects integer parsing. *)
+                           So far only affects integer parsing. *)
 
 (* Set this to true to get old-style handling of gcc's extern inline C extension:
    old-style: the extern inline definition is used until the actual definition is
@@ -89,9 +89,9 @@ let envMachine : M.mach option ref = ref None
 
 
 let lowerConstants: bool ref = ref true
-    (** Do lower constants (default true) *)
+(** Do lower constants (default true) *)
 let insertImplicitCasts: bool ref = ref true
-    (** Do insert implicit casts (default true) *)
+(** Do insert implicit casts (default true) *)
 
 
 let little_endian = ref true
@@ -135,21 +135,21 @@ let debugConstFold = false
 (** The top-level representation of a CIL source file. Its main contents is
     the list of global declarations and definitions. *)
 type file =
-    { mutable fileName: string;   (** The complete file name *)
-      mutable globals: global list; (** List of globals as they will appear
-                                        in the printed file *)
-      mutable globinit: fundec option;
-      (** An optional global initializer function. This is a function where
-       * you can put stuff that must be executed before the program is
-       * started. This function, is conceptually at the end of the file,
-       * although it is not part of the globals list. Use {!Cil.getGlobInit}
-       * to create/get one. *)
-      mutable globinitcalled: bool;
-      (** Whether the global initialization function is called in main. This
-          should always be false if there is no global initializer. When
-          you create a global initialization CIL will try to insert code in
-          main to call it. *)
-    }
+  { mutable fileName: string;   (** The complete file name *)
+    mutable globals: global list; (** List of globals as they will appear
+                                      in the printed file *)
+    mutable globinit: fundec option;
+    (** An optional global initializer function. This is a function where
+     * you can put stuff that must be executed before the program is
+     * started. This function, is conceptually at the end of the file,
+     * although it is not part of the globals list. Use {!Cil.getGlobInit}
+     * to create/get one. *)
+    mutable globinitcalled: bool;
+    (** Whether the global initialization function is called in main. This
+        should always be false if there is no global initializer. When
+        you create a global initialization CIL will try to insert code in
+        main to call it. *)
+  }
 
 and comment = location * string
 
@@ -158,50 +158,50 @@ and comment = location * string
     important. *)
 and global =
   | GType of typeinfo * location
-    (** A typedef. All uses of type names (through the [TNamed] constructor)
-        must be preceeded in the file by a definition of the name. The string
-        is the defined name and always not-empty. *)
+  (** A typedef. All uses of type names (through the [TNamed] constructor)
+      must be preceeded in the file by a definition of the name. The string
+      is the defined name and always not-empty. *)
 
   | GCompTag of compinfo * location
-    (** Defines a struct/union tag with some fields. There must be one of
-        these for each struct/union tag that you use (through the [TComp]
-        constructor) since this is the only context in which the fields are
-        printed. Consequently nested structure tag definitions must be
-        broken into individual definitions with the innermost structure
-        defined first. *)
+  (** Defines a struct/union tag with some fields. There must be one of
+      these for each struct/union tag that you use (through the [TComp]
+      constructor) since this is the only context in which the fields are
+      printed. Consequently nested structure tag definitions must be
+      broken into individual definitions with the innermost structure
+      defined first. *)
 
   | GCompTagDecl of compinfo * location
-    (** Declares a struct/union tag. Use as a forward declaration. This is
-      * printed without the fields.  *)
+  (** Declares a struct/union tag. Use as a forward declaration. This is
+    * printed without the fields.  *)
 
   | GEnumTag of enuminfo * location
-   (** Declares an enumeration tag with some fields. There must be one of
+  (** Declares an enumeration tag with some fields. There must be one of
       these for each enumeration tag that you use (through the [TEnum]
       constructor) since this is the only context in which the items are
       printed. *)
 
   | GEnumTagDecl of enuminfo * location
-    (** Declares an enumeration tag. Use as a forward declaration. This is
-      * printed without the items.  *)
+  (** Declares an enumeration tag. Use as a forward declaration. This is
+    * printed without the items.  *)
 
   | GVarDecl of varinfo * location
-   (** A variable declaration (not a definition). If the variable has a
-       function type then this is a prototype. There can be several
-       declarations and at most one definition for a given variable. If both
-       forms appear then they must share the same varinfo structure. A
-       prototype shares the varinfo with the fundec of the definition. Either
-       has storage Extern or there must be a definition in this file *)
+  (** A variable declaration (not a definition). If the variable has a
+      function type then this is a prototype. There can be several
+      declarations and at most one definition for a given variable. If both
+      forms appear then they must share the same varinfo structure. A
+      prototype shares the varinfo with the fundec of the definition. Either
+      has storage Extern or there must be a definition in this file *)
 
   | GVar  of varinfo * initinfo * location
-     (** A variable definition. Can have an initializer. The initializer is
-      * updateable so that you can change it without requiring to recreate
-      * the list of globals. There can be at most one definition for a
-      * variable in an entire program. Cannot have storage Extern or function
-      * type. *)
+  (** A variable definition. Can have an initializer. The initializer is
+   * updateable so that you can change it without requiring to recreate
+   * the list of globals. There can be at most one definition for a
+   * variable in an entire program. Cannot have storage Extern or function
+   * type. *)
 
 
   | GFun of fundec * location
-     (** A function definition. *)
+  (** A function definition. *)
 
   | GAsm of string * location           (** Global asm statement. These ones
                                             can contain only a template *)
@@ -225,51 +225,51 @@ and typ =
                                          specifies the precision. *)
 
   | TPtr of typ * attributes
-           (** Pointer type. *)
+  (** Pointer type. *)
 
   | TArray of typ * exp option * attributes
-           (** Array type. It indicates the base type and the array length. *)
+  (** Array type. It indicates the base type and the array length. *)
 
   | TFun of typ * (string * typ * attributes) list option * bool * attributes
-          (** Function type. Indicates the type of the result, the name, type
-           * and name attributes of the formal arguments ([None] if no
-           * arguments were specified, as in a function whose definition or
-           * prototype we have not seen; [Some \[\]] means void). Use
-           * {!Cil.argsToList} to obtain a list of arguments. The boolean
-           * indicates if it is a variable-argument function. If this is the
-           * type of a varinfo for which we have a function declaration then
-           * the information for the formals must match that in the
-           * function's sformals. *)
+  (** Function type. Indicates the type of the result, the name, type
+   * and name attributes of the formal arguments ([None] if no
+   * arguments were specified, as in a function whose definition or
+   * prototype we have not seen; [Some \[\]] means void). Use
+   * {!Cil.argsToList} to obtain a list of arguments. The boolean
+   * indicates if it is a variable-argument function. If this is the
+   * type of a varinfo for which we have a function declaration then
+   * the information for the formals must match that in the
+   * function's sformals. *)
 
   | TNamed of typeinfo * attributes
-          (** The use of a named type. All uses of the same type name must
-           * share the typeinfo. Each such type name must be preceeded
-           * in the file by a [GType] global. This is printed as just the
-           * type name. The actual referred type is not printed here and is
-           * carried only to simplify processing. To see through a sequence
-           * of named type references, use {!Cil.unrollType}. The attributes
-           * are in addition to those given when the type name was defined. *)
+  (** The use of a named type. All uses of the same type name must
+   * share the typeinfo. Each such type name must be preceeded
+   * in the file by a [GType] global. This is printed as just the
+   * type name. The actual referred type is not printed here and is
+   * carried only to simplify processing. To see through a sequence
+   * of named type references, use {!Cil.unrollType}. The attributes
+   * are in addition to those given when the type name was defined. *)
 
   | TComp of compinfo * attributes
-          (** A reference to a struct or a union type. All references to the
-             same struct or union must share the same compinfo among them and
-             with a [GCompTag] global that preceeds all uses (except maybe
-             those that are pointers to the composite type). The attributes
-             given are those pertaining to this use of the type and are in
-             addition to the attributes that were given at the definition of
-             the type and which are stored in the compinfo.  *)
+  (** A reference to a struct or a union type. All references to the
+      same struct or union must share the same compinfo among them and
+      with a [GCompTag] global that preceeds all uses (except maybe
+      those that are pointers to the composite type). The attributes
+      given are those pertaining to this use of the type and are in
+      addition to the attributes that were given at the definition of
+      the type and which are stored in the compinfo.  *)
 
   | TEnum of enuminfo * attributes
-           (** A reference to an enumeration type. All such references must
-               share the enuminfo among them and with a [GEnumTag] global that
-               preceeds all uses. The attributes refer to this use of the
-               enumeration and are in addition to the attributes of the
-               enumeration itself, which are stored inside the enuminfo  *)
+  (** A reference to an enumeration type. All such references must
+      share the enuminfo among them and with a [GEnumTag] global that
+      preceeds all uses. The attributes refer to this use of the
+      enumeration and are in addition to the attributes of the
+      enumeration itself, which are stored inside the enuminfo  *)
 
 
 
   | TBuiltin_va_list of attributes
-            (** This is the same as the gcc's type with the same name *)
+  (** This is the same as the gcc's type with the same name *)
 
 (** Various kinds of integers *)
 and ikind =
@@ -304,10 +304,10 @@ and attrparam =
   | AInt of int                          (** An integer constant *)
   | AStr of string                       (** A string constant *)
   | ACons of string * attrparam list       (** Constructed attributes. These
-                                             are printed [foo(a1,a2,...,an)].
-                                             The list of parameters can be
-                                             empty and in that case the
-                                             parentheses are not printed. *)
+                                               are printed [foo(a1,a2,...,an)].
+                                               The list of parameters can be
+                                               empty and in that case the
+                                               parentheses are not printed. *)
   | ASizeOf of typ                       (** A way to talk about types *)
   | ASizeOfE of attrparam
   | ASizeOfS of typsig                   (** Replacement for ASizeOf in type
@@ -330,45 +330,45 @@ and attrparam =
     to create non-recursive or (potentially) recursive versions of this. Make
     sure you have a [GCompTag] for each one of these.  *)
 and compinfo = {
-    mutable cstruct: bool;              (** True if struct, False if union *)
-    mutable cname: string;              (** The name. Always non-empty. Use
-                                         * {!Cil.compFullName} to get the
-                                         * full name of a comp (along with
-                                         * the struct or union) *)
-    mutable ckey: int;                  (** A unique integer constructed from
-                                         * the name. Use {!Hashtbl.hash} on
-                                         * the string returned by
-                                         * {!Cil.compFullName}. All compinfo
-                                         * for a given key are shared. *)
-    mutable cfields: fieldinfo list;    (** Information about the fields *)
-    mutable cattr:   attributes;        (** The attributes that are defined at
-                                            the same time as the composite
-                                            type *)
-    mutable cdefined: bool;             (** Whether this is a defined
-                                         * compinfo. *)
-    mutable creferenced: bool;          (** True if used. Initially set to
-                                         * false *)
-  }
+  mutable cstruct: bool;              (** True if struct, False if union *)
+  mutable cname: string;              (** The name. Always non-empty. Use
+                                       * {!Cil.compFullName} to get the
+                                       * full name of a comp (along with
+                                       * the struct or union) *)
+  mutable ckey: int;                  (** A unique integer constructed from
+                                       * the name. Use {!Hashtbl.hash} on
+                                       * the string returned by
+                                       * {!Cil.compFullName}. All compinfo
+                                       * for a given key are shared. *)
+  mutable cfields: fieldinfo list;    (** Information about the fields *)
+  mutable cattr:   attributes;        (** The attributes that are defined at
+                                          the same time as the composite
+                                          type *)
+  mutable cdefined: bool;             (** Whether this is a defined
+                                       * compinfo. *)
+  mutable creferenced: bool;          (** True if used. Initially set to
+                                       * false *)
+}
 
 (** Information about a struct/union field *)
 and fieldinfo = {
-    mutable fcomp: compinfo;            (** The compinfo of the host. Note
-                                            that this must be shared with the
-                                            host since there can be only one
-                                            compinfo for a given id *)
-    mutable fname: string;              (** The name of the field. Might be
-                                         * the value of
-                                         * {!Cil.missingFieldName} in which
-                                         * case it must be a bitfield and is
-                                         * not printed and it does not
-                                         * participate in initialization *)
-    mutable ftype: typ;                 (** The type *)
-    mutable fbitfield: int option;      (** If a bitfield then ftype should be
-                                            an integer type *)
-    mutable fattr: attributes;          (** The attributes for this field
-                                          * (not for its type) *)
-    mutable floc: location;             (** The location where this field
-                                          * is defined *)
+  mutable fcomp: compinfo;            (** The compinfo of the host. Note
+                                          that this must be shared with the
+                                          host since there can be only one
+                                          compinfo for a given id *)
+  mutable fname: string;              (** The name of the field. Might be
+                                       * the value of
+                                       * {!Cil.missingFieldName} in which
+                                       * case it must be a bitfield and is
+                                       * not printed and it does not
+                                       * participate in initialization *)
+  mutable ftype: typ;                 (** The type *)
+  mutable fbitfield: int option;      (** If a bitfield then ftype should be
+                                          an integer type *)
+  mutable fattr: attributes;          (** The attributes for this field
+                                        * (not for its type) *)
+  mutable floc: location;             (** The location where this field
+                                        * is defined *)
 }
 
 
@@ -376,30 +376,30 @@ and fieldinfo = {
 (** Information about an enumeration. This is shared by all references to an
     enumeration. Make sure you have a [GEnumTag] for each of of these.   *)
 and enuminfo = {
-    mutable ename: string;              (** The name. Always non-empty *)
-    mutable eitems: (string * exp * location) list; (** Items with names
+  mutable ename: string;              (** The name. Always non-empty *)
+  mutable eitems: (string * exp * location) list; (** Items with names
                                                       and values. This list
                                                       should be
                                                       non-empty. The item
                                                       values must be
                                                       compile-time
                                                       constants. *)
-    mutable eattr: attributes;         (** Attributes *)
-    mutable ereferenced: bool;         (** True if used. Initially set to false*)
-    mutable ekind: ikind;
-    (** The integer kind used to represent this enum. Per ANSI-C, this
-      * should always be IInt, but gcc allows other integer kinds *)
+  mutable eattr: attributes;         (** Attributes *)
+  mutable ereferenced: bool;         (** True if used. Initially set to false*)
+  mutable ekind: ikind;
+  (** The integer kind used to represent this enum. Per ANSI-C, this
+    * should always be IInt, but gcc allows other integer kinds *)
 }
 
 (** Information about a defined type *)
 and typeinfo = {
-    mutable tname: string;
-    (** The name. Can be empty only in a [GType] when introducing a composite
-     * or enumeration tag. If empty cannot be refered to from the file *)
-    mutable ttype: typ;
-    (** The actual type. *)
-    mutable treferenced: bool;
-    (** True if used. Initially set to false*)
+  mutable tname: string;
+  (** The name. Can be empty only in a [GType] when introducing a composite
+   * or enumeration tag. If empty cannot be refered to from the file *)
+  mutable ttype: typ;
+  (** The actual type. *)
+  mutable treferenced: bool;
+  (** True if used. Initially set to false*)
 }
 
 
@@ -408,57 +408,57 @@ and typeinfo = {
  * example. Use one of the {!Cil.makeLocalVar}, {!Cil.makeTempVar} or
  * {!Cil.makeGlobalVar} to create instances of this data structure. *)
 and varinfo = {
-    mutable vname: string;		(** The name of the variable. Cannot
-                                          * be empty. *)
-    mutable vtype: typ;                 (** The declared type of the
-                                          * variable. *)
-    mutable vattr: attributes;          (** A list of attributes associated
-                                          * with the variable. *)
-    mutable vstorage: storage;          (** The storage-class *)
-    (* The other fields are not used in varinfo when they appear in the formal
-     * argument list in a [TFun] type *)
+  mutable vname: string;		(** The name of the variable. Cannot
+                                        * be empty. *)
+  mutable vtype: typ;                 (** The declared type of the
+                                        * variable. *)
+  mutable vattr: attributes;          (** A list of attributes associated
+                                        * with the variable. *)
+  mutable vstorage: storage;          (** The storage-class *)
+  (* The other fields are not used in varinfo when they appear in the formal
+   * argument list in a [TFun] type *)
 
 
-    mutable vglob: bool;	        (** True if this is a global variable*)
+  mutable vglob: bool;	        (** True if this is a global variable*)
 
-    (** Whether this varinfo is for an inline function. *)
-    mutable vinline: bool;
+  (** Whether this varinfo is for an inline function. *)
+  mutable vinline: bool;
 
-    mutable vdecl: location;            (** Location of variable declaration *)
+  mutable vdecl: location;            (** Location of variable declaration *)
 
-    vinit: initinfo;
-    (** Optional initializer.  Only used for static and global variables.
-     * Initializers for other types of local variables are turned into
-     * assignments. *)
+  vinit: initinfo;
+  (** Optional initializer.  Only used for static and global variables.
+   * Initializers for other types of local variables are turned into
+   * assignments. *)
 
-    mutable vid: int;  (** A unique integer identifier.  *)
-    mutable vaddrof: bool;              (** True if the address of this
-                                            variable is taken. CIL will set
-                                         * these flags when it parses C, but
-                                         * you should make sure to set the
-                                         * flag whenever your transformation
-                                         * create [AddrOf] expression. *)
+  mutable vid: int;  (** A unique integer identifier.  *)
+  mutable vaddrof: bool;              (** True if the address of this
+                                          variable is taken. CIL will set
+                                       * these flags when it parses C, but
+                                       * you should make sure to set the
+                                       * flag whenever your transformation
+                                       * create [AddrOf] expression. *)
 
-    mutable vreferenced: bool;          (** True if this variable is ever
-                                            referenced. This is computed by
-                                            [removeUnusedVars]. It is safe to
-                                            just initialize this to False *)
+  mutable vreferenced: bool;          (** True if this variable is ever
+                                          referenced. This is computed by
+                                          [removeUnusedVars]. It is safe to
+                                          just initialize this to False *)
 
-    mutable vdescr: doc;                (** For most temporary variables, a
-                                            description of what the var holds.
-                                            (e.g. for temporaries used for
-                                            function call results, this string
-                                            is a representation of the function
-                                            call.) *)
+  mutable vdescr: doc;                (** For most temporary variables, a
+                                          description of what the var holds.
+                                          (e.g. for temporaries used for
+                                          function call results, this string
+                                          is a representation of the function
+                                          call.) *)
 
-    mutable vdescrpure: bool;           (** Indicates whether the vdescr above
-                                            is a pure expression or call.
-                                            True for all CIL expressions and
-                                            Lvals, but false for e.g. function
-                                            calls.
-                                            Printing a non-pure vdescr more
-                                            than once may yield incorrect
-                                            results. *)
+  mutable vdescrpure: bool;           (** Indicates whether the vdescr above
+                                          is a pure expression or call.
+                                          True for all CIL expressions and
+                                          Lvals, but false for e.g. function
+                                          calls.
+                                          Printing a non-pure vdescr more
+                                          than once may yield incorrect
+                                          results. *)
 }
 
 (** Storage-class information *)
@@ -482,9 +482,9 @@ and exp =
 
   | SizeOfE    of exp                   (** sizeof(<expression>) *)
   | SizeOfStr  of string
-    (** sizeof(string_literal). We separate this case out because this is the
-      * only instance in which a string literal should not be treated as
-      * having type pointer to character. *)
+  (** sizeof(string_literal). We separate this case out because this is the
+    * only instance in which a string literal should not be treated as
+    * having type pointer to character. *)
 
   | AlignOf    of typ                   (** Has [unsigned int] type *)
   | AlignOfE   of exp
@@ -494,13 +494,13 @@ and exp =
                                             the type of the result *)
 
   | BinOp      of binop * exp * exp * typ
-                                        (** Binary operation. Includes the
-                                            type of the result. The arithemtic
-                                            conversions are made  explicit
-                                            for the arguments *)
+  (** Binary operation. Includes the
+      type of the result. The arithemtic
+      conversions are made  explicit
+      for the arguments *)
   | Question   of exp * exp * exp * typ
-                                        (** (a ? b : c) operation. Includes
-                                            the type of the result *)
+  (** (a ? b : c) operation. Includes
+      the type of the result *)
   | CastE      of typ * exp            (** Use {!Cil.mkCast} to make casts *)
 
   | AddrOf     of lval                 (** Always use {!Cil.mkAddrOf} to
@@ -522,11 +522,11 @@ and exp =
 (** Literal constants *)
 and constant =
   | CInt64 of int64 * ikind * string option
-                 (** Integer constant. Give the ikind (see ISO9899 6.1.3.2)
-                  * and the textual representation, if available. Use
-                  * {!Cil.integer} or {!Cil.kinteger} to create these. Watch
-                  * out for integers that cannot be represented on 64 bits.
-                  * OCAML does not give Overflow exceptions. *)
+  (** Integer constant. Give the ikind (see ISO9899 6.1.3.2)
+   * and the textual representation, if available. Use
+   * {!Cil.integer} or {!Cil.kinteger} to create these. Watch
+   * out for integers that cannot be represented on 64 bits.
+   * OCAML does not give Overflow exceptions. *)
   | CStr of string (** String constant (of pointer type) *)
   | CWStr of int64 list (** Wide string constant (of type "wchar_t *") *)
   | CChr of char (** Character constant.  This has type int, so use
@@ -537,10 +537,10 @@ and constant =
                                                also the textual representation,
                                                if available *)
   | CEnum of exp * string * enuminfo
-     (** An enumeration constant with the given value, name, from the given
-      * enuminfo. This is not used if {!Cil.lowerEnum} is false (default).
-      * Use {!Cillower.lowerEnumVisitor} to replace these with integer
-      * constants. *)
+  (** An enumeration constant with the given value, name, from the given
+   * enuminfo. This is not used if {!Cil.lowerEnum} is false (default).
+   * Use {!Cillower.lowerEnumVisitor} to replace these with integer
+   * constants. *)
 
 (** Unary operators *)
 and unop =
@@ -591,16 +591,16 @@ and binop =
  * that we can tell quickly whether we are accessing some component of a
  * variable directly or we are accessing a memory location through a pointer.*)
 and lval =
-    lhost * offset
+  lhost * offset
 
 (** The host part of an {!Cil.lval}. *)
 and lhost =
   | Var        of varinfo
-    (** The host is a variable. *)
+  (** The host is a variable. *)
 
   | Mem        of exp
-    (** The host is an object of type [T] when the expression has pointer
-     * [TPtr(T)]. *)
+  (** The host is an object of type [T] when the expression has pointer
+   * [TPtr(T)]. *)
 
 
 (** The offset part of an {!Cil.lval}. Each offset can be applied to certain
@@ -615,18 +615,18 @@ and offset =
                         * offsets. *)
 
   | Field      of fieldinfo * offset
-                      (** A field offset. Can be applied only to an lvalue
-                       * that denotes a structure or a union that contains
-                       * the mentioned field. This advances the offset to the
-                       * beginning of the mentioned field and changes the
-                       * type to the type of the mentioned field. *)
+  (** A field offset. Can be applied only to an lvalue
+   * that denotes a structure or a union that contains
+   * the mentioned field. This advances the offset to the
+   * beginning of the mentioned field and changes the
+   * type to the type of the mentioned field. *)
 
   | Index    of exp * offset
-                     (** An array index offset. Can be applied only to an
-                       * lvalue that denotes an array. This advances the
-                       * starting address of the lval to the beginning of the
-                       * mentioned array element and changes the denoted type
-                       * to be the type of the array element *)
+  (** An array index offset. Can be applied only to an
+    * lvalue that denotes an array. This advances the
+    * starting address of the lval to the beginning of the
+    * mentioned array element and changes the denoted type
+    * to be the type of the array element *)
 
 
 
@@ -640,90 +640,90 @@ and offset =
 and init =
   | SingleInit   of exp   (** A single initializer *)
   | CompoundInit   of typ * (offset * init) list
-            (** Used only for initializers of structures, unions and arrays.
-             * The offsets are all of the form [Field(f, NoOffset)] or
-             * [Index(i, NoOffset)] and specify the field or the index being
-             * initialized. For structures all fields
-             * must have an initializer (except the unnamed bitfields), in
-             * the proper order. This is necessary since the offsets are not
-             * printed. For arrays the list must contain a prefix of the
-             * initializers; the rest are 0-initialized.
-             * For unions there must be exactly one initializer. If
-             * the initializer is not for the first field then a field
-             * designator is printed, so you better be on GCC since MSVC does
-             * not understand this. You can scan an initializer list with
-             * {!Cil.foldLeftCompound}. *)
+  (** Used only for initializers of structures, unions and arrays.
+   * The offsets are all of the form [Field(f, NoOffset)] or
+   * [Index(i, NoOffset)] and specify the field or the index being
+   * initialized. For structures all fields
+   * must have an initializer (except the unnamed bitfields), in
+   * the proper order. This is necessary since the offsets are not
+   * printed. For arrays the list must contain a prefix of the
+   * initializers; the rest are 0-initialized.
+   * For unions there must be exactly one initializer. If
+   * the initializer is not for the first field then a field
+   * designator is printed, so you better be on GCC since MSVC does
+   * not understand this. You can scan an initializer list with
+   * {!Cil.foldLeftCompound}. *)
 
 (** We want to be able to update an initializer in a global variable, so we
  * define it as a mutable field *)
 and initinfo = {
-    mutable init : init option;
-  }
+  mutable init : init option;
+}
 
 
 (** Function definitions. *)
 and fundec =
-    { mutable svar:     varinfo;
-         (** Holds the name and type as a variable, so we can refer to it
-          * easily from the program. All references to this function either
-          * in a function call or in a prototype must point to the same
-          * varinfo. *)
-      mutable sformals: varinfo list;
-        (** Formals. These must be shared with the formals that appear in the
-         * type of the function. Use {!Cil.setFormals} or
-         * {!Cil.setFunctionType} to set these
-         * formals and ensure that they are reflected in the function type.
-         * Do not make copies of these because the body refers to them. *)
-      mutable slocals: varinfo list;
-        (** Locals. Does not include the sformals. Do not make copies of
-         * these because the body refers to them. *)
-      mutable smaxid: int;           (** Max local id. Starts at 0. *)
-      mutable sbody: block;          (** The function body. *)
-      mutable smaxstmtid: int option;  (** max id of a (reachable) statement
-                                        * in this function, if we have
-                                        * computed it. range = 0 ...
-                                        * (smaxstmtid-1). This is computed by
-                                        * {!Cil.computeCFGInfo}. *)
-      mutable sallstmts: stmt list;   (** After you call {!Cil.computeCFGInfo}
-                                      * this field is set to contain all
-                                      * statements in the function *)
-    }
+  { mutable svar:     varinfo;
+    (** Holds the name and type as a variable, so we can refer to it
+     * easily from the program. All references to this function either
+     * in a function call or in a prototype must point to the same
+     * varinfo. *)
+    mutable sformals: varinfo list;
+    (** Formals. These must be shared with the formals that appear in the
+     * type of the function. Use {!Cil.setFormals} or
+     * {!Cil.setFunctionType} to set these
+     * formals and ensure that they are reflected in the function type.
+     * Do not make copies of these because the body refers to them. *)
+    mutable slocals: varinfo list;
+    (** Locals. Does not include the sformals. Do not make copies of
+     * these because the body refers to them. *)
+    mutable smaxid: int;           (** Max local id. Starts at 0. *)
+    mutable sbody: block;          (** The function body. *)
+    mutable smaxstmtid: int option;  (** max id of a (reachable) statement
+                                      * in this function, if we have
+                                      * computed it. range = 0 ...
+                                      * (smaxstmtid-1). This is computed by
+                                      * {!Cil.computeCFGInfo}. *)
+    mutable sallstmts: stmt list;   (** After you call {!Cil.computeCFGInfo}
+                                     * this field is set to contain all
+                                     * statements in the function *)
+  }
 
 
 (** A block is a sequence of statements with the control falling through from
     one element to the next *)
 and block =
-   { mutable battrs: attributes;      (** Attributes for the block *)
-     mutable bstmts: stmt list;       (** The statements comprising the block*)
-   }
+  { mutable battrs: attributes;      (** Attributes for the block *)
+    mutable bstmts: stmt list;       (** The statements comprising the block*)
+  }
 
 
 (** Statements.
     The statement is the structural unit in the control flow graph. Use mkStmt
     to make a statement and then fill in the fields. *)
 and stmt = {
-    mutable labels: label list;        (** Whether the statement starts with
-                                           some labels, case statements or
-                                           default statement *)
-    mutable skind: stmtkind;           (** The kind of statement *)
+  mutable labels: label list;        (** Whether the statement starts with
+                                         some labels, case statements or
+                                         default statement *)
+  mutable skind: stmtkind;           (** The kind of statement *)
 
-    (* Now some additional control flow information. Initially this is not
-     * filled in. *)
-    mutable sid: int;                  (** A number (>= 0) that is unique
-                                           in a function. *)
-    mutable succs: stmt list;          (** The successor statements. They can
-                                           always be computed from the skind
-                                           and the context in which this
-                                           statement appears *)
-    mutable preds: stmt list;          (** The inverse of the succs function*)
-  }
+  (* Now some additional control flow information. Initially this is not
+   * filled in. *)
+  mutable sid: int;                  (** A number (>= 0) that is unique
+                                         in a function. *)
+  mutable succs: stmt list;          (** The successor statements. They can
+                                         always be computed from the skind
+                                         and the context in which this
+                                         statement appears *)
+  mutable preds: stmt list;          (** The inverse of the succs function*)
+}
 
 (** Labels *)
 and label =
     Label of string * location * bool
-          (** A real label. If the bool is "true", the label is from the
-           * input source program. If the bool is "false", the label was
-           * created by CIL or some other transformation *)
+  (** A real label. If the bool is "true", the label is from the
+   * input source program. If the bool is "false", the label was
+   * created by CIL or some other transformation *)
   | Case of exp * location              (** A case statement *)
   | CaseRange of exp * exp * location   (** A case statement corresponding to a
                                             range of values *)
@@ -754,51 +754,51 @@ and stmtkind =
                                              branches  fall-through to the
                                              successor of the If statement *)
   | Switch of exp * block * (stmt list) * location
-                                       (** A switch statement. The block
-                                           contains within all of the cases.
-                                           We also have direct pointers to the
-                                           statements that implement the
-                                           cases. Which cases they implement
-                                           you can get from the labels of the
-                                           statement *)
+  (** A switch statement. The block
+      contains within all of the cases.
+      We also have direct pointers to the
+      statements that implement the
+      cases. Which cases they implement
+      you can get from the labels of the
+      statement *)
 
   | Loop of block * location * (stmt option) * (stmt option)
-                                           (** A [while(1)] loop. The
-                                            * termination test is implemented
-                                            * in the body of a loop using a
-                                            * [Break] statement. If
-                                            * prepareCFG has been called, the
-                                            * first stmt option will point to
-                                            * the stmt containing the
-                                            * continue label for this loop
-                                            * and the second will point to
-                                            * the stmt containing the break
-                                            * label for this loop. *)
+  (** A [while(1)] loop. The
+   * termination test is implemented
+   * in the body of a loop using a
+   * [Break] statement. If
+   * prepareCFG has been called, the
+   * first stmt option will point to
+   * the stmt containing the
+   * continue label for this loop
+   * and the second will point to
+   * the stmt containing the break
+   * label for this loop. *)
 
   | Block of block                      (** Just a block of statements. Use it
                                             as a way to keep some attributes
                                             local *)
-    (** On MSVC we support structured exception handling. This is what you
-     * might expect. Control can get into the finally block either from the
-     * end of the body block, or if an exception is thrown. The location
-     * corresponds to the try keyword. *)
+  (** On MSVC we support structured exception handling. This is what you
+   * might expect. Control can get into the finally block either from the
+   * end of the body block, or if an exception is thrown. The location
+   * corresponds to the try keyword. *)
   | TryFinally of block * block * location
 
-    (** On MSVC we support structured exception handling. The try/except
-     * statement is a bit tricky:
-         __try { blk }
-         __except (e) {
-            handler
-         }
+  (** On MSVC we support structured exception handling. The try/except
+   * statement is a bit tricky:
+       __try { blk }
+       __except (e) {
+          handler
+       }
 
-         The argument to __except  must be an expression. However, we keep a
-         list of instructions AND an expression in case you need to make
-         function calls. We'll print those as a comma expression. The control
-         can get to the __except expression only if an exception is thrown.
-         After that, depending on the value of the expression the control
-         goes to the handler, propagates the exception, or retries the
-         exception !!! The location corresponds to the try keyword.
-     *)
+       The argument to __except  must be an expression. However, we keep a
+       list of instructions AND an expression in case you need to make
+       function calls. We'll print those as a comma expression. The control
+       can get to the __except expression only if an exception is thrown.
+       After that, depending on the value of the expression the control
+       goes to the handler, propagates the exception, or retries the
+       exception !!! The location corresponds to the try keyword.
+  *)
   | TryExcept of block * (instr list * exp) * block * location
 
 
@@ -809,51 +809,51 @@ and instr =
                                              if the exp has different type
                                              from lval *)
   | Call       of lval option * exp * exp list * location
- 			 (** optional: result is an lval. A cast might be
-                             necessary if the declared result type of the
-                             function is not the same as that of the
-                             destination. If the function is declared then
-                             casts are inserted for those arguments that
-                             correspond to declared formals. (The actual
-                             number of arguments might be smaller or larger
-                             than the declared number of arguments. C allows
-                             this.) If the type of the result variable is not
-                             the same as the declared type of the function
-                             result then an implicit cast exists. *)
+  (** optional: result is an lval. A cast might be
+                          necessary if the declared result type of the
+                          function is not the same as that of the
+                          destination. If the function is declared then
+                          casts are inserted for those arguments that
+                          correspond to declared formals. (The actual
+                          number of arguments might be smaller or larger
+                          than the declared number of arguments. C allows
+                          this.) If the type of the result variable is not
+                          the same as the declared type of the function
+                          result then an implicit cast exists. *)
 
-                         (* See the GCC specification for the meaning of ASM.
-                          * If the source is MS VC then only the templates
-                          * are used *)
-                         (* sm: I've added a notes.txt file which contains more
-                          * information on interpreting Asm instructions *)
+  (* See the GCC specification for the meaning of ASM.
+   * If the source is MS VC then only the templates
+   * are used *)
+  (* sm: I've added a notes.txt file which contains more
+   * information on interpreting Asm instructions *)
   | Asm        of attributes * (* Really only const and volatile can appear
-                               * here *)
+                                * here *)
                   string list *         (* templates (CR-separated) *)
                   (string option * string * lval) list *
-                                          (* outputs must be lvals with
-                                           * optional names and constraints.
-                                           * I would like these
-                                           * to be actually variables, but I
-                                           * run into some trouble with ASMs
-                                           * in the Linux sources  *)
+                  (* outputs must be lvals with
+                   * optional names and constraints.
+                   * I would like these
+                   * to be actually variables, but I
+                   * run into some trouble with ASMs
+                   * in the Linux sources  *)
                   (string option * string * exp) list *
-                                        (* inputs with optional names and constraints *)
+                  (* inputs with optional names and constraints *)
                   string list *         (* register clobbers *)
                   location
-        (** An inline assembly instruction. The arguments are (1) a list of
-            attributes (only const and volatile can appear here and only for
-            GCC), (2) templates (CR-separated), (3) a list of
-            outputs, each of which is an lvalue with a constraint, (4) a list
-            of input expressions along with constraints, (5) clobbered
-            registers, and (5) location information *)
+  (** An inline assembly instruction. The arguments are (1) a list of
+      attributes (only const and volatile can appear here and only for
+      GCC), (2) templates (CR-separated), (3) a list of
+      outputs, each of which is an lvalue with a constraint, (4) a list
+      of input expressions along with constraints, (5) clobbered
+      registers, and (5) location information *)
 
 
 
 (** Describes a location in a source file *)
 and location = {
-    line: int;		   (** The line number. -1 means "do not know" *)
-    file: string;          (** The name of the source file*)
-    byte: int;             (** The byte position in the source file *)
+  line: int;		   (** The line number. -1 means "do not know" *)
+  file: string;          (** The name of the source file*)
+  byte: int;             (** The byte position in the source file *)
 }
 
 (* Type signatures. Two types are identical iff they have identical
@@ -867,8 +867,8 @@ and typsig =
   | TSBase of typ
 
 let locUnknown = { line = -1;
-		   file = "";
-		   byte = -1;}
+                   file = "";
+                   byte = -1;}
 
 (* A reference to the current location *)
 let currentLoc : location ref = ref locUnknown
@@ -888,10 +888,10 @@ let compareLoc (a: location) (b: location) : int =
     else a.byte - b.byte
 
 let argsToList : (string * typ * attributes) list option
-                  -> (string * typ * attributes) list
-    = function
-    None -> []
-  | Some al -> al
+  -> (string * typ * attributes) list
+  = function
+      None -> []
+    | Some al -> al
 
 
 (* A hack to allow forward reference of d_exp *)
@@ -914,12 +914,12 @@ type 'a visitAction =
   | ChangeTo of 'a                      (** Replace the expression with the
                                             given one *)
   | ChangeDoChildrenPost of 'a * ('a -> 'a) (** First consider that the entire
-                                           exp is replaced by the first
-                                           parameter. Then continue with
-                                           the children. On return rebuild
-                                           the node if any of the children
-                                           has changed and then apply the
-                                           function on the node *)
+                                                exp is replaced by the first
+                                                parameter. Then continue with
+                                                the children. On return rebuild
+                                                the node if any of the children
+                                                has changed and then apply the
+                                                function on the node *)
 
 
 
@@ -933,44 +933,44 @@ type 'a visitAction =
 class type cilVisitor = object
 
   method vvdec: varinfo -> varinfo visitAction
-    (** Invoked for each variable declaration. The subtrees to be traversed
-     * are those corresponding to the type and attributes of the variable.
-     * Note that variable declarations are all the [GVar], [GVarDecl], [GFun],
-     * all the [varinfo] in formals of function types, and the formals and
-     * locals for function definitions. This means that the list of formals
-     * in a function definition will be traversed twice, once as part of the
-     * function type and second as part of the formals in a function
-     * definition. *)
+  (** Invoked for each variable declaration. The subtrees to be traversed
+   * are those corresponding to the type and attributes of the variable.
+   * Note that variable declarations are all the [GVar], [GVarDecl], [GFun],
+   * all the [varinfo] in formals of function types, and the formals and
+   * locals for function definitions. This means that the list of formals
+   * in a function definition will be traversed twice, once as part of the
+   * function type and second as part of the formals in a function
+   * definition. *)
 
   method vvrbl: varinfo -> varinfo visitAction
-    (** Invoked on each variable use. Here only the [SkipChildren] and
-     * [ChangeTo] actions make sense since there are no subtrees. Note that
-     * the type and attributes of the variable are not traversed for a
-     * variable use *)
+  (** Invoked on each variable use. Here only the [SkipChildren] and
+   * [ChangeTo] actions make sense since there are no subtrees. Note that
+   * the type and attributes of the variable are not traversed for a
+   * variable use *)
 
   method vexpr: exp -> exp visitAction
-    (** Invoked on each expression occurence. The subtrees are the
-     * subexpressions, the types (for a [Cast] or [SizeOf] expression) or the
-     * variable use. *)
+  (** Invoked on each expression occurence. The subtrees are the
+   * subexpressions, the types (for a [Cast] or [SizeOf] expression) or the
+   * variable use. *)
 
   method vlval: lval -> lval visitAction
-    (** Invoked on each lvalue occurence *)
+  (** Invoked on each lvalue occurence *)
 
   method voffs: offset -> offset visitAction
-    (** Invoked on each offset occurrence that is *not* as part
-      * of an initializer list specification, i.e. in an lval or
-      * recursively inside an offset. *)
+  (** Invoked on each offset occurrence that is *not* as part
+    * of an initializer list specification, i.e. in an lval or
+    * recursively inside an offset. *)
 
   method vinitoffs: offset -> offset visitAction
-    (** Invoked on each offset appearing in the list of a
-      * CompoundInit initializer.  *)
+  (** Invoked on each offset appearing in the list of a
+    * CompoundInit initializer.  *)
 
   method vinst: instr -> instr list visitAction
-    (** Invoked on each instruction occurrence. The [ChangeTo] action can
-     * replace this instruction with a list of instructions *)
+  (** Invoked on each instruction occurrence. The [ChangeTo] action can
+   * replace this instruction with a list of instructions *)
 
   method vstmt: stmt -> stmt visitAction
-    (** Control-flow statement. *)
+  (** Control-flow statement. *)
 
   method vblock: block -> block visitAction     (** Block. Replaced in
                                                     place. *)
@@ -979,9 +979,9 @@ class type cilVisitor = object
   method vglob: global -> global list visitAction (** Global (vars, types,
                                                       etc.)  *)
   method vinit: varinfo -> offset -> init -> init visitAction
-                                                (** Initializers for globals,
-                                                 * pass the global where this
-                                                 * occurs, and the offset *)
+  (** Initializers for globals,
+   * pass the global where this
+   * occurs, and the offset *)
   method vtype: typ -> typ visitAction          (** Use of some type. Note
                                                  * that for structure/union
                                                  * and enumeration types the
@@ -990,15 +990,15 @@ class type cilVisitor = object
                                                  * visited. Use [vglob] to
                                                  * visit it.  *)
   method vattr: attribute -> attribute list visitAction
-    (** Attribute. Each attribute can be replaced by a list *)
+  (** Attribute. Each attribute can be replaced by a list *)
   method vattrparam: attrparam -> attrparam visitAction
-    (** Attribute parameters. *)
+  (** Attribute parameters. *)
 
-    (** Add here instructions while visiting to queue them to
-     * preceede the current statement or instruction being processed *)
+  (** Add here instructions while visiting to queue them to
+   * preceede the current statement or instruction being processed *)
   method queueInstr: instr list -> unit
 
-    (** Gets the queue of instructions and resets the queue *)
+  (** Gets the queue of instructions and resets the queue *)
   method unqueueInstr: unit -> instr list
 
 end
@@ -1049,11 +1049,11 @@ let lu = locUnknown
 
 (* sm: utility *)
 let startsWith (prefix: string) (s: string) : bool =
-(
-  let prefixLen = (String.length prefix) in
-  (String.length s) >= prefixLen &&
-  (String.sub s 0 prefixLen) = prefix
-)
+  (
+    let prefixLen = (String.length prefix) in
+    (String.length s) >= prefixLen &&
+    (String.sub s 0 prefixLen) = prefix
+  )
 
 let endsWith (suffix: string) (s: string) : bool =
   let suffixLen = String.length suffix in
@@ -1069,9 +1069,9 @@ let stripUnderscores (s: string) : string =
 
 let get_instrLoc (inst : instr) =
   match inst with
-      Set(_, _, loc) -> loc
-    | Call(_, _, _, loc) -> loc
-    | Asm(_, _, _, _, _, loc) -> loc
+    Set(_, _, loc) -> loc
+  | Call(_, _, _, loc) -> loc
+  | Asm(_, _, _, _, _, loc) -> loc
 let get_globalLoc (g : global) =
   match g with
   | GFun(_,l) -> (l)
@@ -1088,20 +1088,20 @@ let get_globalLoc (g : global) =
 
 let rec get_stmtLoc (statement : stmtkind) =
   match statement with
-      Instr([]) -> lu
-    | Instr(hd::tl) -> get_instrLoc(hd)
-    | Return(_, loc) -> loc
-    | Goto(_, loc) -> loc
-    | ComputedGoto(_, loc) -> loc
-    | Break(loc) -> loc
-    | Continue(loc) -> loc
-    | If(_, _, _, loc) -> loc
-    | Switch (_, _, _, loc) -> loc
-    | Loop (_, loc, _, _) -> loc
-    | Block b -> if b.bstmts == [] then lu
-                 else get_stmtLoc ((List.hd b.bstmts).skind)
-    | TryFinally (_, _, l) -> l
-    | TryExcept (_, _, _, l) -> l
+    Instr([]) -> lu
+  | Instr(hd::tl) -> get_instrLoc(hd)
+  | Return(_, loc) -> loc
+  | Goto(_, loc) -> loc
+  | ComputedGoto(_, loc) -> loc
+  | Break(loc) -> loc
+  | Continue(loc) -> loc
+  | If(_, _, _, loc) -> loc
+  | Switch (_, _, _, loc) -> loc
+  | Loop (_, loc, _, _) -> loc
+  | Block b -> if b.bstmts == [] then lu
+    else get_stmtLoc ((List.hd b.bstmts).skind)
+  | TryFinally (_, _, l) -> l
+  | TryExcept (_, _, _, l) -> l
 
 
 (* The next variable identifier to use. Counts up *)
@@ -1203,9 +1203,9 @@ let warnLoc (loc: location) (fmt : ('a,unit,doc) format) : 'a =
 let zero      = Const(CInt64(Int64.zero, IInt, None))
 
 (** Given the character c in a (CChr c), sign-extend it to 32 bits.
-  (This is the official way of interpreting character constants, according to
-  ISO C 6.4.4.4.10, which says that character constants are chars cast to ints)
-  Returns CInt64(sign-extened c, IInt, None) *)
+    (This is the official way of interpreting character constants, according to
+    ISO C 6.4.4.4.10, which says that character constants are chars cast to ints)
+    Returns CInt64(sign-extened c, IInt, None) *)
 let charConstToInt (c: char) : constant =
   let c' = Char.code c in
   let value =
@@ -1226,7 +1226,7 @@ let i64_to_int (i: int64) : int =
 let cilint_to_int (i: cilint) : int =
   try int_of_cilint i
   with _ -> E.s (E.unimp "%a: Int constant too large: %s\n"
-		   d_loc !currentLoc (string_of_cilint i))
+                   d_loc !currentLoc (string_of_cilint i))
 
 let voidType = TVoid([])
 let intType = TInt(IInt,[])
@@ -1273,15 +1273,15 @@ let isSigned = function
   | IUInt
   | IULong
   | IULongLong ->
-      false
+    false
   | ISChar
   | IShort
   | IInt
   | ILong
   | ILongLong ->
-      true
+    true
   | IChar ->
-      not !M.theMachine.M.char_is_unsigned
+    not !M.theMachine.M.char_is_unsigned
 
 let mkStmt (sk: stmtkind) : stmt =
   { skind = sk;
@@ -1298,12 +1298,12 @@ let dummyInstr = (Asm([], ["dummy statement!!"], [], [], [], lu))
 let dummyStmt =  mkStmt (Instr [dummyInstr])
 
 let compactStmts (b: stmt list) : stmt list =
-      (* Try to compress statements. Scan the list of statements and remember
-       * the last instrunction statement encountered, along with a Clist of
-       * instructions in it. *)
+  (* Try to compress statements. Scan the list of statements and remember
+   * the last instrunction statement encountered, along with a Clist of
+   * instructions in it. *)
   let rec compress (lastinstrstmt: stmt) (* Might be dummStmt *)
-                   (lastinstrs: instr Clist.clist)
-                   (body: stmt list) =
+      (lastinstrs: instr Clist.clist)
+      (body: stmt list) =
     let finishLast (tail: stmt list) : stmt list =
       if lastinstrstmt == dummyStmt then tail
       else begin
@@ -1314,17 +1314,17 @@ let compactStmts (b: stmt list) : stmt list =
     match body with
       [] -> finishLast []
     | ({skind=Instr il} as s) :: rest ->
-        let ils = Clist.fromList il in
-        if lastinstrstmt != dummyStmt && s.labels == [] then
-          compress lastinstrstmt (Clist.append lastinstrs ils) rest
-        else
-          finishLast (compress s ils rest)
+      let ils = Clist.fromList il in
+      if lastinstrstmt != dummyStmt && s.labels == [] then
+        compress lastinstrstmt (Clist.append lastinstrs ils) rest
+      else
+        finishLast (compress s ils rest)
 
     | {skind=Block b;labels = []} :: rest when b.battrs = [] ->
-        compress lastinstrstmt lastinstrs (b.bstmts@rest)
+      compress lastinstrstmt lastinstrs (b.bstmts@rest)
     | s :: rest ->
-        let res = s :: compress dummyStmt Clist.empty rest in
-        finishLast res
+      let res = s :: compress dummyStmt Clist.empty rest in
+      finishLast res
   in
   compress dummyStmt Clist.empty b
 
@@ -1334,16 +1334,16 @@ let rec addAttribute (Attr(an, _) as a: attribute) (al: attributes) =
   let rec insertSorted = function
       [] -> [a]
     | ((Attr(an0, _) as a0) :: rest) as l ->
-        if an < an0 then a :: l
-        else if Util.equals a a0 then l (* Do not add if already in there *)
-        else a0 :: insertSorted rest (* Make sure we see all attributes with
-                                      * this name *)
+      if an < an0 then a :: l
+      else if Util.equals a a0 then l (* Do not add if already in there *)
+      else a0 :: insertSorted rest (* Make sure we see all attributes with
+                                    * this name *)
   in
   insertSorted al
 
 (** The second attribute list is sorted *)
 and addAttributes al0 (al: attributes) : attributes =
-    if al0 == [] then al else
+  if al0 == [] then al else
     List.fold_left (fun acc a -> addAttribute a acc) al al0
 
 and dropAttribute (an: string) (al: attributes) =
@@ -1362,12 +1362,12 @@ let hasAttribute s al =
 
 type attributeClass =
     AttrName of bool
-        (* Attribute of a name. If argument is true and we are on MSVC then
-         * the attribute is printed using __declspec as part of the storage
-         * specifier  *)
+  (* Attribute of a name. If argument is true and we are on MSVC then
+   * the attribute is printed using __declspec as part of the storage
+   * specifier  *)
   | AttrFunType of bool
-        (* Attribute of a function type. If argument is true and we are on
-         * MSVC then the attribute is printed just before the function name *)
+  (* Attribute of a function type. If argument is true and we are on
+   * MSVC then the attribute is printed just before the function name *)
 
   | AttrType  (* Attribute of a type *)
 
@@ -1408,15 +1408,15 @@ let attributeHash: (string, attributeClass) H.t =
 let partitionAttributes
     ~(default:attributeClass)
     (attrs:  attribute list) :
-    attribute list * attribute list * attribute list =
+  attribute list * attribute list * attribute list =
   let rec loop (n,f,t) = function
       [] -> n, f, t
     | (Attr(an, _) as a) :: rest ->
-        match (try H.find attributeHash an with Not_found -> default) with
-          AttrName _ -> loop (addAttribute a n, f, t) rest
-        | AttrFunType _ ->
-            loop (n, addAttribute a f, t) rest
-        | AttrType -> loop (n, f, addAttribute a t) rest
+      match (try H.find attributeHash an with Not_found -> default) with
+        AttrName _ -> loop (addAttribute a n, f, t) rest
+      | AttrFunType _ ->
+        loop (n, addAttribute a f, t) rest
+      | AttrType -> loop (n, f, addAttribute a t) rest
   in
   loop ([], [], []) attrs
 
@@ -1431,40 +1431,40 @@ let missingFieldName = "___missing_field_name"
 (** Creates a a (potentially recursive) composite type. Make sure you add a
   * GTag for it to the file! **)
 let mkCompInfo
-      (isstruct: bool)
-      (n: string)
-      (* fspec is a function that when given a forward
-       * representation of the structure type constructs the type of
-       * the fields. The function can ignore this argument if not
-       * constructing a recursive type.  *)
-       (mkfspec: compinfo -> (string * typ * int option * attribute list *
-                             location) list)
-       (a: attribute list) : compinfo =
+    (isstruct: bool)
+    (n: string)
+    (* fspec is a function that when given a forward
+     * representation of the structure type constructs the type of
+     * the fields. The function can ignore this argument if not
+     * constructing a recursive type.  *)
+    (mkfspec: compinfo -> (string * typ * int option * attribute list *
+                           location) list)
+    (a: attribute list) : compinfo =
 
   (* make a new name for anonymous structs *)
-   if n = "" then
-     E.s (E.bug "mkCompInfo: missing structure name\n");
-   (* Make a new self cell and a forward reference *)
-   let comp =
-     { cstruct = isstruct; cname = ""; ckey = 0; cfields = [];
-       cattr = a; creferenced = false;
-       (* Make this compinfo undefined by default *)
-       cdefined = false; }
-   in
-   comp.cname <- n;
-   comp.ckey <- !nextCompinfoKey;
-   incr nextCompinfoKey;
-   let flds =
-       Util.list_map (fun (fn, ft, fb, fa, fl) ->
-          { fcomp = comp;
-            ftype = ft;
-            fname = fn;
-            fbitfield = fb;
-            fattr = fa;
-            floc = fl}) (mkfspec comp) in
-   comp.cfields <- flds;
-   if flds <> [] then comp.cdefined <- true;
-   comp
+  if n = "" then
+    E.s (E.bug "mkCompInfo: missing structure name\n");
+  (* Make a new self cell and a forward reference *)
+  let comp =
+    { cstruct = isstruct; cname = ""; ckey = 0; cfields = [];
+      cattr = a; creferenced = false;
+      (* Make this compinfo undefined by default *)
+      cdefined = false; }
+  in
+  comp.cname <- n;
+  comp.ckey <- !nextCompinfoKey;
+  incr nextCompinfoKey;
+  let flds =
+    Util.list_map (fun (fn, ft, fb, fa, fl) ->
+        { fcomp = comp;
+          ftype = ft;
+          fname = fn;
+          fbitfield = fb;
+          fattr = fa;
+          floc = fl}) (mkfspec comp) in
+  comp.cfields <- flds;
+  if flds <> [] then comp.cdefined <- true;
+  comp
 
 (** Make a copy of a compinfo, changing the name and the key *)
 let copyCompInfo (ci: compinfo) (n: string) : compinfo =
@@ -1505,12 +1505,12 @@ let setTypeAttrs t a =
 
 
 let typeAddAttributes a0 t =
-begin
-  match a0 with
-  | [] ->
+  begin
+    match a0 with
+    | [] ->
       (* no attributes, keep same type *)
       t
-  | _ ->
+    | _ ->
       (* anything else: add a0 to existing attributes *)
       let add (a: attributes) = addAttributes a0 a in
       match t with
@@ -1524,7 +1524,7 @@ begin
       | TComp (comp, a) -> TComp (comp, add a)
       | TNamed (t, a) -> TNamed (t, add a)
       | TBuiltin_va_list a -> TBuiltin_va_list (add a)
-end
+  end
 
 let typeRemoveAttributes (anl: string list) t =
   let drop (al: attributes) = dropAttributes anl al in
@@ -1555,14 +1555,14 @@ let rec unrollTypeDeep (t: typ) : typ =
     | TPtr(t, a') -> TPtr(unrollTypeDeep t, addAttributes al a')
     | TArray(t, l, a') -> TArray(unrollTypeDeep t, l, addAttributes al a')
     | TFun(rt, args, isva, a') ->
-        TFun (unrollTypeDeep rt,
-              (match args with
-                None -> None
-              | Some argl ->
-                  Some (Util.list_map (fun (an,at,aa) ->
-                  (an, unrollTypeDeep at, aa)) argl)),
-              isva,
-              addAttributes al a')
+      TFun (unrollTypeDeep rt,
+            (match args with
+               None -> None
+             | Some argl ->
+               Some (Util.list_map (fun (an,at,aa) ->
+                   (an, unrollTypeDeep at, aa)) argl)),
+            isva,
+            addAttributes al a')
     | x -> typeAddAttributes al x
   in
   withAttrs [] t
@@ -1592,14 +1592,14 @@ let mkWhile ~(guard:exp) ~(body: stmt list) : stmt list =
 
 
 let mkFor ~(start: stmt list) ~(guard: exp) ~(next: stmt list)
-          ~(body: stmt list) : stmt list =
+    ~(body: stmt list) : stmt list =
   (start @
-     (mkWhile guard (body @ next)))
+   (mkWhile guard (body @ next)))
 
 
 let mkForIncr ~(iter : varinfo) ~(first: exp) ~stopat:(past: exp) ~(incr: exp)
     ~(body: stmt list) : stmt list =
-      (* See what kind of operator we need *)
+  (* See what kind of operator we need *)
   let compop, nextop =
     match unrollType iter.vtype with
       TPtr _ -> Lt, PlusPI
@@ -1620,7 +1620,7 @@ let rec stripCasts (e: exp) =
 
 
 (* the name of the C function we call to get ccgr ASTs
-external parse : string -> file = "cil_main"
+   external parse : string -> file = "cil_main"
 *)
 (*
   Pretty Printing
@@ -1638,10 +1638,10 @@ let d_ikind () = function
   | ILong -> text "long"
   | IULong -> text "unsigned long"
   | ILongLong ->
-      if !msvcMode then text "__int64" else text "long long"
+    if !msvcMode then text "__int64" else text "long long"
   | IULongLong ->
-      if !msvcMode then text "unsigned __int64"
-      else text "unsigned long long"
+    if !msvcMode then text "unsigned __int64"
+    else text "unsigned long long"
 
 let d_fkind () = function
     FFloat -> text "float"
@@ -1672,69 +1672,69 @@ let d_const () c =
   match c with
     CInt64(_, _, Some s) -> text s (* Always print the text if there is one *)
   | CInt64(i, ik, None) ->
-      (** We must make sure to capture the type of the constant. For some
-       * constants this is done with a suffix, for others with a cast prefix.*)
-      let suffix : string =
-        match ik with
-          IUInt -> "U"
-        | ILong -> "L"
-        | IULong -> "UL"
-        | ILongLong -> if !msvcMode then "L" else "LL"
-        | IULongLong -> if !msvcMode then "UL" else "ULL"
-        | _ -> ""
-      in
-      let prefix : string =
-        if suffix <> "" then ""
-        else if ik = IInt then ""
-        else "(" ^ (sprint !lineLength (d_ikind () ik)) ^ ")"
-      in
-      (* Watch out here for negative integers that we should be printing as
-       * large positive ones *)
-      if i < Int64.zero && (not (isSigned ik)) then
-        if bytesSizeOfInt ik <> 8 then
-          (* I am convinced that we shall never store smaller than 64-bits
-           * integers in negative form. -- Gabriel *)
-          E.s (E.bug "unexpected negative unsigned integer (please report this bug)")
-        else
-          text (prefix ^ "0x" ^ Int64.format "%x" i ^ suffix)
-      else (
-        if (i = mostNeg32BitInt) then
-          (* sm: quirk here: if you print -2147483648 then this is two tokens *)
-          (* in C, and the second one is too large to represent in a signed *)
-          (* int.. so we do what's done in limits.h, and print (-2147483467-1); *)
-          (* in gcc this avoids a warning, but it might avoid a real problem *)
-          (* on another compiler or a 64-bit architecture *)
-          text (prefix ^ "(-0x7FFFFFFF-1)")
-        else if (i = mostNeg64BitInt) then
-          (* The same is true of the largest 64-bit negative. *)
-          text (prefix ^ "(-0x7FFFFFFFFFFFFFFF-1)")
-        else
-          text (prefix ^ (Int64.to_string i ^ suffix))
-      )
+    (** We must make sure to capture the type of the constant. For some
+     * constants this is done with a suffix, for others with a cast prefix.*)
+    let suffix : string =
+      match ik with
+        IUInt -> "U"
+      | ILong -> "L"
+      | IULong -> "UL"
+      | ILongLong -> if !msvcMode then "L" else "LL"
+      | IULongLong -> if !msvcMode then "UL" else "ULL"
+      | _ -> ""
+    in
+    let prefix : string =
+      if suffix <> "" then ""
+      else if ik = IInt then ""
+      else "(" ^ (sprint !lineLength (d_ikind () ik)) ^ ")"
+    in
+    (* Watch out here for negative integers that we should be printing as
+     * large positive ones *)
+    if i < Int64.zero && (not (isSigned ik)) then
+      if bytesSizeOfInt ik <> 8 then
+        (* I am convinced that we shall never store smaller than 64-bits
+         * integers in negative form. -- Gabriel *)
+        E.s (E.bug "unexpected negative unsigned integer (please report this bug)")
+      else
+        text (prefix ^ "0x" ^ Int64.format "%x" i ^ suffix)
+    else (
+      if (i = mostNeg32BitInt) then
+        (* sm: quirk here: if you print -2147483648 then this is two tokens *)
+        (* in C, and the second one is too large to represent in a signed *)
+        (* int.. so we do what's done in limits.h, and print (-2147483467-1); *)
+        (* in gcc this avoids a warning, but it might avoid a real problem *)
+        (* on another compiler or a 64-bit architecture *)
+        text (prefix ^ "(-0x7FFFFFFF-1)")
+      else if (i = mostNeg64BitInt) then
+        (* The same is true of the largest 64-bit negative. *)
+        text (prefix ^ "(-0x7FFFFFFFFFFFFFFF-1)")
+      else
+        text (prefix ^ (Int64.to_string i ^ suffix))
+    )
 
   | CStr(s) -> text ("\"" ^ escape_string s ^ "\"")
   | CWStr(s) ->
-      (* text ("L\"" ^ escape_string s ^ "\"")  *)
-      (List.fold_left (fun acc elt ->
-        acc ++
-        if (elt >= Int64.zero &&
-            elt <= (Int64.of_int 255)) then
-          text (escape_char (Char.chr (Int64.to_int elt)))
-        else
-          ( text (Printf.sprintf "\\x%LX\"" elt) ++ break ++
-            (text "\""))
-      ) (text "L\"") s ) ++ text "\""
-      (* we cannot print L"\xabcd" "feedme" as L"\xabcdfeedme" --
-       * the former has 7 wide characters and the later has 3. *)
+    (* text ("L\"" ^ escape_string s ^ "\"")  *)
+    (List.fold_left (fun acc elt ->
+         acc ++
+         if (elt >= Int64.zero &&
+             elt <= (Int64.of_int 255)) then
+           text (escape_char (Char.chr (Int64.to_int elt)))
+         else
+           ( text (Printf.sprintf "\\x%LX\"" elt) ++ break ++
+             (text "\""))
+       ) (text "L\"") s ) ++ text "\""
+  (* we cannot print L"\xabcd" "feedme" as L"\xabcdfeedme" --
+   * the former has 7 wide characters and the later has 3. *)
 
   | CChr(c) -> text ("'" ^ escape_char c ^ "'")
   | CReal(_, _, Some s) -> text s
   | CReal(f, fsize, None) ->
-      text (string_of_float f) ++
-      (match fsize with
-         FFloat -> chr 'f'
-       | FDouble -> nil
-       | FLongDouble -> chr 'L')
+    text (string_of_float f) ++
+    (match fsize with
+       FFloat -> chr 'f'
+     | FDouble -> nil
+     | FLongDouble -> chr 'L')
   | CEnum(_, s, ei) -> text s
 
 
@@ -1755,30 +1755,30 @@ let getParenthLevel (e: exp) =
   match e with
   | Question _ -> questionLevel
   | BinOp((LAnd | LOr), _,_,_) -> 80
-                                        (* Bit operations. *)
+  (* Bit operations. *)
   | BinOp((BOr|BXor|BAnd),_,_,_) -> bitwiseLevel (* 75 *)
 
-                                        (* Comparisons *)
+  (* Comparisons *)
   | BinOp((Eq|Ne|Gt|Lt|Ge|Le),_,_,_) ->
-      comparativeLevel (* 70 *)
-                                        (* Additive. Shifts can have higher
-                                         * level than + or - but I want
-                                         * parentheses around them *)
+    comparativeLevel (* 70 *)
+  (* Additive. Shifts can have higher
+   * level than + or - but I want
+   * parentheses around them *)
   | BinOp((MinusA|MinusPP|MinusPI|PlusA|
            PlusPI|IndexPI|Shiftlt|Shiftrt),_,_,_)
     -> additiveLevel (* 60 *)
 
-                                        (* Multiplicative *)
+  (* Multiplicative *)
   | BinOp((Div|Mod|Mult),_,_,_) -> 40
 
-                                        (* Unary *)
+  (* Unary *)
   | CastE(_,_) -> 30
   | AddrOf(_) -> 30
   | AddrOfLabel(_) -> 30
   | StartOf(_) -> 30
   | UnOp((Neg|BNot|LNot),_,_) -> 30
 
-                                        (* Lvals *)
+  (* Lvals *)
   | Lval(Mem _ , _) -> derefStarLevel (* 20 *)
   | Lval(Var _, (Field _|Index _)) -> indexLevel (* 20 *)
   | SizeOf _ | SizeOfE _ | SizeOfStr _ -> 20
@@ -1810,16 +1810,16 @@ let separateStorageModifiers (al: attribute list) =
       | _ -> false
     with Not_found -> false
   in
-    let stom, rest = List.partition isstoragemod al in
-    if not !msvcMode then
-      stom, rest
-    else
-      (* Put back the declspec. Put it without the leading __ since these will
-       * be added later *)
-      let stom' =
-	Util.list_map (fun (Attr(an, args)) ->
+  let stom, rest = List.partition isstoragemod al in
+  if not !msvcMode then
+    stom, rest
+  else
+    (* Put back the declspec. Put it without the leading __ since these will
+     * be added later *)
+    let stom' =
+      Util.list_map (fun (Attr(an, args)) ->
           Attr("declspec", [ACons(an, args)])) stom in
-      stom', rest
+    stom', rest
 
 
 let isIntegralType t =
@@ -1851,14 +1851,14 @@ let rec typeOf (e: exp) : typ =
   match e with
   | Const(CInt64 (_, ik, _)) -> TInt(ik, [])
 
-    (* Character constants have type int.  ISO/IEC 9899:1999 (E),
-     * section 6.4.4.4 [Character constants], paragraph 10, if you
-     * don't believe me. *)
+  (* Character constants have type int.  ISO/IEC 9899:1999 (E),
+   * section 6.4.4.4 [Character constants], paragraph 10, if you
+   * don't believe me. *)
   | Const(CChr _) -> intType
 
-    (* The type of a string is a pointer to characters ! The only case when
-     * you would want it to be an array is as an argument to sizeof, but we
-     * have SizeOfStr for that *)
+  (* The type of a string is a pointer to characters ! The only case when
+   * you would want it to be an array is as an argument to sizeof, but we
+   * have SizeOfStr for that *)
   | Const(CStr s) -> !stringLiteralType
 
   | Const(CWStr s) -> TPtr(!wcharType,[])
@@ -1879,8 +1879,8 @@ let rec typeOf (e: exp) : typ =
   | StartOf (lv) -> begin
       match unrollType (typeOfLval lv) with
         TArray (t,_, a) -> TPtr(t, a)
-     | _ -> E.s (E.bug "typeOf: StartOf on a non-array")
-  end
+      | _ -> E.s (E.bug "typeOf: StartOf on a non-array")
+    end
 
 and typeOfInit (i: init) : typ =
   match i with
@@ -1893,7 +1893,7 @@ and typeOfLval = function
       match unrollType (typeOf addr) with
         TPtr (t, _) -> typeOffset t off
       | _ -> E.s (bug "typeOfLval: Mem on a non-pointer (%a)" !pd_exp addr)
-  end
+    end
 
 and typeOffset basetyp =
   let blendAttributes baseAttrs =
@@ -1906,16 +1906,16 @@ and typeOffset basetyp =
   | Index (_, o) -> begin
       match unrollType basetyp with
         TArray (t, _, baseAttrs) ->
-	  let elementType = typeOffset t o in
-	  blendAttributes baseAttrs elementType
+        let elementType = typeOffset t o in
+        blendAttributes baseAttrs elementType
       | t -> E.s (E.bug "typeOffset: Index on a non-array")
-  end
+    end
   | Field (fi, o) ->
-      match unrollType basetyp with
-        TComp (_, baseAttrs) ->
-	  let fieldType = typeOffset fi.ftype o in
-	  blendAttributes baseAttrs fieldType
-      | _ -> E.s (bug "typeOffset: Field on a non-compound")
+    match unrollType basetyp with
+      TComp (_, baseAttrs) ->
+      let fieldType = typeOffset fi.ftype o in
+      blendAttributes baseAttrs fieldType
+    | _ -> E.s (bug "typeOffset: Field on a non-compound")
 
 
 (**
@@ -1988,12 +1988,12 @@ let intKindForSize (s:int) (unsigned:bool) : ikind =
     else raise Not_found
   else
     (* Test the most common sizes first *)
-    if s = 1 then ISChar
-    else if s = !M.theMachine.M.sizeof_int then IInt
-    else if s = !M.theMachine.M.sizeof_long then ILong
-    else if s = !M.theMachine.M.sizeof_short then IShort
-    else if s = !M.theMachine.M.sizeof_longlong then ILongLong
-    else raise Not_found
+  if s = 1 then ISChar
+  else if s = !M.theMachine.M.sizeof_int then IInt
+  else if s = !M.theMachine.M.sizeof_long then ILong
+  else if s = !M.theMachine.M.sizeof_short then IShort
+  else if s = !M.theMachine.M.sizeof_longlong then ILongLong
+  else raise Not_found
 
 let floatKindForSize (s:int) =
   if s = !M.theMachine.M.sizeof_double then FDouble
@@ -2063,11 +2063,11 @@ let intKindForValue (i: cilint) (unsigned: bool) =
     else if fitsInInt IULong i then IULong
     else IULongLong
   else
-    if fitsInInt ISChar i then ISChar
-    else if fitsInInt IShort i then IShort
-    else if fitsInInt IInt i then IInt
-    else if fitsInInt ILong i then ILong
-    else ILongLong
+  if fitsInInt ISChar i then ISChar
+  else if fitsInInt IShort i then IShort
+  else if fitsInInt IInt i then IInt
+  else if fitsInInt ILong i then ILong
+  else ILongLong
 
 (** If the given expression is an integer constant or a CastE'd
     integer constant, return that constant's value as an ikint, int64 pair.
@@ -2079,14 +2079,14 @@ let rec getInteger (e:exp) : cilint option =
   | Const(CEnum(v, _, _)) -> getInteger v
   | CastE(t, e) -> begin
       (* Handle any truncation due to cast. We optimistically ignore
-	 loss-of-precision due to floating-point casts. *)
+         loss-of-precision due to floating-point casts. *)
       let mkInt ik n = Some (fst (truncateCilint ik n)) in
       match unrollType t, getInteger e with
       | TInt (ik, _), Some n -> mkInt ik n
       | TPtr _, Some n -> begin
-	  match !upointType with
-	    TInt (ik, _) -> mkInt ik n
-	  | _ -> raise (Failure "pointer size unknown")
+          match !upointType with
+            TInt (ik, _) -> mkInt ik n
+          | _ -> raise (Failure "pointer size unknown")
         end
       | TEnum (ei, _), Some n -> mkInt ei.ekind n
       | TFloat _, v -> v
@@ -2100,18 +2100,18 @@ let isZero (e: exp) : bool =
   | _ -> false
 
 type offsetAcc =
-    { oaFirstFree: int;        (* The first free bit *)
-      oaLastFieldStart: int;   (* Where the previous field started *)
-      oaLastFieldWidth: int;   (* The width of the previous field. Might not
-                                * be same as FirstFree - FieldStart because
-                                * of internal padding *)
-      oaPrevBitPack: (int * ikind * int) option; (* If the previous fields
-                                                   * were packed bitfields,
-                                                   * the bit where packing
-                                                   * has started, the ikind
-                                                   * of the bitfield and the
-                                                   * width of the ikind *)
-    }
+  { oaFirstFree: int;        (* The first free bit *)
+    oaLastFieldStart: int;   (* Where the previous field started *)
+    oaLastFieldWidth: int;   (* The width of the previous field. Might not
+                              * be same as FirstFree - FieldStart because
+                              * of internal padding *)
+    oaPrevBitPack: (int * ikind * int) option; (* If the previous fields
+                                                 * were packed bitfields,
+                                                 * the bit where packing
+                                                 * has started, the ikind
+                                                 * of the bitfield and the
+                                                 * width of the ikind *)
+  }
 
 (* Hack to prevent infinite recursion in alignments *)
 let ignoreAlignmentAttrs = ref false
@@ -2136,24 +2136,24 @@ let rec alignOf_int t =
 
     (* For composite types get the maximum alignment of any field inside *)
     | TComp (c, _) ->
-        (* On GCC the zero-width fields do not contribute to the alignment.
-         * On MSVC only those zero-width that _do_ appear after other
-         * bitfields contribute to the alignment. So we drop those that
-         * do not occur after othe bitfields *)
-        let rec dropZeros (afterbitfield: bool) = function
-          | f :: rest when f.fbitfield = Some 0 && not afterbitfield ->
-              dropZeros afterbitfield rest
-          | f :: rest -> f :: dropZeros (f.fbitfield <> None) rest
-          | [] -> []
-        in
-        let fields = dropZeros false c.cfields in
-        List.fold_left
-          (fun sofar f ->
-             (* Bitfields with zero width do not contribute to the alignment in
-              * GCC *)
-             if not !msvcMode && f.fbitfield = Some 0 then sofar else
-               max sofar (alignOfField f)) 1 fields
-          (* These are some error cases *)
+      (* On GCC the zero-width fields do not contribute to the alignment.
+       * On MSVC only those zero-width that _do_ appear after other
+       * bitfields contribute to the alignment. So we drop those that
+       * do not occur after othe bitfields *)
+      let rec dropZeros (afterbitfield: bool) = function
+        | f :: rest when f.fbitfield = Some 0 && not afterbitfield ->
+          dropZeros afterbitfield rest
+        | f :: rest -> f :: dropZeros (f.fbitfield <> None) rest
+        | [] -> []
+      in
+      let fields = dropZeros false c.cfields in
+      List.fold_left
+        (fun sofar f ->
+           (* Bitfields with zero width do not contribute to the alignment in
+            * GCC *)
+           if not !msvcMode && f.fbitfield = Some 0 then sofar else
+             max sofar (alignOfField f)) 1 fields
+    (* These are some error cases *)
     | TFun _ when not !msvcMode -> !M.theMachine.M.alignof_fun
 
     | TFun _ as t -> raise (SizeOfError ("function", t))
@@ -2161,12 +2161,12 @@ let rec alignOf_int t =
   in
   match filterAttributes "aligned" (typeAttrs t) with
     [] ->
-      (* no __aligned__ attribute, so get the default alignment *)
-      alignOfType ()
+    (* no __aligned__ attribute, so get the default alignment *)
+    alignOfType ()
   | _ when !ignoreAlignmentAttrs ->
-      ignore (warn "ignoring recursive align attributes on %a"
-                (!pd_type) t);
-      alignOfType ()
+    ignore (warn "ignoring recursive align attributes on %a"
+              (!pd_type) t);
+    alignOfType ()
   | (Attr(_, [a]) as at)::rest -> begin
       if rest <> [] then
         ignore (warn "ignoring duplicate align attributes on %a"
@@ -2174,21 +2174,21 @@ let rec alignOf_int t =
       match intOfAttrparam a with
         Some n -> n
       | None ->
-          ignore (warn "alignment attribute \"%a\" not understood on %a"
-                    (!pd_attr) at (!pd_type) t);
-          alignOfType ()
+        ignore (warn "alignment attribute \"%a\" not understood on %a"
+                  (!pd_attr) at (!pd_type) t);
+        alignOfType ()
     end
-   | Attr(_, [])::rest ->
-       (* aligned with no arg means a power of two at least as large as
-          any alignment on the system.*)
-       if rest <> [] then
-         ignore(warn "ignoring duplicate align attributes on %a"
-                  (!pd_type) t);
-       !M.theMachine.M.alignof_aligned
+  | Attr(_, [])::rest ->
+    (* aligned with no arg means a power of two at least as large as
+       any alignment on the system.*)
+    if rest <> [] then
+      ignore(warn "ignoring duplicate align attributes on %a"
+               (!pd_type) t);
+    !M.theMachine.M.alignof_aligned
   | at::_ ->
-      ignore (warn "alignment attribute \"%a\" not understood on %a"
-                (!pd_attr) at (!pd_type) t);
-      alignOfType ()
+    ignore (warn "alignment attribute \"%a\" not understood on %a"
+              (!pd_attr) at (!pd_type) t);
+    alignOfType ()
 
 (* alignment of a possibly-packed struct field. *)
 and alignOfField (fi: fieldinfo) =
@@ -2204,10 +2204,10 @@ and intOfAttrparam (a:attrparam) : int option =
     | ABinOp(Shiftlt, a1, a2) -> (doit a1) lsl (doit a2)
     | ABinOp(Div, a1, a2) -> (doit a1) / (doit a2)
     | ASizeOf(t) ->
-        let bs = bitsSizeOf t in
-        bs / 8
+      let bs = bitsSizeOf t in
+      bs / 8
     | AAlignOf(t) ->
-        alignOf_int t
+      alignOf_int t
     | _ -> raise (SizeOfError ("", voidType))
   in
   (* Use ignoreAlignmentAttrs here to prevent stack overflow if a buggy
@@ -2229,55 +2229,55 @@ and intOfAttrparam (a:attrparam) : int option =
 (* GCC version *)
 (* Does not use the sofar.oaPrevBitPack *)
 and offsetOfFieldAcc_GCC
-                         (fi: fieldinfo)
-                         (sofar: offsetAcc) : offsetAcc =
+    (fi: fieldinfo)
+    (sofar: offsetAcc) : offsetAcc =
   (* field type *)
   let ftype = unrollType fi.ftype in
   let ftypeAlign = 8 * alignOfField fi in
   let ftypeBits = bitsSizeOf ftype in
   match ftype, fi.fbitfield with
-    (* A width of 0 means that we must end the current packing. It seems that
-     * GCC pads only up to the alignment boundary for the type of this field.
-     * *)
+  (* A width of 0 means that we must end the current packing. It seems that
+   * GCC pads only up to the alignment boundary for the type of this field.
+   * *)
   | _, Some 0 ->
-      let firstFree      = addTrailing sofar.oaFirstFree ftypeAlign in
-      { oaFirstFree      = firstFree;
-        oaLastFieldStart = firstFree;
-        oaLastFieldWidth = 0;
-        oaPrevBitPack    = None }
+    let firstFree      = addTrailing sofar.oaFirstFree ftypeAlign in
+    { oaFirstFree      = firstFree;
+      oaLastFieldStart = firstFree;
+      oaLastFieldWidth = 0;
+      oaPrevBitPack    = None }
 
-    (* A bitfield cannot span more alignment boundaries of its type than the
-     * type itself *)
+  (* A bitfield cannot span more alignment boundaries of its type than the
+   * type itself *)
   | _, Some wdthis
-      when (sofar.oaFirstFree + wdthis + ftypeAlign - 1) / ftypeAlign
-            - sofar.oaFirstFree / ftypeAlign > ftypeBits / ftypeAlign ->
-          let start = addTrailing sofar.oaFirstFree ftypeAlign in
-          { oaFirstFree      = start + wdthis;
-            oaLastFieldStart = start;
-            oaLastFieldWidth = wdthis;
-            oaPrevBitPack    = None }
+    when (sofar.oaFirstFree + wdthis + ftypeAlign - 1) / ftypeAlign
+         - sofar.oaFirstFree / ftypeAlign > ftypeBits / ftypeAlign ->
+    let start = addTrailing sofar.oaFirstFree ftypeAlign in
+    { oaFirstFree      = start + wdthis;
+      oaLastFieldStart = start;
+      oaLastFieldWidth = wdthis;
+      oaPrevBitPack    = None }
 
-   (* Try a simple method. Just put the field down *)
+  (* Try a simple method. Just put the field down *)
   | _, Some wdthis ->
-      { oaFirstFree      = sofar.oaFirstFree + wdthis;
-        oaLastFieldStart = sofar.oaFirstFree;
-        oaLastFieldWidth = wdthis;
-        oaPrevBitPack    = None
-      }
+    { oaFirstFree      = sofar.oaFirstFree + wdthis;
+      oaLastFieldStart = sofar.oaFirstFree;
+      oaLastFieldWidth = wdthis;
+      oaPrevBitPack    = None
+    }
 
-     (* Non-bitfield *)
+  (* Non-bitfield *)
   | _, None ->
-      (* Align this field *)
-      let newStart = addTrailing sofar.oaFirstFree ftypeAlign  in
-      { oaFirstFree = newStart + ftypeBits;
-        oaLastFieldStart = newStart;
-        oaLastFieldWidth = ftypeBits;
-        oaPrevBitPack = None;
-      }
+    (* Align this field *)
+    let newStart = addTrailing sofar.oaFirstFree ftypeAlign  in
+    { oaFirstFree = newStart + ftypeBits;
+      oaLastFieldStart = newStart;
+      oaLastFieldWidth = ftypeBits;
+      oaPrevBitPack = None;
+    }
 
 (* MSVC version *)
 and offsetOfFieldAcc_MSVC (fi: fieldinfo)
-                              (sofar: offsetAcc) : offsetAcc =
+    (sofar: offsetAcc) : offsetAcc =
   (* field type *)
   let ftype = unrollType fi.ftype in
   let ftypeAlign = 8 * alignOf_int ftype in
@@ -2298,85 +2298,85 @@ and offsetOfFieldAcc_MSVC (fi: fieldinfo)
                   prevpack wdpack));
 *)
   match ftype, fi.fbitfield, sofar.oaPrevBitPack with
-    (* Ignore zero-width bitfields that come after non-bitfields *)
+  (* Ignore zero-width bitfields that come after non-bitfields *)
   | TInt (ikthis, _), Some 0, None ->
-      let firstFree      = sofar.oaFirstFree in
-      { oaFirstFree      = firstFree;
-        oaLastFieldStart = firstFree;
-        oaLastFieldWidth = 0;
+    let firstFree      = sofar.oaFirstFree in
+    { oaFirstFree      = firstFree;
+      oaLastFieldStart = firstFree;
+      oaLastFieldWidth = 0;
+      oaPrevBitPack    = None }
+
+  (* If we are in a bitpack and we see a bitfield for a type with the
+   * different width than the pack, then we finish the pack and retry *)
+  | _, Some _, Some (packstart, _, wdpack) when wdpack != ftypeBits ->
+    let firstFree =
+      if sofar.oaFirstFree = packstart then packstart else
+        packstart + wdpack
+    in
+    offsetOfFieldAcc_MSVC fi
+      { oaFirstFree      = addTrailing firstFree ftypeAlign;
+        oaLastFieldStart = sofar.oaLastFieldStart;
+        oaLastFieldWidth = sofar.oaLastFieldWidth;
         oaPrevBitPack    = None }
 
-    (* If we are in a bitpack and we see a bitfield for a type with the
-     * different width than the pack, then we finish the pack and retry *)
-  | _, Some _, Some (packstart, _, wdpack) when wdpack != ftypeBits ->
-      let firstFree =
-        if sofar.oaFirstFree = packstart then packstart else
-        packstart + wdpack
-      in
-      offsetOfFieldAcc_MSVC fi
-        { oaFirstFree      = addTrailing firstFree ftypeAlign;
-          oaLastFieldStart = sofar.oaLastFieldStart;
-          oaLastFieldWidth = sofar.oaLastFieldWidth;
-          oaPrevBitPack    = None }
-
-    (* A width of 0 means that we must end the current packing. *)
+  (* A width of 0 means that we must end the current packing. *)
   | TInt (ikthis, _), Some 0, Some (packstart, _, wdpack) ->
-      let firstFree =
-        if sofar.oaFirstFree = packstart then packstart else
+    let firstFree =
+      if sofar.oaFirstFree = packstart then packstart else
         packstart + wdpack
-      in
-      let firstFree      = addTrailing firstFree ftypeAlign in
-      { oaFirstFree      = firstFree;
-        oaLastFieldStart = firstFree;
-        oaLastFieldWidth = 0;
-        oaPrevBitPack    = Some (firstFree, ikthis, ftypeBits) }
+    in
+    let firstFree      = addTrailing firstFree ftypeAlign in
+    { oaFirstFree      = firstFree;
+      oaLastFieldStart = firstFree;
+      oaLastFieldWidth = 0;
+      oaPrevBitPack    = Some (firstFree, ikthis, ftypeBits) }
 
-   (* Check for a bitfield that fits in the current pack after some other
-    * bitfields *)
+  (* Check for a bitfield that fits in the current pack after some other
+   * bitfields *)
   | TInt(ikthis, _), Some wdthis, Some (packstart, ikprev, wdpack)
-      when  packstart + wdpack >= sofar.oaFirstFree + wdthis ->
-              { oaFirstFree = sofar.oaFirstFree + wdthis;
-                oaLastFieldStart = sofar.oaFirstFree;
-                oaLastFieldWidth = wdthis;
-                oaPrevBitPack = sofar.oaPrevBitPack
-              }
+    when  packstart + wdpack >= sofar.oaFirstFree + wdthis ->
+    { oaFirstFree = sofar.oaFirstFree + wdthis;
+      oaLastFieldStart = sofar.oaFirstFree;
+      oaLastFieldWidth = wdthis;
+      oaPrevBitPack = sofar.oaPrevBitPack
+    }
 
 
   | _, _, Some (packstart, _, wdpack) -> (* Finish up the bitfield pack and
                                           * restart. *)
-      let firstFree =
-        if sofar.oaFirstFree = packstart then packstart else
+    let firstFree =
+      if sofar.oaFirstFree = packstart then packstart else
         packstart + wdpack
-      in
-      offsetOfFieldAcc_MSVC fi
-        { oaFirstFree      = addTrailing firstFree ftypeAlign;
-          oaLastFieldStart = sofar.oaLastFieldStart;
-          oaLastFieldWidth = sofar.oaLastFieldWidth;
-          oaPrevBitPack    = None }
+    in
+    offsetOfFieldAcc_MSVC fi
+      { oaFirstFree      = addTrailing firstFree ftypeAlign;
+        oaLastFieldStart = sofar.oaLastFieldStart;
+        oaLastFieldWidth = sofar.oaLastFieldWidth;
+        oaPrevBitPack    = None }
 
-        (* No active bitfield pack. But we are seeing a bitfield. *)
+  (* No active bitfield pack. But we are seeing a bitfield. *)
   | TInt(ikthis, _), Some wdthis, None ->
-      let firstFree     = addTrailing sofar.oaFirstFree ftypeAlign in
-      { oaFirstFree     = firstFree + wdthis;
-        oaLastFieldStart = firstFree;
-        oaLastFieldWidth = wdthis;
-        oaPrevBitPack = Some (firstFree, ikthis, ftypeBits); }
+    let firstFree     = addTrailing sofar.oaFirstFree ftypeAlign in
+    { oaFirstFree     = firstFree + wdthis;
+      oaLastFieldStart = firstFree;
+      oaLastFieldWidth = wdthis;
+      oaPrevBitPack = Some (firstFree, ikthis, ftypeBits); }
 
-     (* No active bitfield pack. Non-bitfield *)
+  (* No active bitfield pack. Non-bitfield *)
   | _, None, None ->
-      (* Align this field *)
-      let firstFree = addTrailing sofar.oaFirstFree ftypeAlign  in
-      { oaFirstFree = firstFree + ftypeBits;
-        oaLastFieldStart = firstFree;
-        oaLastFieldWidth = ftypeBits;
-        oaPrevBitPack = None;
-      }
+    (* Align this field *)
+    let firstFree = addTrailing sofar.oaFirstFree ftypeAlign  in
+    { oaFirstFree = firstFree + ftypeBits;
+      oaLastFieldStart = firstFree;
+      oaLastFieldWidth = ftypeBits;
+      oaPrevBitPack = None;
+    }
 
   | _, Some _, None -> E.s (E.bug "offsetAcc")
 
 
 and offsetOfFieldAcc ~(fi: fieldinfo)
-                     ~(sofar: offsetAcc) : offsetAcc =
+    ~(sofar: offsetAcc) : offsetAcc =
   if !msvcMode then offsetOfFieldAcc_MSVC fi sofar
   else offsetOfFieldAcc_GCC fi sofar
 
@@ -2400,77 +2400,77 @@ and bitsSizeOf t =
         raise (SizeOfError ("abstract type", t)) (*abstract type*)
       else
         0
-  end
+    end
 
   | TComp (comp, _) when comp.cstruct -> (* Struct *)
-        (* Go and get the last offset *)
-      let startAcc =
-        { oaFirstFree = 0;
-          oaLastFieldStart = 0;
-          oaLastFieldWidth = 0;
-          oaPrevBitPack = None;
-        } in
-      let lastoff =
-        List.fold_left (fun acc fi -> offsetOfFieldAcc ~fi ~sofar:acc)
-          startAcc comp.cfields
-      in
-      if !msvcMode && lastoff.oaFirstFree = 0 && comp.cfields <> [] then
-          (* On MSVC if we have just a zero-width bitfields then the length
-           * is 32 and is not padded  *)
-        32
-      else begin
-        (* Drop e.g. the align attribute from t.  For this purpose,
-           consider only the attributes on comp itself.*)
-        let structAlign = 8 * alignOf_int
-                            (TComp (comp, [])) in
-        addTrailing lastoff.oaFirstFree structAlign
-      end
+    (* Go and get the last offset *)
+    let startAcc =
+      { oaFirstFree = 0;
+        oaLastFieldStart = 0;
+        oaLastFieldWidth = 0;
+        oaPrevBitPack = None;
+      } in
+    let lastoff =
+      List.fold_left (fun acc fi -> offsetOfFieldAcc ~fi ~sofar:acc)
+        startAcc comp.cfields
+    in
+    if !msvcMode && lastoff.oaFirstFree = 0 && comp.cfields <> [] then
+      (* On MSVC if we have just a zero-width bitfields then the length
+       * is 32 and is not padded  *)
+      32
+    else begin
+      (* Drop e.g. the align attribute from t.  For this purpose,
+         consider only the attributes on comp itself.*)
+      let structAlign = 8 * alignOf_int
+                          (TComp (comp, [])) in
+      addTrailing lastoff.oaFirstFree structAlign
+    end
 
   | TComp (comp, _) -> (* when not comp.cstruct *)
-        (* Get the maximum of all fields *)
-      let startAcc =
-        { oaFirstFree = 0;
-          oaLastFieldStart = 0;
-          oaLastFieldWidth = 0;
-          oaPrevBitPack = None;
-        } in
-      let max =
-        List.fold_left (fun acc fi ->
+    (* Get the maximum of all fields *)
+    let startAcc =
+      { oaFirstFree = 0;
+        oaLastFieldStart = 0;
+        oaLastFieldWidth = 0;
+        oaPrevBitPack = None;
+      } in
+    let max =
+      List.fold_left (fun acc fi ->
           let lastoff = offsetOfFieldAcc ~fi ~sofar:startAcc in
           if lastoff.oaFirstFree > acc then
             lastoff.oaFirstFree else acc) 0 comp.cfields in
-        (* Add trailing by simulating adding an extra field *)
-      addTrailing max (8 * alignOf_int t)
+    (* Add trailing by simulating adding an extra field *)
+    addTrailing max (8 * alignOf_int t)
 
   | TArray(bt, Some len, _) -> begin
       match constFold true len with
         Const(CInt64(l,lk,_)) ->
-	  let sz = mul_cilint (mkCilint lk l) (cilint_of_int  (bitsSizeOf bt)) in
-          (* Check for overflow.
-             There are other places in these cil.ml that overflow can occur,
-             but this multiplication is the most likely to be a problem. *)
-          if not (is_int_cilint sz) then
-            raise (SizeOfError ("Array is so long that its size can't be "
-                                  ^"represented with an OCaml int.", t))
-          else
-            addTrailing (int_of_cilint sz) (8 * alignOf_int t)
+        let sz = mul_cilint (mkCilint lk l) (cilint_of_int  (bitsSizeOf bt)) in
+        (* Check for overflow.
+           There are other places in these cil.ml that overflow can occur,
+           but this multiplication is the most likely to be a problem. *)
+        if not (is_int_cilint sz) then
+          raise (SizeOfError ("Array is so long that its size can't be "
+                              ^"represented with an OCaml int.", t))
+        else
+          addTrailing (int_of_cilint sz) (8 * alignOf_int t)
       | _ -> raise (SizeOfError ("array non-constant length", t))
-  end
+    end
 
 
   | TVoid _ -> 8 * !M.theMachine.M.sizeof_void
   | TFun _ when not !msvcMode -> (* On GCC the size of a function is defined *)
-      8 * !M.theMachine.M.sizeof_fun
+    8 * !M.theMachine.M.sizeof_fun
 
   | TArray (_, None, _) -> (* it seems that on GCC the size of such an
                             * array is 0 *)
-      0
+    0
 
   | TFun _ -> raise (SizeOfError ("function", t))
 
 
 and addTrailing nrbits roundto =
-    (nrbits + roundto - 1) land (lnot (roundto - 1))
+  (nrbits + roundto - 1) land (lnot (roundto - 1))
 
 and sizeOf t =
   try
@@ -2494,34 +2494,34 @@ and bitsOffset (baset: typ) (off: offset) : int * int =
         in
         let bitsbt = bitsSizeOf bt in
         loopOff bt bitsbt (start + ei * bitsbt) off
-    end
+      end
     | Field(f, off) when not f.fcomp.cstruct ->
-        (* All union fields start at offset 0 *)
-        loopOff f.ftype (bitsSizeOf f.ftype) start off
+      (* All union fields start at offset 0 *)
+      loopOff f.ftype (bitsSizeOf f.ftype) start off
 
     | Field(f, off) ->
-        (* Construct a list of fields preceeding and including this one *)
-        let prevflds =
-          let rec loop = function
-              [] -> E.s (E.bug "bitsOffset: Cannot find field %s in %s\n"
-                           f.fname f.fcomp.cname)
-            | fi' :: _ when fi' == f -> [fi']
-            | fi' :: rest -> fi' :: loop rest
-          in
-          loop f.fcomp.cfields
+      (* Construct a list of fields preceeding and including this one *)
+      let prevflds =
+        let rec loop = function
+            [] -> E.s (E.bug "bitsOffset: Cannot find field %s in %s\n"
+                         f.fname f.fcomp.cname)
+          | fi' :: _ when fi' == f -> [fi']
+          | fi' :: rest -> fi' :: loop rest
         in
-        let lastoff =
-          List.fold_left (fun acc fi' -> offsetOfFieldAcc ~fi:fi' ~sofar:acc)
-            { oaFirstFree      = 0; (* Start at 0 because each struct is done
-                                     * separately *)
-              oaLastFieldStart = 0;
-              oaLastFieldWidth = 0;
-              oaPrevBitPack    = None } prevflds
-        in
-        (* ignore (E.log "Field %s of %s: start=%d, lastFieldStart=%d\n"
-                  f.fname f.fcomp.cname start lastoff.oaLastFieldStart); *)
-        loopOff f.ftype lastoff.oaLastFieldWidth
-               (start + lastoff.oaLastFieldStart) off
+        loop f.fcomp.cfields
+      in
+      let lastoff =
+        List.fold_left (fun acc fi' -> offsetOfFieldAcc ~fi:fi' ~sofar:acc)
+          { oaFirstFree      = 0; (* Start at 0 because each struct is done
+                                   * separately *)
+            oaLastFieldStart = 0;
+            oaLastFieldWidth = 0;
+            oaPrevBitPack    = None } prevflds
+      in
+      (* ignore (E.log "Field %s of %s: start=%d, lastFieldStart=%d\n"
+                f.fname f.fcomp.cname start lastoff.oaLastFieldStart); *)
+      loopOff f.ftype lastoff.oaLastFieldWidth
+        (start + lastoff.oaLastFieldStart) off
   in
   loopOff baset (bitsSizeOf baset) 0 off
 
@@ -2545,16 +2545,16 @@ and constFold (machdep: bool) (e: exp) : exp =
         in
         match constFold machdep e1 with
           Const(CInt64(i,ik,_)) -> begin
-	    let ic = mkCilint ik i in
+            let ic = mkCilint ik i in
             match unop with
               Neg -> kintegerCilint tk (neg_cilint ic)
             | BNot -> kintegerCilint tk (lognot_cilint ic)
             | LNot -> if is_zero_cilint ic then one else zero
-            end
+          end
         | e1c -> UnOp(unop, e1c, tres)
       with Not_found -> e
-  end
-        (* Characters are integers *)
+    end
+  (* Characters are integers *)
   | Const(CChr c) -> Const(charConstToInt c)
   | Const(CEnum (v, _, _)) -> constFold machdep v
   | SizeOf t when machdep -> begin
@@ -2562,7 +2562,7 @@ and constFold (machdep: bool) (e: exp) : exp =
         let bs = bitsSizeOf t in
         kinteger !kindOfSizeOf (bs / 8)
       with SizeOfError _ -> e
-  end
+    end
   | SizeOfE e when machdep -> constFold machdep (SizeOf (typeOf e))
   | SizeOfStr s when machdep -> kinteger !kindOfSizeOf (1 + String.length s)
   | AlignOf t when machdep -> kinteger !kindOfSizeOf (alignOf_int t)
@@ -2571,10 +2571,10 @@ and constFold (machdep: bool) (e: exp) : exp =
        * type. I know that for strings this is not true *)
       match e with
         Const (CStr _) when not !msvcMode ->
-          kinteger !kindOfSizeOf !M.theMachine.M.alignof_str
-            (* For an array, it is the alignment of the array ! *)
+        kinteger !kindOfSizeOf !M.theMachine.M.alignof_str
+      (* For an array, it is the alignment of the array ! *)
       | _ -> constFold machdep (AlignOf (typeOf e))
-  end
+    end
 
   | CastE(it,
           AddrOf (Mem (CastE(TPtr(bt, _), z)), off))
@@ -2585,20 +2585,20 @@ and constFold (machdep: bool) (e: exp) : exp =
           E.s (error "Using offset of bitfield");
         constFold machdep (CastE(it, (kinteger !kindOfSizeOf (start / 8))))
       with SizeOfError _ -> e
-  end
+    end
 
 
   | CastE (t, e) -> begin
       match constFold machdep e, unrollType t with
-        (* Might truncate silently *)
+      (* Might truncate silently *)
       | Const(CInt64(i,k,_)), TInt(nk,a)
-          (* It's okay to drop a cast to const.
-             If the cast has any other attributes, leave the cast alone. *)
-          when (dropAttributes ["const"] a) = [] ->
-          let i', _ = truncateCilint nk (mkCilint k i) in
-          Const(CInt64(int64_of_cilint i', nk, None))
+        (* It's okay to drop a cast to const.
+           If the cast has any other attributes, leave the cast alone. *)
+        when (dropAttributes ["const"] a) = [] ->
+        let i', _ = truncateCilint nk (mkCilint k i) in
+        Const(CInt64(int64_of_cilint i', nk, None))
       | e', _ -> CastE (t, e')
-  end
+    end
   | Lval lv -> Lval (constFoldLval machdep lv)
   | AddrOf lv -> AddrOf (constFoldLval machdep lv)
   | StartOf lv -> StartOf (constFoldLval machdep lv)
@@ -2632,14 +2632,14 @@ and constFoldBinOp (machdep: bool) bop e1 e2 tres =
       let collapse0 () = kinteger tk 0 in
       let collapse e = e (*mkCast e tres*) in
       let shiftInBounds i2 =
-         (* We only try to fold shifts if the second arg is positive and
-            less than the size of the type of the first argument.
-            Otherwise, the semantics are processor-dependent, so let the
-            compiler sort it out. *)
+        (* We only try to fold shifts if the second arg is positive and
+           less than the size of the type of the first argument.
+           Otherwise, the semantics are processor-dependent, so let the
+           compiler sort it out. *)
         if machdep then
           try
             compare_cilint i2 zero_cilint >= 0 &&
-	    compare_cilint i2 (cilint_of_int (bitsSizeOf (typeOf e1'))) < 0
+            compare_cilint i2 (cilint_of_int (bitsSizeOf (typeOf e1'))) < 0
           with SizeOfError _ -> false
         else false
       in
@@ -2658,12 +2658,12 @@ and constFoldBinOp (machdep: bool) bop e1 e2 tres =
       | Div, Some i1, Some i2 -> begin
           try kintegerCilint tk (div0_cilint i1 i2)
           with Division_by_zero -> BinOp(bop, e1', e2', tres)
-	end
+        end
       | Div, _, Some o when compare_cilint o one_cilint = 0 -> collapse e1'
       | Mod, Some i1, Some i2 -> begin
           try kintegerCilint tk (rem_cilint i1 i2)
           with Division_by_zero -> BinOp(bop, e1', e2', tres)
-	end
+        end
       | Mod, _, Some o when compare_cilint o one_cilint = 0 -> collapse0 ()
 
       | BAnd, Some i1, Some i2 -> kintegerCilint tk (logand_cilint i1 i2)
@@ -2677,11 +2677,11 @@ and constFoldBinOp (machdep: bool) bop e1 e2 tres =
       | BXor, _, Some z when is_zero_cilint z -> collapse e1'
 
       | Shiftlt, Some i1, Some i2 when shiftInBounds i2 ->
-          kintegerCilint tk (shift_left_cilint i1 (int_of_cilint i2))
+        kintegerCilint tk (shift_left_cilint i1 (int_of_cilint i2))
       | Shiftlt, Some z, _ when is_zero_cilint z -> collapse0 ()
       | Shiftlt, _, Some z when is_zero_cilint z -> collapse e1'
       | Shiftrt, Some i1, Some i2 when shiftInBounds i2 ->
-          kintegerCilint tk (shift_right_cilint i1 (int_of_cilint i2))
+        kintegerCilint tk (shift_right_cilint i1 (int_of_cilint i2))
       | Shiftrt, Some z, _ when is_zero_cilint z -> collapse0 ()
       | Shiftrt, _, Some z when is_zero_cilint z -> collapse e1'
 
@@ -2719,7 +2719,7 @@ let parseInt (str: string) : exp =
   (* See if it is octal or hex *)
   let octalhex = (l >= 1 && String.get str 0 = '0') in
   (* The length of the suffix and a list of possible kinds. See ISO
-  * 6.4.4.1 *)
+   * 6.4.4.1 *)
   let hasSuffix = hasSuffix str in
   let suffixlen, kinds =
     if hasSuffix "ULL" || hasSuffix "LLU" then
@@ -2742,9 +2742,9 @@ let parseInt (str: string) : exp =
       else if not !c99Mode then [ IInt; ILong; IULong; ILongLong; IULongLong]
       else [IInt; ILong; ILongLong]
   in
-    (* Convert to integer. To prevent overflow we do the arithmetic on
-     * cilints. We work only with positive integers since the lexer
-     * takes care of the sign *)
+  (* Convert to integer. To prevent overflow we do the arithmetic on
+   * cilints. We work only with positive integers since the lexer
+   * takes care of the sign *)
   let rec toInt (base: cilint) (acc: cilint) (idx: int) : cilint =
     let doAcc (what: int) =
       let acc' = add_cilint (mul_cilint base acc)  (cilint_of_int what) in
@@ -2767,8 +2767,8 @@ let parseInt (str: string) : exp =
   let i =
     if octalhex then
       if l >= 2 &&
-        (let c = String.get str 1 in c = 'x' || c = 'X') then
-          toInt (cilint_of_int 16) zero_cilint 2
+         (let c = String.get str 1 in c = 'x' || c = 'X') then
+        toInt (cilint_of_int 16) zero_cilint 2
       else
         toInt (cilint_of_int 8) zero_cilint 1
     else
@@ -2779,13 +2779,13 @@ let parseInt (str: string) : exp =
   let res =
     let rec loop = function
         k::rest ->
-	  if fitsInInt k i then kintegerCilint k i
-	  else loop rest
-        | [] -> E.s (E.unimp "Cannot represent the integer %s\n"
-                       (string_of_cilint i))
+        if fitsInInt k i then kintegerCilint k i
+        else loop rest
+      | [] -> E.s (E.unimp "Cannot represent the integer %s\n"
+                     (string_of_cilint i))
     in
     loop kinds
-    in
+  in
   res
 (* with e -> begin *)
 (*   ignore (E.log "int_of_string %s (%s)\n" str  *)
@@ -2952,7 +2952,7 @@ let initGccBuiltins () : unit =
                               [ voidPtrType; intType; intType ], false);
   H.add h "__builtin_bcopy" (voidType, [ voidConstPtrType; voidPtrType; sizeType ], false);
   H.add h "__builtin_bzero" (voidType,
-                              [ voidPtrType; sizeType ], false);
+                             [ voidPtrType; sizeType ], false);
 
   H.add h "__builtin_fmod" (doubleType, [ doubleType ], false);
   H.add h "__builtin_fmodf" (floatType, [ floatType ], false);
@@ -3033,9 +3033,9 @@ let initGccBuiltins () : unit =
   H.add h "__builtin_strpbrk" (charPtrType, [ charConstPtrType; charConstPtrType ], false);
   (* When we parse builtin_types_compatible_p, we change its interface *)
   H.add h "__builtin_types_compatible_p"
-                            (intType, [ !typeOfSizeOf;(* Sizeof the type *)
-                                        !typeOfSizeOf (* Sizeof the type *) ],
-                               false);
+    (intType, [ !typeOfSizeOf;(* Sizeof the type *)
+                !typeOfSizeOf (* Sizeof the type *) ],
+     false);
   H.add h "__builtin_tan" (doubleType, [ doubleType ], false);
   H.add h "__builtin_tanf" (floatType, [ floatType ], false);
   H.add h "__builtin_tanl" (longDoubleType, [ longDoubleType ], false);
@@ -3071,7 +3071,7 @@ let initGccBuiltins () : unit =
   H.add h "__sync_nand_and_fetch" (TVoid[Attr("overloaded",[])], [ ], true);
   H.add h "__sync_bool_compare_and_swap" (TInt (IBool, []), [ ], true);
   H.add h "__sync_val_compare_and_swap" (TVoid[Attr("overloaded",[])], [ ],
-    true);
+                                         true);
   H.add h "__sync_synchronize" (voidType, [ ], true);
   H.add h "__sync_lock_test_and_set" (TVoid[Attr("overloaded",[])], [ ], true);
   H.add h "__sync_lock_release" (voidType, [ ], true);
@@ -3087,7 +3087,7 @@ let initGccBuiltins () : unit =
      Note that these __atomic functions are not really va_arg, but we
      set the va_arg flag nonetheless because it prevents CIL from
      trying to check the type of parameters against the prototype.
-   *)
+  *)
 
   let addAtomicForWidths baseName ?n ~none ~num () =
     (* ?n gives the return type to be used with the "_n" suffix, if any *)
@@ -3098,10 +3098,10 @@ let initGccBuiltins () : unit =
       H.add h identifier (returnType, [], true)
     in
     List.iter begin
-	fun bitWidth ->
-	let suffix = "_" ^ (string_of_int bitWidth) in
-	addWithSuffix suffix num
-      end [1; 2; 4; 8; 16];
+      fun bitWidth ->
+        let suffix = "_" ^ (string_of_int bitWidth) in
+        addWithSuffix suffix num
+    end [1; 2; 4; 8; 16];
     addWithSuffix "" none;
     match n with
     | None -> ()
@@ -3112,10 +3112,10 @@ let initGccBuiltins () : unit =
 
   (* binary operations combined with a fetch of either the old or new value *)
   List.iter begin
-      fun operation ->
+    fun operation ->
       addAtomicForWidths ("fetch_" ^ operation) ~none:anyType ~num:anyType ();
       addAtomicForWidths (operation ^ "_fetch") ~none:anyType ~num:anyType ()
-    end ["add"; "and"; "nand"; "or"; "sub"; "xor"];
+  end ["add"; "and"; "nand"; "or"; "sub"; "xor"];
 
   (* other atomic operations provided at various bit widths *)
   addAtomicForWidths "compare_exchange" ~none:boolType ~n:boolType ~num:boolType ();
@@ -3144,10 +3144,10 @@ let initGccBuiltins () : unit =
     H.add h "__builtin_va_arg" (voidType, [ TBuiltin_va_list [];
                                             !typeOfSizeOf;(* Sizeof the type *)
                                             voidPtrType; (* Ptr to res *) ],
-                               false);
-    H.add h "__builtin_va_copy" (voidType, [ TBuiltin_va_list [];
-					     TBuiltin_va_list [] ],
                                 false);
+    H.add h "__builtin_va_copy" (voidType, [ TBuiltin_va_list [];
+                                             TBuiltin_va_list [] ],
+                                 false);
   end;
 
   H.add h "__builtin_apply_args" (voidPtrType, [ ], false);
@@ -3189,48 +3189,48 @@ class type cilPrinter = object
   method getPrintInstrTerminator : unit -> string
 
   method pVDecl: unit -> varinfo -> doc
-    (** Invoked for each variable declaration. Note that variable
-     * declarations are all the [GVar], [GVarDecl], [GFun], all the [varinfo]
-     * in formals of function types, and the formals and locals for function
-     * definitions. *)
+  (** Invoked for each variable declaration. Note that variable
+   * declarations are all the [GVar], [GVarDecl], [GFun], all the [varinfo]
+   * in formals of function types, and the formals and locals for function
+   * definitions. *)
 
   method pVar: varinfo -> doc
-    (** Invoked on each variable use. *)
+  (** Invoked on each variable use. *)
 
   method pLval: unit -> lval -> doc
-    (** Invoked on each lvalue occurence *)
+  (** Invoked on each lvalue occurence *)
 
   method pOffset: doc -> offset -> doc
-    (** Invoked on each offset occurence. The second argument is the base. *)
+  (** Invoked on each offset occurence. The second argument is the base. *)
 
   method pInstr: unit -> instr -> doc
-    (** Invoked on each instruction occurrence. *)
+  (** Invoked on each instruction occurrence. *)
 
   method pStmt: unit -> stmt -> doc
-    (** Control-flow statement. This is used by
-     * {!Cil.printGlobal} and by {!Cil.dumpGlobal}. *)
+  (** Control-flow statement. This is used by
+   * {!Cil.printGlobal} and by {!Cil.dumpGlobal}. *)
 
   method dStmt: out_channel -> int -> stmt -> unit
-    (** Dump a control-flow statement to a file with a given indentation. This is used by
-     * {!Cil.dumpGlobal}. *)
+  (** Dump a control-flow statement to a file with a given indentation. This is used by
+   * {!Cil.dumpGlobal}. *)
 
   method dBlock: out_channel -> int -> block -> unit
-    (** Dump a control-flow block to a file with a given indentation. This is
-     * used by {!Cil.dumpGlobal}. *)
+  (** Dump a control-flow block to a file with a given indentation. This is
+   * used by {!Cil.dumpGlobal}. *)
 
   method pBlock: unit -> block -> Pretty.doc
-    (** Print a block. *)
+  (** Print a block. *)
 
   method pGlobal: unit -> global -> doc
-    (** Global (vars, types, etc.). This can be slow and is used only by
-     * {!Cil.printGlobal} but by {!Cil.dumpGlobal} for everything else except
-     * [GVar] and [GFun]. *)
+  (** Global (vars, types, etc.). This can be slow and is used only by
+   * {!Cil.printGlobal} but by {!Cil.dumpGlobal} for everything else except
+   * [GVar] and [GFun]. *)
 
   method dGlobal: out_channel -> global -> unit
-    (** Dump a global to a file. This is used by {!Cil.dumpGlobal}. *)
+  (** Dump a global to a file. This is used by {!Cil.dumpGlobal}. *)
 
   method pFieldDecl: unit -> fieldinfo -> doc
-    (** A field declaration *)
+  (** A field declaration *)
 
   method pType: doc option -> unit -> typ -> doc
   (* Use of some type in some declaration. The first argument is used to print
@@ -3240,42 +3240,42 @@ class type cilPrinter = object
    * visit it.  *)
 
   method pAttr: attribute -> doc * bool
-    (** Attribute. Also return an indication whether this attribute must be
-      * printed inside the __attribute__ list or not. *)
+  (** Attribute. Also return an indication whether this attribute must be
+    * printed inside the __attribute__ list or not. *)
 
   method pAttrParam: unit -> attrparam -> doc
-    (** Attribute paramter *)
+  (** Attribute paramter *)
 
   method pAttrs: unit -> attributes -> doc
-    (** Attribute lists *)
+  (** Attribute lists *)
 
   method pLabel: unit -> label -> doc
-    (** Label *)
+  (** Label *)
 
   method pLineDirective: ?forcefile:bool -> location -> Pretty.doc
-    (** Print a line-number. This is assumed to come always on an empty line.
-     * If the forcefile argument is present and is true then the file name
-     * will be printed always. Otherwise the file name is printed only if it
-     * is different from the last time time this function is called. The last
-     * file name is stored in a private field inside the cilPrinter object. *)
+  (** Print a line-number. This is assumed to come always on an empty line.
+   * If the forcefile argument is present and is true then the file name
+   * will be printed always. Otherwise the file name is printed only if it
+   * is different from the last time time this function is called. The last
+   * file name is stored in a private field inside the cilPrinter object. *)
 
   method pStmtKind : stmt -> unit -> stmtkind -> Pretty.doc
-    (** Print a statement kind. The code to be printed is given in the
-     * {!Cil.stmtkind} argument.  The initial {!Cil.stmt} argument
-     * records the statement which follows the one being printed;
-     * {!Cil.defaultCilPrinterClass} uses this information to prettify
-     * statement printing in certain special cases. *)
+  (** Print a statement kind. The code to be printed is given in the
+   * {!Cil.stmtkind} argument.  The initial {!Cil.stmt} argument
+   * records the statement which follows the one being printed;
+   * {!Cil.defaultCilPrinterClass} uses this information to prettify
+   * statement printing in certain special cases. *)
 
   method pExp: unit -> exp -> doc
-    (** Print expressions *)
+  (** Print expressions *)
 
   method pInit: unit -> init -> doc
-    (** Print initializers. This can be slow and is used by
-     * {!Cil.printGlobal} but not by {!Cil.dumpGlobal}. *)
+  (** Print initializers. This can be slow and is used by
+   * {!Cil.printGlobal} but not by {!Cil.dumpGlobal}. *)
 
   method dInit: out_channel -> int -> init -> unit
-    (** Dump a global to a file with a given indentation. This is used by
-     * {!Cil.dumpGlobal}. *)
+  (** Dump a global to a file with a given indentation. This is used by
+   * {!Cil.dumpGlobal}. *)
 end
 
 
@@ -3285,7 +3285,7 @@ class defaultCilPrinterClass : cilPrinter = object (self)
     match List.rev currentFormals with
       f :: _ -> Lval (var f)
     | [] ->
-        E.s (bug "Cannot find the last named argument when printing call to %s\n" s)
+      E.s (bug "Cannot find the last named argument when printing call to %s\n" s)
 
   method private setCurrentFormals (fms : varinfo list) =
     currentFormals <- fms
@@ -3299,32 +3299,32 @@ class defaultCilPrinterClass : cilPrinter = object (self)
     let stom, rest = separateStorageModifiers v.vattr in
     (* First the storage modifiers *)
     text (if v.vinline then "__inline " else "")
-      ++ d_storage () v.vstorage
-      ++ (self#pAttrs () stom)
-      ++ (self#pType (Some (text v.vname)) () v.vtype)
-      ++ text " "
-      ++ self#pAttrs () rest
+    ++ d_storage () v.vstorage
+    ++ (self#pAttrs () stom)
+    ++ (self#pType (Some (text v.vname)) () v.vtype)
+    ++ text " "
+    ++ self#pAttrs () rest
 
   (*** L-VALUES ***)
   method pLval () (lv:lval) =  (* lval (base is 1st field)  *)
     match lv with
       Var vi, o -> self#pOffset (self#pVar vi) o
     | Mem e, Field(fi, o) ->
-        self#pOffset
-          ((self#pExpPrec arrowLevel () e) ++ text ("->" ^ fi.fname)) o
+      self#pOffset
+        ((self#pExpPrec arrowLevel () e) ++ text ("->" ^ fi.fname)) o
     | Mem e, NoOffset ->
-        text "*" ++ self#pExpPrec derefStarLevel () e
+      text "*" ++ self#pExpPrec derefStarLevel () e
     | Mem e, o ->
-        self#pOffset
-          (text "(*" ++ self#pExpPrec derefStarLevel () e ++ text ")") o
+      self#pOffset
+        (text "(*" ++ self#pExpPrec derefStarLevel () e ++ text ")") o
 
   (** Offsets **)
   method pOffset (base: doc) = function
     | NoOffset -> base
     | Field (fi, o) ->
-        self#pOffset (base ++ text "." ++ text fi.fname) o
+      self#pOffset (base ++ text "." ++ text fi.fname) o
     | Index (e, o) ->
-        self#pOffset (base ++ text "[" ++ self#pExp () e ++ text "]") o
+      self#pOffset (base ++ text "[" ++ self#pExp () e ++ text "]") o
 
   method private pLvalPrec (contextprec: int) () lv =
     if getParenthLevel (Lval(lv)) >= contextprec then
@@ -3339,46 +3339,46 @@ class defaultCilPrinterClass : cilPrinter = object (self)
       Const(c) -> d_const () c
     | Lval(l) -> self#pLval () l
     | UnOp(u,e1,_) ->
-        (d_unop () u) ++ chr ' ' ++ (self#pExpPrec level () e1)
+      (d_unop () u) ++ chr ' ' ++ (self#pExpPrec level () e1)
 
     | BinOp(b,e1,e2,_) ->
-        align
-          ++ (self#pExpPrec level () e1)
-          ++ chr ' '
-          ++ (d_binop () b)
-          ++ chr ' '
-          ++ (self#pExpPrec level () e2)
-          ++ unalign
+      align
+      ++ (self#pExpPrec level () e1)
+      ++ chr ' '
+      ++ (d_binop () b)
+      ++ chr ' '
+      ++ (self#pExpPrec level () e2)
+      ++ unalign
 
     | Question(e1,e2,e3,_) ->
-        (self#pExpPrec level () e1)
-          ++ text " ? "
-          ++ (self#pExpPrec level () e2)
-          ++ text " : "
-          ++ (self#pExpPrec level () e3)
+      (self#pExpPrec level () e1)
+      ++ text " ? "
+      ++ (self#pExpPrec level () e2)
+      ++ text " : "
+      ++ (self#pExpPrec level () e3)
 
     | CastE(t,e) ->
-        text "("
-          ++ self#pType None () t
-          ++ text ")"
-          ++ self#pExpPrec level () e
+      text "("
+      ++ self#pType None () t
+      ++ text ")"
+      ++ self#pExpPrec level () e
 
     | SizeOf (t) ->
-        text "sizeof(" ++ self#pType None () t ++ chr ')'
+      text "sizeof(" ++ self#pType None () t ++ chr ')'
     | SizeOfE (Lval (Var fv, NoOffset)) when fv.vname = "__builtin_va_arg_pack" && (not !printCilAsIs) ->
-        text "__builtin_va_arg_pack()"
+      text "__builtin_va_arg_pack()"
     | SizeOfE (e) ->
-        text "sizeof(" ++ self#pExp () e ++ chr ')'
+      text "sizeof(" ++ self#pExp () e ++ chr ')'
 
     | SizeOfStr s ->
-        text "sizeof(" ++ d_const () (CStr s) ++ chr ')'
+      text "sizeof(" ++ d_const () (CStr s) ++ chr ')'
 
     | AlignOf (t) ->
-        text "__alignof__(" ++ self#pType None () t ++ chr ')'
+      text "__alignof__(" ++ self#pType None () t ++ chr ')'
     | AlignOfE (e) ->
-        text "__alignof__(" ++ self#pExp () e ++ chr ')'
+      text "__alignof__(" ++ self#pExp () e ++ chr ')'
     | AddrOf(lv) ->
-        text "& " ++ (self#pLvalPrec addrOfLevel () lv)
+      text "& " ++ (self#pLvalPrec addrOfLevel () lv)
     | AddrOfLabel(sref) -> begin
         (* Grab one of the labels *)
         let rec pickLabel = function
@@ -3389,9 +3389,9 @@ class defaultCilPrinterClass : cilPrinter = object (self)
         match pickLabel !sref.labels with
           Some lbl -> text ("&& " ^ lbl)
         | None ->
-            ignore (error "Cannot find label for target of address of label");
-            text "&& __invalid_label"
-    end
+          ignore (error "Cannot find label for target of address of label");
+          text "&& __invalid_label"
+      end
 
     | StartOf(lv) -> self#pLval () lv
 
@@ -3401,12 +3401,12 @@ class defaultCilPrinterClass : cilPrinter = object (self)
     let thisLevel = getParenthLevel e in
     let needParens =
       if thisLevel >= contextprec then
-	true
+        true
       else if contextprec == bitwiseLevel then
         (* quiet down some GCC warnings *)
-	thisLevel == additiveLevel || thisLevel == comparativeLevel
+        thisLevel == additiveLevel || thisLevel == comparativeLevel
       else
-	false
+        false
     in
     if needParens then
       chr '(' ++ self#pExp () e ++ chr ')'
@@ -3422,35 +3422,35 @@ class defaultCilPrinterClass : cilPrinter = object (self)
       dprintf "{@[%a@]}"
         (docList ~sep:(chr ',' ++ break) dinit) initl
 *)
-        let printDesignator =
-          if not !msvcMode then begin
-            (* Print only for union when we do not initialize the first field *)
-            match unrollType t, initl with
-              TComp(ci, _), [(Field(f, NoOffset), _)] ->
-                if not (ci.cstruct) && ci.cfields != [] &&
-                  (List.hd ci.cfields) != f then
-                  true
-                else
-                  false
-            | _ -> false
-          end else
-            false
-        in
-        let d_oneInit = function
-            Field(f, NoOffset), i ->
-              (if printDesignator then
-                text ("." ^ f.fname ^ " = ")
-              else nil) ++ self#pInit () i
-          | Index(e, NoOffset), i ->
-              (if printDesignator then
-                text "[" ++ self#pExp () e ++ text "] = " else nil) ++
-                self#pInit () i
-          | _ -> E.s (unimp "Trying to print malformed initializer")
-        in
-        chr '{' ++ (align
-                      ++ ((docList ~sep:(chr ',' ++ break) d_oneInit) () initl)
-                      ++ unalign)
-          ++ chr '}'
+      let printDesignator =
+        if not !msvcMode then begin
+          (* Print only for union when we do not initialize the first field *)
+          match unrollType t, initl with
+            TComp(ci, _), [(Field(f, NoOffset), _)] ->
+            if not (ci.cstruct) && ci.cfields != [] &&
+               (List.hd ci.cfields) != f then
+              true
+            else
+              false
+          | _ -> false
+        end else
+          false
+      in
+      let d_oneInit = function
+          Field(f, NoOffset), i ->
+          (if printDesignator then
+             text ("." ^ f.fname ^ " = ")
+           else nil) ++ self#pInit () i
+        | Index(e, NoOffset), i ->
+          (if printDesignator then
+             text "[" ++ self#pExp () e ++ text "] = " else nil) ++
+          self#pInit () i
+        | _ -> E.s (unimp "Trying to print malformed initializer")
+      in
+      chr '{' ++ (align
+                  ++ ((docList ~sep:(chr ',' ++ break) d_oneInit) () initl)
+                  ++ unalign)
+      ++ chr '}'
 (*
     | ArrayInit (_, _, il) ->
         chr '{' ++ (align
@@ -3468,31 +3468,31 @@ class defaultCilPrinterClass : cilPrinter = object (self)
       let rec outputElements (isfirst: bool) (room_on_line: int) = function
           [] -> output_string out "}"
         | (i: 'a) :: rest ->
-            if not isfirst then output_string out ", ";
-            let new_room_on_line =
-              if room_on_line == 0 then begin
-                output_string out "\n"; output_string out (String.make ind ' ');
-                onALine - 1
-              end else
-                room_on_line - 1
-            in
-            self#dInit out (ind + 2) (getelem i);
-            outputElements false new_room_on_line rest
+          if not isfirst then output_string out ", ";
+          let new_room_on_line =
+            if room_on_line == 0 then begin
+              output_string out "\n"; output_string out (String.make ind ' ');
+              onALine - 1
+            end else
+              room_on_line - 1
+          in
+          self#dInit out (ind + 2) (getelem i);
+          outputElements false new_room_on_line rest
       in
       output_string out "{ ";
       outputElements true onALine il
     in
     match i with
       SingleInit e ->
-        fprint out !lineLength (indent ind (self#pExp () e))
+      fprint out !lineLength (indent ind (self#pExp () e))
     | CompoundInit (t, initl) -> begin
         match unrollType t with
           TArray(bt, _, _) ->
-            dumpArray bt initl (fun (_, i) -> i)
+          dumpArray bt initl (fun (_, i) -> i)
         | _ ->
-            (* Now a structure or a union *)
-            fprint out !lineLength (indent ind (self#pInit () i))
-    end
+          (* Now a structure or a union *)
+          fprint out !lineLength (indent ind (self#pInit () i))
+      end
 (*
     | ArrayInit (bt, len, initl) -> begin
         (* If the base type does not contain structs then use the pInit
@@ -3520,200 +3520,200 @@ class defaultCilPrinterClass : cilPrinter = object (self)
         (* Be nice to some special cases *)
         match e with
           BinOp((PlusA|PlusPI|IndexPI),Lval(lv'),Const(CInt64(one,_,_)),_)
-            when Util.equals lv lv' && one = Int64.one && not !printCilAsIs ->
-              self#pLineDirective l
-                ++ self#pLvalPrec indexLevel () lv
-                ++ text (" ++" ^ printInstrTerminator)
+          when Util.equals lv lv' && one = Int64.one && not !printCilAsIs ->
+          self#pLineDirective l
+          ++ self#pLvalPrec indexLevel () lv
+          ++ text (" ++" ^ printInstrTerminator)
 
         | BinOp((MinusA|MinusPI),Lval(lv'),
                 Const(CInt64(one,_,_)), _)
-            when Util.equals lv lv' && one = Int64.one && not !printCilAsIs ->
-                  self#pLineDirective l
-                    ++ self#pLvalPrec indexLevel () lv
-                    ++ text (" --" ^ printInstrTerminator)
+          when Util.equals lv lv' && one = Int64.one && not !printCilAsIs ->
+          self#pLineDirective l
+          ++ self#pLvalPrec indexLevel () lv
+          ++ text (" --" ^ printInstrTerminator)
 
         | BinOp((PlusA|PlusPI|IndexPI),Lval(lv'),Const(CInt64(mone,_,_)),_)
-            when Util.equals lv lv' && mone = Int64.minus_one
-                && not !printCilAsIs ->
-              self#pLineDirective l
-                ++ self#pLvalPrec indexLevel () lv
-                ++ text (" --" ^ printInstrTerminator)
+          when Util.equals lv lv' && mone = Int64.minus_one
+               && not !printCilAsIs ->
+          self#pLineDirective l
+          ++ self#pLvalPrec indexLevel () lv
+          ++ text (" --" ^ printInstrTerminator)
 
         | BinOp((PlusA|PlusPI|IndexPI|MinusA|MinusPP|MinusPI|BAnd|BOr|BXor|
-          Mult|Div|Mod|Shiftlt|Shiftrt) as bop,
+                 Mult|Div|Mod|Shiftlt|Shiftrt) as bop,
                 Lval(lv'),e,_) when Util.equals lv lv'
-                && not !printCilAsIs ->
-                  self#pLineDirective l
-                    ++ self#pLval () lv
-                    ++ text " " ++ d_binop () bop
-                    ++ text "= "
-                    ++ self#pExp () e
-                    ++ text printInstrTerminator
+                                 && not !printCilAsIs ->
+          self#pLineDirective l
+          ++ self#pLval () lv
+          ++ text " " ++ d_binop () bop
+          ++ text "= "
+          ++ self#pExp () e
+          ++ text printInstrTerminator
 
         | _ ->
-            self#pLineDirective l
-              ++ self#pLval () lv
-              ++ text " = "
-              ++ self#pExp () e
-              ++ text printInstrTerminator
-
-    end
-      (* In cabs2cil we have turned the call to builtin_va_arg into a
-       * three-argument call: the last argument is the address of the
-       * destination *)
-    | Call(None, Lval(Var vi, NoOffset), [dest; SizeOf t; adest], l)
-        when vi.vname = "__builtin_va_arg" && not !printCilAsIs ->
-          let destlv = match stripCasts adest with
-            AddrOf destlv -> destlv
-              (* If this fails, it's likely that an extension interfered
-                 with the AddrOf *)
-          | _ -> E.s (E.bug
-                        "%a: Encountered unexpected call to %s with dest %a\n"
-                        d_loc l vi.vname self#pExp adest)
-          in
           self#pLineDirective l
-	    ++ self#pLval () destlv ++ text " = "
-
-            (* Now the function name *)
-            ++ text "__builtin_va_arg"
-            ++ text "(" ++ (align
-                              (* Now the arguments *)
-                              ++ self#pExp () dest
-                              ++ chr ',' ++ break
-                              ++ self#pType None () t
-                              ++ unalign)
-            ++ text (")" ^ printInstrTerminator)
-
-      (* In cabs2cil we have dropped the last argument in the call to
-       * __builtin_va_start and __builtin_stdarg_start. *)
-    | Call(None, Lval(Var vi, NoOffset), [marker], l)
-        when ((vi.vname = "__builtin_stdarg_start" ||
-               vi.vname = "__builtin_va_start") && not !printCilAsIs) ->
-        if currentFormals <> [] then begin
-          let last = self#getLastNamedArgument vi.vname in
-          self#pInstr () (Call(None,Lval(Var vi,NoOffset),[marker; last],l))
-        end
-        else begin
-          (* We can't print this call because someone called pInstr outside
-             of a pFunDecl, so we don't know what the formals of the current
-             function are.  Just put in a placeholder for now; this isn't
-             valid C. *)
-          self#pLineDirective l
-          ++ dprintf
-            "%s(%a, /* last named argument of the function calling %s */)"
-            vi.vname self#pExp marker vi.vname
+          ++ self#pLval () lv
+          ++ text " = "
+          ++ self#pExp () e
           ++ text printInstrTerminator
-        end
-      (* In cabs2cil we have dropped the last argument in the call to
-       * __builtin_next_arg. *)
-    | Call(res, Lval(Var vi, NoOffset), [ ], l)
-        when vi.vname = "__builtin_next_arg" && not !printCilAsIs -> begin
-          let last = self#getLastNamedArgument vi.vname in
-          self#pInstr () (Call(res,Lval(Var vi,NoOffset),[last],l))
-        end
 
-      (* In cparser we have turned the call to
-       * __builtin_types_compatible_p(t1, t2) into
-       * __builtin_types_compatible_p(sizeof t1, sizeof t2), so that we can
-       * represent the types as expressions.
-       * Remove the sizeofs when printing. *)
-    | Call(dest, Lval(Var vi, NoOffset), [SizeOf t1; SizeOf t2], l)
-        when vi.vname = "__builtin_types_compatible_p" && not !printCilAsIs ->
+      end
+    (* In cabs2cil we have turned the call to builtin_va_arg into a
+     * three-argument call: the last argument is the address of the
+     * destination *)
+    | Call(None, Lval(Var vi, NoOffset), [dest; SizeOf t; adest], l)
+      when vi.vname = "__builtin_va_arg" && not !printCilAsIs ->
+      let destlv = match stripCasts adest with
+          AddrOf destlv -> destlv
+        (* If this fails, it's likely that an extension interfered
+           with the AddrOf *)
+        | _ -> E.s (E.bug
+                      "%a: Encountered unexpected call to %s with dest %a\n"
+                      d_loc l vi.vname self#pExp adest)
+      in
+      self#pLineDirective l
+      ++ self#pLval () destlv ++ text " = "
+
+      (* Now the function name *)
+      ++ text "__builtin_va_arg"
+      ++ text "(" ++ (align
+                      (* Now the arguments *)
+                      ++ self#pExp () dest
+                      ++ chr ',' ++ break
+                      ++ self#pType None () t
+                      ++ unalign)
+      ++ text (")" ^ printInstrTerminator)
+
+    (* In cabs2cil we have dropped the last argument in the call to
+     * __builtin_va_start and __builtin_stdarg_start. *)
+    | Call(None, Lval(Var vi, NoOffset), [marker], l)
+      when ((vi.vname = "__builtin_stdarg_start" ||
+             vi.vname = "__builtin_va_start") && not !printCilAsIs) ->
+      if currentFormals <> [] then begin
+        let last = self#getLastNamedArgument vi.vname in
+        self#pInstr () (Call(None,Lval(Var vi,NoOffset),[marker; last],l))
+      end
+      else begin
+        (* We can't print this call because someone called pInstr outside
+           of a pFunDecl, so we don't know what the formals of the current
+           function are.  Just put in a placeholder for now; this isn't
+           valid C. *)
         self#pLineDirective l
-          (* Print the destination *)
-        ++ (match dest with
-              None -> nil
-            | Some lv -> self#pLval () lv ++ text " = ")
-          (* Now the call itself *)
-        ++ dprintf "%s(%a, %a)" vi.vname
-             (self#pType None) t1  (self#pType None) t2
+        ++ dprintf
+          "%s(%a, /* last named argument of the function calling %s */)"
+          vi.vname self#pExp marker vi.vname
         ++ text printInstrTerminator
+      end
+    (* In cabs2cil we have dropped the last argument in the call to
+     * __builtin_next_arg. *)
+    | Call(res, Lval(Var vi, NoOffset), [ ], l)
+      when vi.vname = "__builtin_next_arg" && not !printCilAsIs -> begin
+        let last = self#getLastNamedArgument vi.vname in
+        self#pInstr () (Call(res,Lval(Var vi,NoOffset),[last],l))
+      end
+
+    (* In cparser we have turned the call to
+     * __builtin_types_compatible_p(t1, t2) into
+     * __builtin_types_compatible_p(sizeof t1, sizeof t2), so that we can
+     * represent the types as expressions.
+     * Remove the sizeofs when printing. *)
+    | Call(dest, Lval(Var vi, NoOffset), [SizeOf t1; SizeOf t2], l)
+      when vi.vname = "__builtin_types_compatible_p" && not !printCilAsIs ->
+      self#pLineDirective l
+      (* Print the destination *)
+      ++ (match dest with
+            None -> nil
+          | Some lv -> self#pLval () lv ++ text " = ")
+      (* Now the call itself *)
+      ++ dprintf "%s(%a, %a)" vi.vname
+        (self#pType None) t1  (self#pType None) t2
+      ++ text printInstrTerminator
     | Call(_, Lval(Var vi, NoOffset), _, l)
-        when vi.vname = "__builtin_types_compatible_p" && not !printCilAsIs ->
-        E.s (bug "__builtin_types_compatible_p: cabs2cil should have added sizeof to the arguments.")
+      when vi.vname = "__builtin_types_compatible_p" && not !printCilAsIs ->
+      E.s (bug "__builtin_types_compatible_p: cabs2cil should have added sizeof to the arguments.")
 
     | Call(dest,e,args,l) ->
-        self#pLineDirective l
-          ++ (match dest with
+      self#pLineDirective l
+      ++ (match dest with
             None -> nil
           | Some lv ->
-              self#pLval () lv ++ text " = " ++
-                (* Maybe we need to print a cast *)
-                (let destt = typeOfLval lv in
-                match unrollType (typeOf e) with
-                  TFun (rt, _, _, _)
-                      when not (Util.equals (!pTypeSig rt)
-                                            (!pTypeSig destt)) ->
-                    text "(" ++ self#pType None () destt ++ text ")"
-                | _ -> nil))
-          (* Now the function name *)
-          ++ (let ed = self#pExp () e in
-              match e with
-                Lval(Var _, _) -> ed
-              | _ -> text "(" ++ ed ++ text ")")
-          ++ text "(" ++
-          (align
-             (* Now the arguments *)
-             ++ (docList ~sep:(chr ',' ++ break)
-                   (self#pExp ()) () args)
-             ++ unalign)
-        ++ text (")" ^ printInstrTerminator)
+            self#pLval () lv ++ text " = " ++
+            (* Maybe we need to print a cast *)
+            (let destt = typeOfLval lv in
+             match unrollType (typeOf e) with
+               TFun (rt, _, _, _)
+               when not (Util.equals (!pTypeSig rt)
+                           (!pTypeSig destt)) ->
+               text "(" ++ self#pType None () destt ++ text ")"
+             | _ -> nil))
+      (* Now the function name *)
+      ++ (let ed = self#pExp () e in
+          match e with
+            Lval(Var _, _) -> ed
+          | _ -> text "(" ++ ed ++ text ")")
+      ++ text "(" ++
+      (align
+       (* Now the arguments *)
+       ++ (docList ~sep:(chr ',' ++ break)
+             (self#pExp ()) () args)
+       ++ unalign)
+      ++ text (")" ^ printInstrTerminator)
 
     | Asm(attrs, tmpls, outs, ins, clobs, l) ->
-        if !msvcMode then
-          self#pLineDirective l
-            ++ text "__asm {"
-            ++ (align
-                  ++ (docList ~sep:line text () tmpls)
-                  ++ unalign)
-            ++ text ("}" ^ printInstrTerminator)
-        else
-          self#pLineDirective l
-            ++ text ("__asm__ ")
-            ++ self#pAttrs () attrs
-            ++ text " ("
-            ++ (align
-                  ++ (docList ~sep:line
-                        (fun x -> text ("\"" ^ escape_string x ^ "\""))
-                        () tmpls)
-                  ++
-                  (if outs = [] && ins = [] && clobs = [] then
-                    chr ':'
-                else
-                  (text ": "
-                     ++ (docList ~sep:(chr ',' ++ break)
-                           (fun (idopt, c, lv) ->
-                            text(match idopt with
-                                 None -> ""
-                               | Some id -> "[" ^ id ^ "] "
-                            ) ++
-                             text ("\"" ^ escape_string c ^ "\" (")
-                               ++ self#pLval () lv
-                               ++ text ")") () outs)))
-                ++
-                  (if ins = [] && clobs = [] then
-                    nil
-                  else
-                    (text ": "
-                       ++ (docList ~sep:(chr ',' ++ break)
-                             (fun (idopt, c, e) ->
-                                text(match idopt with
-                                     None -> ""
-                                   | Some id -> "[" ^ id ^ "] "
-                                ) ++
-                               text ("\"" ^ escape_string c ^ "\" (")
-                                 ++ self#pExp () e
-                                 ++ text ")") () ins)))
-                  ++
-                  (if clobs = [] then nil
-                  else
-                    (text ": "
-                       ++ (docList ~sep:(chr ',' ++ break)
-                             (fun c -> text ("\"" ^ escape_string c ^ "\""))
-                             ()
-                             clobs)))
-                  ++ unalign)
-            ++ text (")" ^ printInstrTerminator)
+      if !msvcMode then
+        self#pLineDirective l
+        ++ text "__asm {"
+        ++ (align
+            ++ (docList ~sep:line text () tmpls)
+            ++ unalign)
+        ++ text ("}" ^ printInstrTerminator)
+      else
+        self#pLineDirective l
+        ++ text ("__asm__ ")
+        ++ self#pAttrs () attrs
+        ++ text " ("
+        ++ (align
+            ++ (docList ~sep:line
+                  (fun x -> text ("\"" ^ escape_string x ^ "\""))
+                  () tmpls)
+            ++
+            (if outs = [] && ins = [] && clobs = [] then
+               chr ':'
+             else
+               (text ": "
+                ++ (docList ~sep:(chr ',' ++ break)
+                      (fun (idopt, c, lv) ->
+                         text(match idopt with
+                               None -> ""
+                             | Some id -> "[" ^ id ^ "] "
+                           ) ++
+                         text ("\"" ^ escape_string c ^ "\" (")
+                         ++ self#pLval () lv
+                         ++ text ")") () outs)))
+            ++
+            (if ins = [] && clobs = [] then
+               nil
+             else
+               (text ": "
+                ++ (docList ~sep:(chr ',' ++ break)
+                      (fun (idopt, c, e) ->
+                         text(match idopt with
+                               None -> ""
+                             | Some id -> "[" ^ id ^ "] "
+                           ) ++
+                         text ("\"" ^ escape_string c ^ "\" (")
+                         ++ self#pExp () e
+                         ++ text ")") () ins)))
+            ++
+            (if clobs = [] then nil
+             else
+               (text ": "
+                ++ (docList ~sep:(chr ',' ++ break)
+                      (fun c -> text ("\"" ^ escape_string c ^ "\""))
+                      ()
+                      clobs)))
+            ++ unalign)
+        ++ text (")" ^ printInstrTerminator)
 
 
   (**** STATEMENTS ****)
@@ -3729,21 +3729,21 @@ class defaultCilPrinterClass : cilPrinter = object (self)
   method private pStmtNext (next: stmt) () (s: stmt) =
     (* print the labels *)
     ((docList ~sep:line (fun l -> self#pLabel () l)) () s.labels)
-      (* print the statement itself. If the labels are non-empty and the
-      * statement is empty, print a semicolon  *)
-      ++
-      (if s.skind = Instr [] && s.labels <> [] then
-        text ";"
-      else
-        (if s.labels <> [] then line else nil)
-          ++ self#pStmtKind next () s.skind)
+    (* print the statement itself. If the labels are non-empty and the
+     * statement is empty, print a semicolon  *)
+    ++
+    (if s.skind = Instr [] && s.labels <> [] then
+       text ";"
+     else
+       (if s.labels <> [] then line else nil)
+       ++ self#pStmtKind next () s.skind)
 
   method private pLabel () = function
       Label (s, _, true) -> text (s ^ ": ")
     | Label (s, _, false) -> text (s ^ ": /* CIL Label */ ")
     | Case (e, _) -> text "case " ++ self#pExp () e ++ text ": "
     | CaseRange (e1, e2, _) -> text "case " ++ self#pExp () e1 ++ text " ... "
-        ++ self#pExp () e2 ++ text ": "
+                               ++ self#pExp () e2 ++ text ": "
     | Default _ -> text "default: "
 
   (* The pBlock will put the unalign itself *)
@@ -3755,19 +3755,19 @@ class defaultCilPrinterClass : cilPrinter = object (self)
     and dorest acc prev = function
         [] -> acc ++ (self#pStmtNext invalidStmt () prev)
       | x :: rest ->
-          dorest (acc ++ (self#pStmtNext x () prev) ++ line)
-            x rest
+        dorest (acc ++ (self#pStmtNext x () prev) ++ line)
+          x rest
     in
     (* Let the host of the block decide on the alignment. The d_block will
      * pop the alignment as well  *)
     text "{"
-      ++
-      (if blk.battrs <> [] then
-        self#pAttrsGen true blk.battrs
-      else nil)
-      ++ line
-      ++ (dofirst () blk.bstmts)
-      ++ unalign ++ line ++ text "}"
+    ++
+    (if blk.battrs <> [] then
+       self#pAttrsGen true blk.battrs
+     else nil)
+    ++ line
+    ++ (dofirst () blk.bstmts)
+    ++ unalign ++ line ++ text "}"
 
 
   (* Store here the name of the last file printed in a line number. This is
@@ -3782,47 +3782,47 @@ class defaultCilPrinterClass : cilPrinter = object (self)
     | None -> nil
     | Some _ when l.line <= 0 -> nil
 
-      (* Do not print lineComment if the same line as above *)
+    (* Do not print lineComment if the same line as above *)
     | Some LineCommentSparse when l.line = lastLineNumber -> nil
 
     | Some style  ->
-	let directive =
-	  match style with
-	  | LineComment | LineCommentSparse -> text "//#line "
-	  | LinePreprocessorOutput when not !msvcMode -> chr '#'
-	  | LinePreprocessorOutput | LinePreprocessorInput -> text "#line"
-	in
-        lastLineNumber <- l.line;
-	let filename =
-          if forcefile || l.file <> lastFileName then
-	    begin
-	      lastFileName <- l.file;
-	      text " \"" ++ text l.file ++ text "\""
-            end
-	  else
-	    nil
-	in
-	leftflush ++ directive ++ chr ' ' ++ num l.line ++ filename ++ line
+      let directive =
+        match style with
+        | LineComment | LineCommentSparse -> text "//#line "
+        | LinePreprocessorOutput when not !msvcMode -> chr '#'
+        | LinePreprocessorOutput | LinePreprocessorInput -> text "#line"
+      in
+      lastLineNumber <- l.line;
+      let filename =
+        if forcefile || l.file <> lastFileName then
+          begin
+            lastFileName <- l.file;
+            text " \"" ++ text l.file ++ text "\""
+          end
+        else
+          nil
+      in
+      leftflush ++ directive ++ chr ' ' ++ num l.line ++ filename ++ line
 
   method private pIfConditionThen loc condition thenBlock =
-      self#pLineDirective loc
-      ++ text "if"
-      ++ (align
-          ++ text " ("
-          ++ self#pExp () condition
-          ++ text ") "
-          ++ self#pBlock () thenBlock)
+    self#pLineDirective loc
+    ++ text "if"
+    ++ (align
+        ++ text " ("
+        ++ self#pExp () condition
+        ++ text ") "
+        ++ self#pBlock () thenBlock)
 
   method private pStmtKind (next: stmt) () = function
       Return(None, l) ->
-        self#pLineDirective l
-          ++ text "return;"
+      self#pLineDirective l
+      ++ text "return;"
 
     | Return(Some e, l) ->
-        self#pLineDirective l
-          ++ text "return ("
-          ++ self#pExp () e
-          ++ text ");"
+      self#pLineDirective l
+      ++ text "return ("
+      ++ self#pExp () e
+      ++ text ");"
 
     | Goto (sref, l) -> begin
         (* Grab one of the labels *)
@@ -3834,65 +3834,65 @@ class defaultCilPrinterClass : cilPrinter = object (self)
         match pickLabel !sref.labels with
           Some lbl -> self#pLineDirective l ++ text ("goto " ^ lbl ^ ";")
         | None ->
-            ignore (error "Cannot find label for target of goto");
-            text "goto __invalid_label;"
-    end
+          ignore (error "Cannot find label for target of goto");
+          text "goto __invalid_label;"
+      end
 
     | ComputedGoto(e, l) ->
-        self#pLineDirective l
-          ++ text "goto *("
-          ++ self#pExp () e
-          ++ text ");"
+      self#pLineDirective l
+      ++ text "goto *("
+      ++ self#pExp () e
+      ++ text ");"
 
     | Break l ->
-        self#pLineDirective l
-          ++ text "break;"
+      self#pLineDirective l
+      ++ text "break;"
 
     | Continue l ->
-        self#pLineDirective l
-          ++ text "continue;"
+      self#pLineDirective l
+      ++ text "continue;"
 
     | Instr il ->
-        align
-          ++ (docList ~sep:line (fun i -> self#pInstr () i) () il)
-          ++ unalign
+      align
+      ++ (docList ~sep:line (fun i -> self#pInstr () i) () il)
+      ++ unalign
 
     | If(be,t,{bstmts=[];battrs=[]},l) when not !printCilAsIs ->
-        self#pIfConditionThen l be t
+      self#pIfConditionThen l be t
 
     | If(be,t,{bstmts=[{skind=Goto(gref,_);labels=[]}];
-                battrs=[]},l)
-     when !gref == next && not !printCilAsIs ->
-        self#pIfConditionThen l be t
+               battrs=[]},l)
+      when !gref == next && not !printCilAsIs ->
+      self#pIfConditionThen l be t
 
     | If(be,{bstmts=[];battrs=[]},e,l) when not !printCilAsIs ->
-          self#pIfConditionThen l (UnOp(LNot,be,intType)) e
+      self#pIfConditionThen l (UnOp(LNot,be,intType)) e
 
     | If(be,{bstmts=[{skind=Goto(gref,_);labels=[]}];
-           battrs=[]},e,l)
+             battrs=[]},e,l)
       when !gref == next && not !printCilAsIs ->
-        self#pIfConditionThen l (UnOp(LNot,be,intType)) e
+      self#pIfConditionThen l (UnOp(LNot,be,intType)) e
 
     | If(be,t,e,l) ->
-        self#pIfConditionThen l be t
-          ++ (match e with
-                { bstmts=[{skind=If _} as elsif]; battrs=[] } ->
-                    text " else"
-                    ++ line (* Don't indent else-ifs *)
-                    ++ self#pStmtNext next () elsif
-              | _ ->
-                    text " "   (* sm: indent next code 2 spaces (was 4) *)
-                    ++ align
-                    ++ text "else "
-                    ++ self#pBlock () e)
+      self#pIfConditionThen l be t
+      ++ (match e with
+            { bstmts=[{skind=If _} as elsif]; battrs=[] } ->
+            text " else"
+            ++ line (* Don't indent else-ifs *)
+            ++ self#pStmtNext next () elsif
+          | _ ->
+            text " "   (* sm: indent next code 2 spaces (was 4) *)
+            ++ align
+            ++ text "else "
+            ++ self#pBlock () e)
 
     | Switch(e,b,_,l) ->
-        self#pLineDirective l
-          ++ (align
-                ++ text "switch ("
-                ++ self#pExp () e
-                ++ text ") "
-                ++ self#pBlock () b)
+      self#pLineDirective l
+      ++ (align
+          ++ text "switch ("
+          ++ self#pExp () e
+          ++ text ") "
+          ++ self#pBlock () b)
     | Loop(b, l, _, _) -> begin
         (* Maybe the first thing is a conditional. Turn it into a WHILE *)
         try
@@ -3905,406 +3905,406 @@ class defaultCilPrinterClass : cilPrinter = object (self)
             (* Bill McCloskey: Do not remove the If if it has labels *)
             match skipEmpty b.bstmts with
               {skind=If(e,tb,fb,_); labels=[]} :: rest
-                                              when not !printCilAsIs -> begin
+              when not !printCilAsIs -> begin
                 match skipEmpty tb.bstmts, skipEmpty fb.bstmts with
                   [], {skind=Break _; labels=[]} :: _  -> e, rest
                 | {skind=Break _; labels=[]} :: _, []
-                                     -> UnOp(LNot, e, intType), rest
+                  -> UnOp(LNot, e, intType), rest
                 | _ -> raise Not_found
               end
             | _ -> raise Not_found
           in
           self#pLineDirective l
-            ++ text "wh"
-            ++ (align
-                  ++ text "ile ("
-                  ++ self#pExp () term
-                  ++ text ") "
-                  ++ self#pBlock () {bstmts=bodystmts; battrs=b.battrs})
+          ++ text "wh"
+          ++ (align
+              ++ text "ile ("
+              ++ self#pExp () term
+              ++ text ") "
+              ++ self#pBlock () {bstmts=bodystmts; battrs=b.battrs})
 
         with Not_found ->
           self#pLineDirective l
-            ++ text "wh"
-            ++ (align
-                  ++ text "ile (1) "
-                  ++ self#pBlock () b)
-    end
+          ++ text "wh"
+          ++ (align
+              ++ text "ile (1) "
+              ++ self#pBlock () b)
+      end
     | Block b -> align ++ self#pBlock () b
 
     | TryFinally (b, h, l) ->
-        self#pLineDirective l
-          ++ text "__try "
-          ++ align
-          ++ self#pBlock () b
-          ++ text " __fin" ++ align ++ text "ally "
-          ++ self#pBlock () h
+      self#pLineDirective l
+      ++ text "__try "
+      ++ align
+      ++ self#pBlock () b
+      ++ text " __fin" ++ align ++ text "ally "
+      ++ self#pBlock () h
 
     | TryExcept (b, (il, e), h, l) ->
-        self#pLineDirective l
-          ++ text "__try "
-          ++ align
-          ++ self#pBlock () b
-          ++ text " __e" ++ align ++ text "xcept(" ++ line
-          ++ align
-          (* Print the instructions but with a comma at the end, instead of
-           * semicolon *)
-          ++ (printInstrTerminator <- ",";
-              let res =
-                (docList ~sep:line (self#pInstr ())
-                   () il)
-              in
-              printInstrTerminator <- ";";
-              res)
-          ++ self#pExp () e
-          ++ text ") " ++ unalign
-          ++ self#pBlock () h
+      self#pLineDirective l
+      ++ text "__try "
+      ++ align
+      ++ self#pBlock () b
+      ++ text " __e" ++ align ++ text "xcept(" ++ line
+      ++ align
+      (* Print the instructions but with a comma at the end, instead of
+       * semicolon *)
+      ++ (printInstrTerminator <- ",";
+          let res =
+            (docList ~sep:line (self#pInstr ())
+               () il)
+          in
+          printInstrTerminator <- ";";
+          res)
+      ++ self#pExp () e
+      ++ text ") " ++ unalign
+      ++ self#pBlock () h
 
 
   (*** GLOBALS ***)
   method pGlobal () (g:global) : doc =       (* global (vars, types, etc.) *)
     match g with
     | GFun (fundec, l) ->
-        (* If the function has attributes then print a prototype because
-        * GCC cannot accept function attributes in a definition *)
-        let oldattr = fundec.svar.vattr in
-        (* Always pring the file name before function declarations *)
-        let proto =
-          if oldattr <> [] then
-            (self#pLineDirective l) ++ (self#pVDecl () fundec.svar)
-              ++ chr ';' ++ line
-          else nil in
-        (* Temporarily remove the function attributes *)
-        fundec.svar.vattr <- [];
-        let body = (self#pLineDirective ~forcefile:true l)
-                      ++ (self#pFunDecl () fundec) in
-        fundec.svar.vattr <- oldattr;
-        proto ++ body ++ line
+      (* If the function has attributes then print a prototype because
+       * GCC cannot accept function attributes in a definition *)
+      let oldattr = fundec.svar.vattr in
+      (* Always pring the file name before function declarations *)
+      let proto =
+        if oldattr <> [] then
+          (self#pLineDirective l) ++ (self#pVDecl () fundec.svar)
+          ++ chr ';' ++ line
+        else nil in
+      (* Temporarily remove the function attributes *)
+      fundec.svar.vattr <- [];
+      let body = (self#pLineDirective ~forcefile:true l)
+                 ++ (self#pFunDecl () fundec) in
+      fundec.svar.vattr <- oldattr;
+      proto ++ body ++ line
 
     | GType (typ, l) ->
-        self#pLineDirective ~forcefile:true l ++
-          text "typedef "
-          ++ (self#pType (Some (text typ.tname)) () typ.ttype)
-          ++ text ";\n"
+      self#pLineDirective ~forcefile:true l ++
+      text "typedef "
+      ++ (self#pType (Some (text typ.tname)) () typ.ttype)
+      ++ text ";\n"
 
     | GEnumTag (enum, l) ->
-        self#pLineDirective l ++
-          text "enum" ++ align ++ text (" " ^ enum.ename) ++
-          text " {" ++ line
-          ++ (docList ~sep:(chr ',' ++ line)
-                (fun (n,i, loc) ->
-                  text (n ^ " = ")
-                    ++ self#pExp () i)
-                () enum.eitems)
-          ++ unalign ++ line ++ text "} "
-          ++ self#pAttrs () enum.eattr ++ text";\n"
+      self#pLineDirective l ++
+      text "enum" ++ align ++ text (" " ^ enum.ename) ++
+      text " {" ++ line
+      ++ (docList ~sep:(chr ',' ++ line)
+            (fun (n,i, loc) ->
+               text (n ^ " = ")
+               ++ self#pExp () i)
+            () enum.eitems)
+      ++ unalign ++ line ++ text "} "
+      ++ self#pAttrs () enum.eattr ++ text";\n"
 
     | GEnumTagDecl (enum, l) -> (* This is a declaration of a tag *)
-        self#pLineDirective l ++
-          text "enum " ++ text enum.ename ++ chr ' '
-          ++ self#pAttrs () enum.eattr ++ text ";\n"
+      self#pLineDirective l ++
+      text "enum " ++ text enum.ename ++ chr ' '
+      ++ self#pAttrs () enum.eattr ++ text ";\n"
 
     | GCompTag (comp, l) -> (* This is a definition of a tag *)
-        let n = comp.cname in
-        let su, su1, su2 =
-          if comp.cstruct then "struct", "str", "uct"
-          else "union",  "uni", "on"
-        in
-        let sto_mod, rest_attr = separateStorageModifiers comp.cattr in
-        self#pLineDirective ~forcefile:true l ++
-          text su1 ++ (align ++ text su2 ++ chr ' ' ++ (self#pAttrs () sto_mod)
-                         ++ text n
-                         ++ text " {" ++ line
-                         ++ ((docList ~sep:line (self#pFieldDecl ())) ()
-                               comp.cfields)
-                         ++ unalign)
-          ++ line ++ text "}" ++
-          (self#pAttrs () rest_attr) ++ text ";\n"
+      let n = comp.cname in
+      let su, su1, su2 =
+        if comp.cstruct then "struct", "str", "uct"
+        else "union",  "uni", "on"
+      in
+      let sto_mod, rest_attr = separateStorageModifiers comp.cattr in
+      self#pLineDirective ~forcefile:true l ++
+      text su1 ++ (align ++ text su2 ++ chr ' ' ++ (self#pAttrs () sto_mod)
+                   ++ text n
+                   ++ text " {" ++ line
+                   ++ ((docList ~sep:line (self#pFieldDecl ())) ()
+                         comp.cfields)
+                   ++ unalign)
+      ++ line ++ text "}" ++
+      (self#pAttrs () rest_attr) ++ text ";\n"
 
     | GCompTagDecl (comp, l) -> (* This is a declaration of a tag *)
-        let su = if comp.cstruct then "struct " else "union " in
-        let sto_mod, rest_attr = separateStorageModifiers comp.cattr in
-        self#pLineDirective l
-          ++ text su ++ self#pAttrs () sto_mod
-          ++ text comp.cname ++ chr ' '
-          ++ self#pAttrs () rest_attr ++ text ";\n"
+      let su = if comp.cstruct then "struct " else "union " in
+      let sto_mod, rest_attr = separateStorageModifiers comp.cattr in
+      self#pLineDirective l
+      ++ text su ++ self#pAttrs () sto_mod
+      ++ text comp.cname ++ chr ' '
+      ++ self#pAttrs () rest_attr ++ text ";\n"
 
     | GVar (vi, io, l) ->
-        self#pLineDirective ~forcefile:true l ++
-          self#pVDecl () vi
-          ++ chr ' '
-          ++ (match io.init with
+      self#pLineDirective ~forcefile:true l ++
+      self#pVDecl () vi
+      ++ chr ' '
+      ++ (match io.init with
             None -> nil
           | Some i -> text " = " ++
-                (let islong =
-                  match i with
-                    CompoundInit (_, il) when List.length il >= 8 -> true
-                  | _ -> false
-                in
-                if islong then
-                  line ++ self#pLineDirective l ++ text "  "
-                else nil) ++
-                (self#pInit () i))
-          ++ text ";\n"
+                      (let islong =
+                         match i with
+                           CompoundInit (_, il) when List.length il >= 8 -> true
+                         | _ -> false
+                       in
+                       if islong then
+                         line ++ self#pLineDirective l ++ text "  "
+                       else nil) ++
+                      (self#pInit () i))
+      ++ text ";\n"
 
     (* print global variable 'extern' declarations, and function prototypes *)
     | GVarDecl (vi, l) ->
-        if not !printCilAsIs && H.mem builtinFunctions vi.vname then begin
-          (* Compiler builtins need no prototypes. Just print them in
-             comments. *)
-          text "/* compiler builtin: \n   " ++
-            (self#pVDecl () vi)
-            ++ text ";  */\n"
+      if not !printCilAsIs && H.mem builtinFunctions vi.vname then begin
+        (* Compiler builtins need no prototypes. Just print them in
+           comments. *)
+        text "/* compiler builtin: \n   " ++
+        (self#pVDecl () vi)
+        ++ text ";  */\n"
 
-        end else
-          self#pLineDirective l ++
-            (self#pVDecl () vi)
-            ++ text ";\n"
+      end else
+        self#pLineDirective l ++
+        (self#pVDecl () vi)
+        ++ text ";\n"
 
     | GAsm (s, l) ->
-        self#pLineDirective l ++
-          text ("__asm__(\"" ^ escape_string s ^ "\");\n")
+      self#pLineDirective l ++
+      text ("__asm__(\"" ^ escape_string s ^ "\");\n")
 
     | GPragma (Attr(an, args), l) ->
-        (* sm: suppress printing pragmas that gcc does not understand *)
-        (* assume anything starting with "ccured" is ours *)
-        (* also don't print the 'combiner' pragma *)
-        (* nor 'cilnoremove' *)
-        let suppress =
-          not !print_CIL_Input &&
-          not !msvcMode &&
-          ((startsWith "box" an) ||
-           (startsWith "ccured" an) ||
-           (an = "merger") ||
-           (an = "cilnoremove")) in
-        let d =
-	  match an, args with
-	  | _, [] ->
-              text an
-	  | "weak", [ACons (symbol, [])] ->
-	      text "weak " ++ text symbol
-	  | _ ->
-            text (an ^ "(")
-              ++ docList ~sep:(chr ',') (self#pAttrParam ()) () args
-              ++ text ")"
-        in
-        self#pLineDirective l
-          ++ (if suppress then text "/* " else text "")
-          ++ (text "#pragma ")
-          ++ d
-          ++ (if suppress then text " */\n" else text "\n")
+      (* sm: suppress printing pragmas that gcc does not understand *)
+      (* assume anything starting with "ccured" is ours *)
+      (* also don't print the 'combiner' pragma *)
+      (* nor 'cilnoremove' *)
+      let suppress =
+        not !print_CIL_Input &&
+        not !msvcMode &&
+        ((startsWith "box" an) ||
+         (startsWith "ccured" an) ||
+         (an = "merger") ||
+         (an = "cilnoremove")) in
+      let d =
+        match an, args with
+        | _, [] ->
+          text an
+        | "weak", [ACons (symbol, [])] ->
+          text "weak " ++ text symbol
+        | _ ->
+          text (an ^ "(")
+          ++ docList ~sep:(chr ',') (self#pAttrParam ()) () args
+          ++ text ")"
+      in
+      self#pLineDirective l
+      ++ (if suppress then text "/* " else text "")
+      ++ (text "#pragma ")
+      ++ d
+      ++ (if suppress then text " */\n" else text "\n")
 
     | GText s  ->
-        if s <> "//" then
-          text s ++ text "\n"
-        else
-          nil
+      if s <> "//" then
+        text s ++ text "\n"
+      else
+        nil
 
 
-   method dGlobal (out: out_channel) (g: global) : unit =
-     (* For all except functions and variable with initializers, use the
-      * pGlobal *)
-     match g with
-       GFun (fdec, l) ->
-         (* If the function has attributes then print a prototype because
-          * GCC cannot accept function attributes in a definition *)
-         let oldattr = fdec.svar.vattr in
-         let proto =
-           if oldattr <> [] then
-             (self#pLineDirective l) ++ (self#pVDecl () fdec.svar)
-               ++ chr ';' ++ line
-           else nil in
-         fprint out !lineLength
-           (proto ++ (self#pLineDirective ~forcefile:true l));
-         (* Temporarily remove the function attributes *)
-         fdec.svar.vattr <- [];
-         fprint out !lineLength (self#pFunDecl () fdec);
-         fdec.svar.vattr <- oldattr;
-         output_string out "\n"
+  method dGlobal (out: out_channel) (g: global) : unit =
+    (* For all except functions and variable with initializers, use the
+     * pGlobal *)
+    match g with
+      GFun (fdec, l) ->
+      (* If the function has attributes then print a prototype because
+       * GCC cannot accept function attributes in a definition *)
+      let oldattr = fdec.svar.vattr in
+      let proto =
+        if oldattr <> [] then
+          (self#pLineDirective l) ++ (self#pVDecl () fdec.svar)
+          ++ chr ';' ++ line
+        else nil in
+      fprint out !lineLength
+        (proto ++ (self#pLineDirective ~forcefile:true l));
+      (* Temporarily remove the function attributes *)
+      fdec.svar.vattr <- [];
+      fprint out !lineLength (self#pFunDecl () fdec);
+      fdec.svar.vattr <- oldattr;
+      output_string out "\n"
 
-     | GVar (vi, {init = Some i}, l) -> begin
-         fprint out !lineLength
-           (self#pLineDirective ~forcefile:true l ++
-              self#pVDecl () vi
-              ++ text " = "
-              ++ (let islong =
-                match i with
-                  CompoundInit (_, il) when List.length il >= 8 -> true
-                | _ -> false
-              in
-              if islong then
-                line ++ self#pLineDirective l ++ text "  "
-              else nil));
-         self#dInit out 3 i;
-         output_string out ";\n"
-     end
+    | GVar (vi, {init = Some i}, l) -> begin
+        fprint out !lineLength
+          (self#pLineDirective ~forcefile:true l ++
+           self#pVDecl () vi
+           ++ text " = "
+           ++ (let islong =
+                 match i with
+                   CompoundInit (_, il) when List.length il >= 8 -> true
+                 | _ -> false
+               in
+               if islong then
+                 line ++ self#pLineDirective l ++ text "  "
+               else nil));
+        self#dInit out 3 i;
+        output_string out ";\n"
+      end
 
-     | g -> fprint out !lineLength (self#pGlobal () g)
+    | g -> fprint out !lineLength (self#pGlobal () g)
 
-   method pFieldDecl () fi =
-     (self#pType
-        (Some (text (if fi.fname = missingFieldName then "" else fi.fname)))
-        ()
-        fi.ftype)
-       ++ text " "
-       ++ (match fi.fbitfield with None -> nil
-       | Some i -> text ": " ++ num i ++ text " ")
-       ++ self#pAttrs () fi.fattr
-       ++ text ";"
+  method pFieldDecl () fi =
+    (self#pType
+       (Some (text (if fi.fname = missingFieldName then "" else fi.fname)))
+       ()
+       fi.ftype)
+    ++ text " "
+    ++ (match fi.fbitfield with None -> nil
+                              | Some i -> text ": " ++ num i ++ text " ")
+    ++ self#pAttrs () fi.fattr
+    ++ text ";"
 
   method private pFunDecl () f =
-      self#pVDecl () f.svar
-      ++  line
-      ++ text "{ "
-      ++ (align
-            (* locals. *)
-            ++ line
-            ++ (docList ~sep:line
-                (fun vi -> match vi.vinit.init with
-                | None -> self#pVDecl () vi ++ text ";"
-                | Some i -> self#pVDecl () vi ++ text " = " ++
-                    self#pInit () i ++ text ";")
-                () f.slocals)
-            ++ line ++ line
-            (* the body *)
-            ++ ((* remember the declaration *) currentFormals <- f.sformals;
-                let body = self#pBlock () f.sbody in
-                currentFormals <- [];
-                body))
-      ++ line
-      ++ text "}"
+    self#pVDecl () f.svar
+    ++  line
+    ++ text "{ "
+    ++ (align
+        (* locals. *)
+        ++ line
+        ++ (docList ~sep:line
+              (fun vi -> match vi.vinit.init with
+                 | None -> self#pVDecl () vi ++ text ";"
+                 | Some i -> self#pVDecl () vi ++ text " = " ++
+                             self#pInit () i ++ text ";")
+              () f.slocals)
+        ++ line ++ line
+        (* the body *)
+        ++ ((* remember the declaration *) currentFormals <- f.sformals;
+                                          let body = self#pBlock () f.sbody in
+                                          currentFormals <- [];
+                                          body))
+    ++ line
+    ++ text "}"
 
   (***** PRINTING DECLARATIONS and TYPES ****)
 
   method pType (nameOpt: doc option) (* Whether we are declaring a name or
                                       * we are just printing a type *)
-               () (t:typ) =       (* use of some type *)
+      () (t:typ) =       (* use of some type *)
     let name = match nameOpt with None -> nil | Some d -> d in
     let printAttributes (a: attributes) =
       let pa = self#pAttrs () a in
       match nameOpt with
       | None when not !print_CIL_Input && not !msvcMode ->
-          (* Cannot print the attributes in this case because gcc does not
-           * like them here, except if we are printing for CIL, or for MSVC.
-           * In fact, for MSVC we MUST print attributes such as __stdcall *)
-          if pa = nil then nil else
+        (* Cannot print the attributes in this case because gcc does not
+         * like them here, except if we are printing for CIL, or for MSVC.
+         * In fact, for MSVC we MUST print attributes such as __stdcall *)
+        if pa = nil then nil else
           text "/*" ++ pa ++ text "*/"
       | _ -> pa
     in
     match t with
       TVoid a ->
-        text "void"
-          ++ self#pAttrs () a
-          ++ text " "
-          ++ name
+      text "void"
+      ++ self#pAttrs () a
+      ++ text " "
+      ++ name
 
     | TInt (ikind,a) ->
-        d_ikind () ikind
-          ++ self#pAttrs () a
-          ++ text " "
-          ++ name
+      d_ikind () ikind
+      ++ self#pAttrs () a
+      ++ text " "
+      ++ name
 
     | TFloat(fkind, a) ->
-        d_fkind () fkind
-          ++ self#pAttrs () a
-          ++ text " "
-          ++ name
+      d_fkind () fkind
+      ++ self#pAttrs () a
+      ++ text " "
+      ++ name
 
     | TComp (comp, a) -> (* A reference to a struct *)
-        let su = if comp.cstruct then "struct" else "union" in
-        text (su ^ " " ^ comp.cname ^ " ")
-          ++ self#pAttrs () a
-          ++ name
+      let su = if comp.cstruct then "struct" else "union" in
+      text (su ^ " " ^ comp.cname ^ " ")
+      ++ self#pAttrs () a
+      ++ name
 
     | TEnum (enum, a) ->
-        text ("enum " ^ enum.ename ^ " ")
-          ++ self#pAttrs () a
-          ++ name
+      text ("enum " ^ enum.ename ^ " ")
+      ++ self#pAttrs () a
+      ++ name
     | TPtr (bt, a)  ->
-        (* Parenthesize the ( * attr name) if a pointer to a function or an
-         * array. However, on MSVC the __stdcall modifier must appear right
-         * before the pointer constructor "(__stdcall *f)". We push them into
-         * the parenthesis. *)
-        let (paren: doc option), (bt': typ) =
-          match bt with
-            TFun(rt, args, isva, fa) when !msvcMode ->
-              let an, af', at = partitionAttributes ~default:AttrType fa in
-              (* We take the af' and we put them into the parentheses *)
-              Some (text "(" ++ printAttributes af'),
-              TFun(rt, args, isva, addAttributes an at)
+      (* Parenthesize the ( * attr name) if a pointer to a function or an
+       * array. However, on MSVC the __stdcall modifier must appear right
+       * before the pointer constructor "(__stdcall *f)". We push them into
+       * the parenthesis. *)
+      let (paren: doc option), (bt': typ) =
+        match bt with
+          TFun(rt, args, isva, fa) when !msvcMode ->
+          let an, af', at = partitionAttributes ~default:AttrType fa in
+          (* We take the af' and we put them into the parentheses *)
+          Some (text "(" ++ printAttributes af'),
+          TFun(rt, args, isva, addAttributes an at)
 
-          | TFun _ | TArray _ -> Some (text "("), bt
+        | TFun _ | TArray _ -> Some (text "("), bt
 
-          | _ -> None, bt
-        in
-        let name' = text "*" ++ printAttributes a ++ name in
-        let name'' = (* Put the parenthesis *)
-          match paren with
-            Some p -> p ++ name' ++ text ")"
-          | _ -> name'
-        in
-        self#pType
-          (Some name'')
-          ()
-          bt'
+        | _ -> None, bt
+      in
+      let name' = text "*" ++ printAttributes a ++ name in
+      let name'' = (* Put the parenthesis *)
+        match paren with
+          Some p -> p ++ name' ++ text ")"
+        | _ -> name'
+      in
+      self#pType
+        (Some name'')
+        ()
+        bt'
 
     | TArray (elemt, lo, a) ->
-        (* ignore the const attribute for arrays *)
-        let a' = dropAttributes [ "const" ] a in
-        let name' =
-          if a' == [] then name else
-          if nameOpt == None then printAttributes a' else
+      (* ignore the const attribute for arrays *)
+      let a' = dropAttributes [ "const" ] a in
+      let name' =
+        if a' == [] then name else
+        if nameOpt == None then printAttributes a' else
           text "(" ++ printAttributes a' ++ name ++ text ")"
-        in
-        self#pType
-          (Some (name'
-                   ++ text "["
-                   ++ (match lo with None -> nil | Some e -> self#pExp () e)
-                   ++ text "]"))
-          ()
-          elemt
+      in
+      self#pType
+        (Some (name'
+               ++ text "["
+               ++ (match lo with None -> nil | Some e -> self#pExp () e)
+               ++ text "]"))
+        ()
+        elemt
 
     | TFun (restyp, args, isvararg, a) ->
-        let name' =
-          if a == [] then name else
-          if nameOpt == None then printAttributes a else
+      let name' =
+        if a == [] then name else
+        if nameOpt == None then printAttributes a else
           text "(" ++ printAttributes a ++ name ++ text ")"
-        in
-        self#pType
-          (Some
-             (name'
-                ++ text "("
-                ++ (align
-                      ++
-                      (if args = Some [] && isvararg then
-                        text "..."
-                      else
-                        (if args = None then nil
-                        else if args = Some [] then text "void"
-                        else
-                          let pArg (aname, atype, aattr) =
-                            let stom, rest = separateStorageModifiers aattr in
-                            (* First the storage modifiers *)
-                            (self#pAttrs () stom)
-                              ++ (self#pType (Some (text aname)) () atype)
-                              ++ text " "
-                              ++ self#pAttrs () rest
-                          in
-                          (docList ~sep:(chr ',' ++ break) pArg) ()
-                            (argsToList args))
-                          ++ (if isvararg then break ++ text ", ..." else nil))
-                      ++ unalign)
-                ++ text ")"))
-          ()
-          restyp
+      in
+      self#pType
+        (Some
+           (name'
+            ++ text "("
+            ++ (align
+                ++
+                (if args = Some [] && isvararg then
+                   text "..."
+                 else
+                   (if args = None then nil
+                    else if args = Some [] then text "void"
+                    else
+                      let pArg (aname, atype, aattr) =
+                        let stom, rest = separateStorageModifiers aattr in
+                        (* First the storage modifiers *)
+                        (self#pAttrs () stom)
+                        ++ (self#pType (Some (text aname)) () atype)
+                        ++ text " "
+                        ++ self#pAttrs () rest
+                      in
+                      (docList ~sep:(chr ',' ++ break) pArg) ()
+                        (argsToList args))
+                   ++ (if isvararg then break ++ text ", ..." else nil))
+                ++ unalign)
+            ++ text ")"))
+        ()
+        restyp
 
-  | TNamed (t, a) ->
+    | TNamed (t, a) ->
       text t.tname ++ self#pAttrs () a ++ text " " ++ name
 
-  | TBuiltin_va_list a ->
+    | TBuiltin_va_list a ->
       text "__builtin_va_list"
-       ++ self#pAttrs () a
-        ++ text " "
-        ++ name
+      ++ self#pAttrs () a
+      ++ text " "
+      ++ name
 
 
   (**** PRINTING ATTRIBUTES *********)
@@ -4318,7 +4318,7 @@ class defaultCilPrinterClass : cilPrinter = object (self)
     (* Recognize and take care of some known cases *)
     match an, args with
       "const", [] -> text "const", false
-          (* Put the aconst inside the attribute list *)
+    (* Put the aconst inside the attribute list *)
     | "aconst", [] when not !msvcMode -> text "__const__", true
     | "thread", [] when not !msvcMode -> text "__thread", false
 (*
@@ -4331,20 +4331,20 @@ class defaultCilPrinterClass : cilPrinter = object (self)
     | "stdcall", [] when !msvcMode -> text "__stdcall", false
     | "fastcall", [] when !msvcMode -> text "__fastcall", false
     | "declspec", args when !msvcMode ->
-        text "__declspec("
-          ++ docList (self#pAttrParam ()) () args
-          ++ text ")", false
+      text "__declspec("
+      ++ docList (self#pAttrParam ()) () args
+      ++ text ")", false
     | "w64", [] when !msvcMode -> text "__w64", false
     | "asm", args ->
-        text "__asm__("
-          ++ docList (self#pAttrParam ()) () args
-          ++ text ")", false
+      text "__asm__("
+      ++ docList (self#pAttrParam ()) () args
+      ++ text ")", false
     (* we suppress printing mode(__si__) because it triggers an *)
     (* internal compiler error in all current gcc versions *)
     (* sm: I've now encountered a problem with mode(__hi__)... *)
     (* I don't know what's going on, but let's try disabling all "mode"..*)
     | "mode", [ACons(tag,[])] ->
-        text "/* mode(" ++ text tag ++ text ") */", false
+      text "/* mode(" ++ text tag ++ text ") */", false
 
     (* sm: also suppress "format" because we seem to print it in *)
     (* a way gcc does not like *)
@@ -4352,35 +4352,35 @@ class defaultCilPrinterClass : cilPrinter = object (self)
 
     (* sm: here's another one I don't want to see gcc warnings about.. *)
     | "mayPointToStack", _ when not !print_CIL_Input
-    (* [matth: may be inside another comment.]
-      -> text "/*mayPointToStack*/", false
-    *)
+      (* [matth: may be inside another comment.]
+         -> text "/*mayPointToStack*/", false
+      *)
       -> text "", false
     | "arraylen", [a] ->
-        (* text "/*[" ++ self#pAttrParam () a ++ text "]*/" *) nil, false
+      (* text "/*[" ++ self#pAttrParam () a ++ text "]*/" *) nil, false
 
 
     | _ -> (* This is the dafault case *)
-        (* Add underscores to the name *)
-        let an' = if !msvcMode then "__" ^ an else "__" ^ an ^ "__" in
-        if args = [] then
-          text an', true
-        else
-          text (an' ^ "(")
-            ++ (docList (self#pAttrParam ()) () args)
-            ++ text ")",
-          true
+      (* Add underscores to the name *)
+      let an' = if !msvcMode then "__" ^ an else "__" ^ an ^ "__" in
+      if args = [] then
+        text an', true
+      else
+        text (an' ^ "(")
+        ++ (docList (self#pAttrParam ()) () args)
+        ++ text ")",
+        true
 
   method private pAttrPrec (contextprec: int) () (a: attrparam) =
     let thisLevel = getParenthLevelAttrParam a in
     let needParens =
       if thisLevel >= contextprec then
-	true
+        true
       else if contextprec == bitwiseLevel then
         (* quiet down some GCC warnings *)
-	thisLevel == additiveLevel || thisLevel == comparativeLevel
+        thisLevel == additiveLevel || thisLevel == comparativeLevel
       else
-	false
+        false
     in
     if needParens then
       chr '(' ++ self#pAttrParam () a ++ chr ')'
@@ -4395,9 +4395,9 @@ class defaultCilPrinterClass : cilPrinter = object (self)
     | AStr s -> text ("\"" ^ escape_string s ^ "\"")
     | ACons(s, []) -> text s
     | ACons(s,al) ->
-        text (s ^ "(")
-          ++ (docList (self#pAttrParam ()) () al)
-          ++ text ")"
+      text (s ^ "(")
+      ++ (docList (self#pAttrParam ()) () al)
+      ++ text ")"
     | ASizeOfE a -> text "sizeof(" ++ self#pAttrParam () a ++ text ")"
     | ASizeOf t -> text "sizeof(" ++ self#pType None () t ++ text ")"
     | ASizeOfS ts -> text "sizeof(<typsig>)"
@@ -4405,27 +4405,27 @@ class defaultCilPrinterClass : cilPrinter = object (self)
     | AAlignOf t -> text "__alignof__(" ++ self#pType None () t ++ text ")"
     | AAlignOfS ts -> text "__alignof__(<typsig>)"
     | AUnOp(u,a1) ->
-        (d_unop () u) ++ chr ' ' ++ (self#pAttrPrec level () a1)
+      (d_unop () u) ++ chr ' ' ++ (self#pAttrPrec level () a1)
 
     | ABinOp(b,a1,a2) ->
-        align
-          ++ text "("
-          ++ (self#pAttrPrec level () a1)
-          ++ text ") "
-          ++ (d_binop () b)
-          ++ break
-          ++ text " (" ++ (self#pAttrPrec level () a2) ++ text ") "
-          ++ unalign
+      align
+      ++ text "("
+      ++ (self#pAttrPrec level () a1)
+      ++ text ") "
+      ++ (d_binop () b)
+      ++ break
+      ++ text " (" ++ (self#pAttrPrec level () a2) ++ text ") "
+      ++ unalign
     | ADot (ap, s) -> (self#pAttrParam () ap) ++ text ("." ^ s)
     | AStar a1 ->
-        text "(*" ++ (self#pAttrPrec derefStarLevel () a1) ++ text ")"
+      text "(*" ++ (self#pAttrPrec derefStarLevel () a1) ++ text ")"
     | AAddrOf a1 -> text "& " ++ (self#pAttrPrec addrOfLevel () a1)
     | AIndex (a1, a2) -> self#pAttrParam () a1 ++ text "[" ++
                          self#pAttrParam () a2 ++ text "]"
     | AQuestion (a1, a2, a3) ->
-          self#pAttrParam () a1 ++ text " ? " ++
-          self#pAttrParam () a2 ++ text " : " ++
-          self#pAttrParam () a3
+      self#pAttrParam () a1 ++ text " ? " ++
+      self#pAttrParam () a2 ++ text " : " ++
+      self#pAttrParam () a3
 
 
   (* A general way of printing lists of attributes *)
@@ -4437,29 +4437,29 @@ class defaultCilPrinterClass : cilPrinter = object (self)
           match in__attr__ with
             [] -> nil
           | _ :: _->
-              (* sm: added 'forgcc' calls to not comment things out
-               * if CIL is the consumer; this is to address a case
-               * Daniel ran into where blockattribute(nobox) was being
-               * dropped by the merger
-               *)
-              (if block then
-                text (" " ^ (forgcc "/*") ^ " __blockattribute__(")
-               else
-                 text "__attribute__((")
+            (* sm: added 'forgcc' calls to not comment things out
+             * if CIL is the consumer; this is to address a case
+             * Daniel ran into where blockattribute(nobox) was being
+             * dropped by the merger
+            *)
+            (if block then
+               text (" " ^ (forgcc "/*") ^ " __blockattribute__(")
+             else
+               text "__attribute__((")
 
-                ++ (docList ~sep:(chr ',' ++ break)
-                      (fun a -> a)) () in__attr__
-                ++ text ")"
-                ++ (if block then text (forgcc "*/") else text ")")
+            ++ (docList ~sep:(chr ',' ++ break)
+                  (fun a -> a)) () in__attr__
+            ++ text ")"
+            ++ (if block then text (forgcc "*/") else text ")")
         end
       | x :: rest ->
-          let dx, ina = self#pAttr x in
-          if ina then
-            loop (dx :: in__attr__) rest
-          else if dx = nil then
-            loop in__attr__ rest
-          else
-            dx ++ text " " ++ loop in__attr__ rest
+        let dx, ina = self#pAttr x in
+        if ina then
+          loop (dx :: in__attr__) rest
+        else if dx = nil then
+          loop in__attr__ rest
+        else
+          dx ++ text " " ++ loop in__attr__ rest
     in
     let res = loop [] a in
     if res = nil then
@@ -4551,18 +4551,18 @@ let d_shortglobal () = function
  * behaves the same, except it never prints #line directives
  * (this is useful for debugging printfs) *)
 let dn_obj (func: unit -> 'a -> doc) : (unit -> 'a -> doc) =
-begin
-  (* construct the closure to return *)
-  let theFunc () (obj:'a) : doc =
   begin
-    let prevStyle = !lineDirectiveStyle in
-    lineDirectiveStyle := None;
-    let ret = (func () obj) in    (* call underlying printer *)
-    lineDirectiveStyle := prevStyle;
-    ret
-  end in
-  theFunc
-end
+    (* construct the closure to return *)
+    let theFunc () (obj:'a) : doc =
+      begin
+        let prevStyle = !lineDirectiveStyle in
+        lineDirectiveStyle := None;
+        let ret = (func () obj) in    (* call underlying printer *)
+        lineDirectiveStyle := prevStyle;
+        ret
+      end in
+    theFunc
+  end
 
 (* now define shortcuts for the non-location-printing versions,
  * with the naming prefix "dn_" *)
@@ -4586,147 +4586,147 @@ class plainCilPrinterClass =
   let donecomps : (int, unit) H.t = H.create 13 in
   object (self)
 
-  inherit defaultCilPrinterClass as super
+    inherit defaultCilPrinterClass as super
 
-  (*** PLAIN TYPES ***)
-  method pType (dn: doc option) () (t: typ) =
-    match dn with
-      None -> self#pOnlyType () t
-    | Some d -> d ++ text " : " ++ self#pOnlyType () t
+    (*** PLAIN TYPES ***)
+    method pType (dn: doc option) () (t: typ) =
+      match dn with
+        None -> self#pOnlyType () t
+      | Some d -> d ++ text " : " ++ self#pOnlyType () t
 
- method private pOnlyType () = function
-     TVoid a -> dprintf "TVoid(@[%a@])" self#pAttrs a
-   | TInt(ikind, a) -> dprintf "TInt(@[%a,@?%a@])"
-         d_ikind ikind self#pAttrs a
-   | TFloat(fkind, a) ->
-       dprintf "TFloat(@[%a,@?%a@])" d_fkind fkind self#pAttrs a
-   | TNamed (t, a) ->
-       dprintf "TNamed(@[%s,@?%a,@?%a@])"
-         t.tname self#pOnlyType t.ttype self#pAttrs a
-   | TPtr(t, a) -> dprintf "TPtr(@[%a,@?%a@])" self#pOnlyType t self#pAttrs a
-   | TArray(t,l,a) ->
-       let dl = match l with
-         None -> text "None" | Some l -> dprintf "Some(@[%a@])" self#pExp l in
-       dprintf "TArray(@[%a,@?%a,@?%a@])"
-         self#pOnlyType t insert dl self#pAttrs a
-   | TEnum(enum,a) -> dprintf "Enum(%s,@[%a@])" enum.ename self#pAttrs a
-   | TFun(tr,args,isva,a) ->
-       dprintf "TFun(@[%a,@?%a%s,@?%a@])"
-         self#pOnlyType tr
-         insert
-         (if args = None then text "None"
-         else (docList ~sep:(chr ',' ++ break)
-                 (fun (an,at,aa) ->
-                   dprintf "%s: %a" an self#pOnlyType at))
-             ()
-             (argsToList args))
-         (if isva then "..." else "") self#pAttrs a
-   | TComp (comp, a) ->
-       if H.mem donecomps comp.ckey then
-         dprintf "TCompLoop(%s %s, _, %a)"
-           (if comp.cstruct then "struct" else "union") comp.cname
-           self#pAttrs comp.cattr
-       else begin
-         H.add donecomps comp.ckey (); (* Add it before we do the fields *)
-         dprintf "TComp(@[%s %s,@?%a,@?%a,@?%a@])"
-           (if comp.cstruct then "struct" else "union") comp.cname
-           (docList ~sep:(chr ',' ++ break)
-              (fun f -> dprintf "%s : %a" f.fname self#pOnlyType f.ftype))
-           comp.cfields
-           self#pAttrs comp.cattr
-           self#pAttrs a
-       end
-   | TBuiltin_va_list a ->
-       dprintf "TBuiltin_va_list(%a)" self#pAttrs a
+    method private pOnlyType () = function
+        TVoid a -> dprintf "TVoid(@[%a@])" self#pAttrs a
+      | TInt(ikind, a) -> dprintf "TInt(@[%a,@?%a@])"
+                            d_ikind ikind self#pAttrs a
+      | TFloat(fkind, a) ->
+        dprintf "TFloat(@[%a,@?%a@])" d_fkind fkind self#pAttrs a
+      | TNamed (t, a) ->
+        dprintf "TNamed(@[%s,@?%a,@?%a@])"
+          t.tname self#pOnlyType t.ttype self#pAttrs a
+      | TPtr(t, a) -> dprintf "TPtr(@[%a,@?%a@])" self#pOnlyType t self#pAttrs a
+      | TArray(t,l,a) ->
+        let dl = match l with
+            None -> text "None" | Some l -> dprintf "Some(@[%a@])" self#pExp l in
+        dprintf "TArray(@[%a,@?%a,@?%a@])"
+          self#pOnlyType t insert dl self#pAttrs a
+      | TEnum(enum,a) -> dprintf "Enum(%s,@[%a@])" enum.ename self#pAttrs a
+      | TFun(tr,args,isva,a) ->
+        dprintf "TFun(@[%a,@?%a%s,@?%a@])"
+          self#pOnlyType tr
+          insert
+          (if args = None then text "None"
+           else (docList ~sep:(chr ',' ++ break)
+                   (fun (an,at,aa) ->
+                      dprintf "%s: %a" an self#pOnlyType at))
+               ()
+               (argsToList args))
+          (if isva then "..." else "") self#pAttrs a
+      | TComp (comp, a) ->
+        if H.mem donecomps comp.ckey then
+          dprintf "TCompLoop(%s %s, _, %a)"
+            (if comp.cstruct then "struct" else "union") comp.cname
+            self#pAttrs comp.cattr
+        else begin
+          H.add donecomps comp.ckey (); (* Add it before we do the fields *)
+          dprintf "TComp(@[%s %s,@?%a,@?%a,@?%a@])"
+            (if comp.cstruct then "struct" else "union") comp.cname
+            (docList ~sep:(chr ',' ++ break)
+               (fun f -> dprintf "%s : %a" f.fname self#pOnlyType f.ftype))
+            comp.cfields
+            self#pAttrs comp.cattr
+            self#pAttrs a
+        end
+      | TBuiltin_va_list a ->
+        dprintf "TBuiltin_va_list(%a)" self#pAttrs a
 
 
-  (* Some plain pretty-printers. Unlike the above these expose all the
-   * details of the internal representation *)
-  method pExp () = function
-    Const(c) ->
-      let d_plainconst () c =
-        match c with
-          CInt64(i, ik, so) ->
-	    let fmt = if isSigned ik then "%d" else "%x" in
+    (* Some plain pretty-printers. Unlike the above these expose all the
+     * details of the internal representation *)
+    method pExp () = function
+        Const(c) ->
+        let d_plainconst () c =
+          match c with
+            CInt64(i, ik, so) ->
+            let fmt = if isSigned ik then "%d" else "%x" in
             dprintf "Int64(%s,%a,%s)"
               (Int64.format fmt i)
               d_ikind ik
               (match so with Some s -> s | _ -> "None")
-        | CStr(s) ->
+          | CStr(s) ->
             text ("CStr(\"" ^ escape_string s ^ "\")")
-        | CWStr(s) ->
+          | CWStr(s) ->
             dprintf "CWStr(%a)" d_const c
 
-        | CChr(c) -> text ("CChr('" ^ escape_char c ^ "')")
-        | CReal(f, fk, so) ->
+          | CChr(c) -> text ("CChr('" ^ escape_char c ^ "')")
+          | CReal(f, fk, so) ->
             dprintf "CReal(%f, %a, %s)"
               f
               d_fkind fk
               (match so with Some s -> s | _ -> "None")
-        | CEnum(_, s, _) -> text s
-      in
-      text "Const(" ++ d_plainconst () c ++ text ")"
+          | CEnum(_, s, _) -> text s
+        in
+        text "Const(" ++ d_plainconst () c ++ text ")"
 
 
-  | Lval(lv) ->
-      text "Lval("
+      | Lval(lv) ->
+        text "Lval("
         ++ (align
-              ++ self#pLval () lv
-              ++ unalign)
+            ++ self#pLval () lv
+            ++ unalign)
         ++ text ")"
 
-  | CastE(t,e) -> dprintf "CastE(@[%a,@?%a@])" self#pOnlyType t self#pExp e
+      | CastE(t,e) -> dprintf "CastE(@[%a,@?%a@])" self#pOnlyType t self#pExp e
 
-  | UnOp(u,e1,_) ->
-      dprintf "UnOp(@[%a,@?%a@])"
-        d_unop u self#pExp e1
+      | UnOp(u,e1,_) ->
+        dprintf "UnOp(@[%a,@?%a@])"
+          d_unop u self#pExp e1
 
-  | BinOp(b,e1,e2,_) ->
-      let d_plainbinop () b =
-        match b with
-          PlusA -> text "PlusA"
-        | PlusPI -> text "PlusPI"
-        | IndexPI -> text "IndexPI"
-        | MinusA -> text "MinusA"
-        | MinusPP -> text "MinusPP"
-        | MinusPI -> text "MinusPI"
-        | _ -> d_binop () b
-      in
-      dprintf "%a(@[%a,@?%a@])" d_plainbinop b
-        self#pExp e1 self#pExp e2
+      | BinOp(b,e1,e2,_) ->
+        let d_plainbinop () b =
+          match b with
+            PlusA -> text "PlusA"
+          | PlusPI -> text "PlusPI"
+          | IndexPI -> text "IndexPI"
+          | MinusA -> text "MinusA"
+          | MinusPP -> text "MinusPP"
+          | MinusPI -> text "MinusPI"
+          | _ -> d_binop () b
+        in
+        dprintf "%a(@[%a,@?%a@])" d_plainbinop b
+          self#pExp e1 self#pExp e2
 
-  | Question(e1,e2,e3,_) ->
-      dprintf "Question(@[%a,@?%a,@?%a@])"
-        self#pExp e1 self#pExp e2 self#pExp e3
+      | Question(e1,e2,e3,_) ->
+        dprintf "Question(@[%a,@?%a,@?%a@])"
+          self#pExp e1 self#pExp e2 self#pExp e3
 
-  | SizeOf (t) ->
-      text "sizeof(" ++ self#pType None () t ++ chr ')'
-  | SizeOfE (e) ->
-      text "sizeofE(" ++ self#pExp () e ++ chr ')'
-  | SizeOfStr (s) ->
-      text "sizeofStr(" ++ d_const () (CStr s) ++ chr ')'
-  | AlignOf (t) ->
-      text "__alignof__(" ++ self#pType None () t ++ chr ')'
-  | AlignOfE (e) ->
-      text "__alignof__(" ++ self#pExp () e ++ chr ')'
+      | SizeOf (t) ->
+        text "sizeof(" ++ self#pType None () t ++ chr ')'
+      | SizeOfE (e) ->
+        text "sizeofE(" ++ self#pExp () e ++ chr ')'
+      | SizeOfStr (s) ->
+        text "sizeofStr(" ++ d_const () (CStr s) ++ chr ')'
+      | AlignOf (t) ->
+        text "__alignof__(" ++ self#pType None () t ++ chr ')'
+      | AlignOfE (e) ->
+        text "__alignof__(" ++ self#pExp () e ++ chr ')'
 
-  | StartOf lv -> dprintf "StartOf(%a)" self#pLval lv
-  | AddrOf (lv) -> dprintf "AddrOf(%a)" self#pLval lv
-  | AddrOfLabel (sref) -> dprintf "AddrOfLabel(%a)" self#pStmt !sref
+      | StartOf lv -> dprintf "StartOf(%a)" self#pLval lv
+      | AddrOf (lv) -> dprintf "AddrOf(%a)" self#pLval lv
+      | AddrOfLabel (sref) -> dprintf "AddrOfLabel(%a)" self#pStmt !sref
 
 
 
-  method private d_plainoffset () = function
-      NoOffset -> text "NoOffset"
-    | Field(fi,o) ->
+    method private d_plainoffset () = function
+        NoOffset -> text "NoOffset"
+      | Field(fi,o) ->
         dprintf "Field(@[%s:%a,@?%a@])"
           fi.fname self#pOnlyType fi.ftype self#d_plainoffset o
-     | Index(e, o) ->
-         dprintf "Index(@[%a,@?%a@])" self#pExp e self#d_plainoffset o
+      | Index(e, o) ->
+        dprintf "Index(@[%a,@?%a@])" self#pExp e self#d_plainoffset o
 
-  method pInit () = function
-      SingleInit e -> dprintf "SI(%a)" d_exp e
-    | CompoundInit (t, initl) ->
+    method pInit () = function
+        SingleInit e -> dprintf "SI(%a)" d_exp e
+      | CompoundInit (t, initl) ->
         let d_plainoneinit (o, i) =
           self#d_plainoffset () o ++ text " = " ++ self#pInit () i
         in
@@ -4742,13 +4742,13 @@ class plainCilPrinterClass =
         dprintf "AI(@[%a,%d,@?%a@])" self#pOnlyType t len
           (docList ~sep:(chr ',' ++ break) d_plainoneinit) initl
 *)
-  method pLval () (lv: lval) =
-    match lv with
-    | Var vi, o -> dprintf "Var(@[%s,@?%a@])" vi.vname self#d_plainoffset o
-    | Mem e, o -> dprintf "Mem(@[%a,@?%a@])" self#pExp e self#d_plainoffset o
+    method pLval () (lv: lval) =
+      match lv with
+      | Var vi, o -> dprintf "Var(@[%s,@?%a@])" vi.vname self#d_plainoffset o
+      | Mem e, o -> dprintf "Mem(@[%a,@?%a@])" self#pExp e self#d_plainoffset o
 
 
-end
+  end
 let plainCilPrinter = new plainCilPrinterClass
 
 (* And now some shortcuts *)
@@ -4766,71 +4766,71 @@ class type descriptiveCilPrinter = object
 end
 
 class descriptiveCilPrinterClass (enable: bool) : descriptiveCilPrinter =
-object (self)
-  (** Like defaultCilPrinterClass, but instead of temporary variable
-      names it prints the description that was provided when the temp was
-      created.  This is usually better for messages that are printed for end
-      users, although you may want the temporary names for debugging.
+  object (self)
+    (** Like defaultCilPrinterClass, but instead of temporary variable
+        names it prints the description that was provided when the temp was
+        created.  This is usually better for messages that are printed for end
+        users, although you may want the temporary names for debugging.
 
-      The boolean here enables descriptive printing.  Usually use true
-      here, but you can set enable to false to make this class behave
-      like defaultCilPrinterClass. This allows subclasses to turn the
-      feature off. *)
-  inherit defaultCilPrinterClass as super
+        The boolean here enables descriptive printing.  Usually use true
+        here, but you can set enable to false to make this class behave
+        like defaultCilPrinterClass. This allows subclasses to turn the
+        feature off. *)
+    inherit defaultCilPrinterClass as super
 
-  val mutable temps: (varinfo * string * doc) list = []
-  val mutable useTemps: bool = false
+    val mutable temps: (varinfo * string * doc) list = []
+    val mutable useTemps: bool = false
 
-  method startTemps () : unit =
-    temps <- [];
-    useTemps <- true
+    method startTemps () : unit =
+      temps <- [];
+      useTemps <- true
 
-  method stopTemps () : unit =
-    temps <- [];
-    useTemps <- false
+    method stopTemps () : unit =
+      temps <- [];
+      useTemps <- false
 
-  method pTemps () : doc =
-    if temps = [] then
-      nil
-    else
-      text "\nWhere:\n  " ++
-      docList ~sep:(text "\n  ")
-              (fun (_, s, d) -> dprintf "%s = %a" s insert d) ()
-              (List.rev temps)
+    method pTemps () : doc =
+      if temps = [] then
+        nil
+      else
+        text "\nWhere:\n  " ++
+        docList ~sep:(text "\n  ")
+          (fun (_, s, d) -> dprintf "%s = %a" s insert d) ()
+          (List.rev temps)
 
-  method private pVarDescriptive (vi: varinfo) : doc =
-    if vi.vdescr <> nil then begin
-      if vi.vdescrpure || not useTemps then
-        vi.vdescr
-      else begin
-        try
-          let _, name, _ = List.find (fun (vi', _, _) -> vi == vi') temps in
-          text name
-        with Not_found ->
-          let name = "tmp" ^ string_of_int (List.length temps) in
-          temps <- (vi, name, vi.vdescr) :: temps;
-          text name
-      end
-    end else
-      super#pVar vi
+    method private pVarDescriptive (vi: varinfo) : doc =
+      if vi.vdescr <> nil then begin
+        if vi.vdescrpure || not useTemps then
+          vi.vdescr
+        else begin
+          try
+            let _, name, _ = List.find (fun (vi', _, _) -> vi == vi') temps in
+            text name
+          with Not_found ->
+            let name = "tmp" ^ string_of_int (List.length temps) in
+            temps <- (vi, name, vi.vdescr) :: temps;
+            text name
+        end
+      end else
+        super#pVar vi
 
-  (* Only substitute temp vars that appear in expressions.
-     (Other occurrences of lvalues are the left-hand sides of assignments,
-      but we shouldn't substitute there since "foo(a,b) = foo(a,b)"
-      would make no sense to the user.)  *)
-  method pExp () (e:exp) : doc =
-    if enable then
-      match e with
-        Lval (Var vi, o)
-      | StartOf (Var vi, o) ->
+    (* Only substitute temp vars that appear in expressions.
+       (Other occurrences of lvalues are the left-hand sides of assignments,
+        but we shouldn't substitute there since "foo(a,b) = foo(a,b)"
+        would make no sense to the user.)  *)
+    method pExp () (e:exp) : doc =
+      if enable then
+        match e with
+          Lval (Var vi, o)
+        | StartOf (Var vi, o) ->
           self#pOffset (self#pVarDescriptive vi) o
-      | AddrOf (Var vi, o) ->
+        | AddrOf (Var vi, o) ->
           (* No parens needed, since offsets have higher precedence than & *)
           text "& " ++ self#pOffset (self#pVarDescriptive vi) o
-      | _ -> super#pExp () e
-    else
-      super#pExp () e
-end
+        | _ -> super#pExp () e
+      else
+        super#pExp () e
+  end
 
 let descriptiveCilPrinter: descriptiveCilPrinter =
   ((new descriptiveCilPrinterClass true) :> descriptiveCilPrinter)
@@ -4844,31 +4844,31 @@ let printerForMaincil = ref defaultCilPrinter
 
 let rec d_typsig () = function
     TSArray (ts, eo, al) ->
-      dprintf "TSArray(@[%a,@?%a,@?%a@])"
-        d_typsig ts
-        insert (text (match eo with None -> "None"
-                       | Some e -> "Some " ^ Int64.to_string e))
-        d_attrlist al
+    dprintf "TSArray(@[%a,@?%a,@?%a@])"
+      d_typsig ts
+      insert (text (match eo with None -> "None"
+                                | Some e -> "Some " ^ Int64.to_string e))
+      d_attrlist al
   | TSPtr (ts, al) ->
-      dprintf "TSPtr(@[%a,@?%a@])"
-        d_typsig ts d_attrlist al
+    dprintf "TSPtr(@[%a,@?%a@])"
+      d_typsig ts d_attrlist al
   | TSComp (iss, name, al) ->
-      dprintf "TSComp(@[%s %s,@?%a@])"
-        (if iss then "struct" else "union") name
-        d_attrlist al
+    dprintf "TSComp(@[%s %s,@?%a@])"
+      (if iss then "struct" else "union") name
+      d_attrlist al
   | TSFun (rt, args, isva, al) ->
-      dprintf "TSFun(@[%a,@?%a,%B,@?%a@])"
-        d_typsig rt
-        insert
-        (match args with
-        | None -> text "None"
-        | Some args ->
-            docList ~sep:(chr ',' ++ break) (d_typsig ()) () args)
-        isva
-        d_attrlist al
+    dprintf "TSFun(@[%a,@?%a,%B,@?%a@])"
+      d_typsig rt
+      insert
+      (match args with
+       | None -> text "None"
+       | Some args ->
+         docList ~sep:(chr ',' ++ break) (d_typsig ()) () args)
+      isva
+      d_attrlist al
   | TSEnum (n, al) ->
-      dprintf "TSEnum(@[%s,@?%a@])"
-        n d_attrlist al
+    dprintf "TSEnum(@[%s,@?%a@])"
+      n d_attrlist al
   | TSBase t -> dprintf "TSBase(%a)" d_type t
 
 
@@ -4877,7 +4877,7 @@ let newVID () =
   incr nextGlobalVID;
   t
 
-   (* Make a varinfo. Used mostly as a helper function below  *)
+(* Make a varinfo. Used mostly as a helper function below  *)
 let makeVarinfo global name ?init typ =
   (* Strip const from type for locals *)
   let vi =
@@ -4906,25 +4906,25 @@ let makeLocal fdec name typ init = (* a helper function *)
   let vi = makeVarinfo false name ?init:init typ in
   vi
 
-   (* Make a local variable and add it to a function *)
+(* Make a local variable and add it to a function *)
 let makeLocalVar fdec ?(insert = true) name ?init typ =
   let vi = makeLocal fdec name typ init in
   if insert then fdec.slocals <- fdec.slocals @ [vi];
   vi
 
 let makeTempVar fdec ?(insert = true) ?(name = "__cil_tmp")
-                ?(descr = nil) ?(descrpure = true) typ : varinfo =
+    ?(descr = nil) ?(descrpure = true) typ : varinfo =
   let rec findUniqueName () : string=
     let n = name ^ (string_of_int (1 + fdec.smaxid)) in
     (* Is this check a performance problem?  We could bring the old
        unchecked makeTempVar back as a separate function that assumes
        the prefix name does not occur in the original program. *)
     if (List.exists (fun vi -> vi.vname = n) fdec.slocals)
-      || (List.exists (fun vi -> vi.vname = n) fdec.sformals) then begin
-        fdec.smaxid <- 1 + fdec.smaxid;
-        findUniqueName ()
-      end else
-        n
+    || (List.exists (fun vi -> vi.vname = n) fdec.sformals) then begin
+      fdec.smaxid <- 1 + fdec.smaxid;
+      findUniqueName ()
+    end else
+      n
   in
   let name = findUniqueName () in
   let vi = makeLocalVar fdec ~insert name typ in
@@ -4938,61 +4938,61 @@ let setFormals (f: fundec) (forms: varinfo list) =
   f.sformals <- forms; (* Set the formals *)
   match unrollType f.svar.vtype with
     TFun(rt, _, isva, fa) ->
-      f.svar.vtype <-
-         TFun(rt,
-              Some (Util.list_map (fun a -> (a.vname, a.vtype, a.vattr)) forms),
-              isva, fa)
+    f.svar.vtype <-
+      TFun(rt,
+           Some (Util.list_map (fun a -> (a.vname, a.vtype, a.vattr)) forms),
+           isva, fa)
   | _ -> E.s (E.bug "Set formals. %s does not have function type\n"
                 f.svar.vname)
 
-   (* Set the types of arguments and results as given by the function type
-    * passed as the second argument *)
+(* Set the types of arguments and results as given by the function type
+ * passed as the second argument *)
 let setFunctionType (f: fundec) (t: typ) =
   match unrollType t with
     TFun (rt, Some args, va, a) ->
-      if List.length f.sformals <> List.length args then
-        E.s (E.bug "setFunctionType: number of arguments differs from the number of formals");
-      (* Change the function type. *)
-      f.svar.vtype <- t;
-      (* Change the sformals and we know that indirectly we'll change the
-       * function type *)
-      List.iter2
-        (fun (an,at,aa) f ->
-          f.vtype <- at; f.vattr <- aa)
-        args f.sformals
+    if List.length f.sformals <> List.length args then
+      E.s (E.bug "setFunctionType: number of arguments differs from the number of formals");
+    (* Change the function type. *)
+    f.svar.vtype <- t;
+    (* Change the sformals and we know that indirectly we'll change the
+     * function type *)
+    List.iter2
+      (fun (an,at,aa) f ->
+         f.vtype <- at; f.vattr <- aa)
+      args f.sformals
 
   | _ -> E.s (E.bug "setFunctionType: not a function type")
 
 
-   (* Set the types of arguments and results as given by the function type
-    * passed as the second argument *)
+(* Set the types of arguments and results as given by the function type
+ * passed as the second argument *)
 let setFunctionTypeMakeFormals (f: fundec) (t: typ) =
   match unrollType t with
     TFun (rt, Some args, va, a) ->
-      if f.sformals <> [] then
-        E.s (E.warn "setFunctionTypMakeFormals called on function %s with some formals already"
-               f.svar.vname);
-      (* Change the function type. *)
-      f.svar.vtype <- t;
-      f.sformals <- [];
+    if f.sformals <> [] then
+      E.s (E.warn "setFunctionTypMakeFormals called on function %s with some formals already"
+             f.svar.vname);
+    (* Change the function type. *)
+    f.svar.vtype <- t;
+    f.sformals <- [];
 
-      f.sformals <- Util.list_map (fun (n,t,a) -> makeLocal f n t None) args;
+    f.sformals <- Util.list_map (fun (n,t,a) -> makeLocal f n t None) args;
 
-      setFunctionType f t
+    setFunctionType f t
 
   | _ -> E.s (E.bug "setFunctionTypeMakeFormals: not a function type: %a"
-             d_type t)
+                d_type t)
 
 
 let setMaxId (f: fundec) =
   f.smaxid <- List.length f.sformals + List.length f.slocals
 
 
-  (* Make a formal variable for a function. Insert it in both the sformals
-   * and the type of the function. You can optionally specify where to insert
-   * this one. If where = "^" then it is inserted first. If where = "$" then
-   * it is inserted last. Otherwise where must be the name of a formal after
-   * which to insert this. By default it is inserted at the end. *)
+(* Make a formal variable for a function. Insert it in both the sformals
+ * and the type of the function. You can optionally specify where to insert
+ * this one. If where = "^" then it is inserted first. If where = "$" then
+ * it is inserted last. Otherwise where must be the name of a formal after
+ * which to insert this. By default it is inserted at the end. *)
 let makeFormalVar fdec ?(where = "$") name typ : varinfo =
   (* Search for the insertion place *)
   let thenewone = ref fdec.svar in (* Just a placeholder *)
@@ -5003,26 +5003,26 @@ let makeFormalVar fdec ?(where = "$") name typ : varinfo =
   in
   let rec loopFormals = function
       [] ->
-        if where = "$" then [makeit ()]
-        else E.s (E.error "makeFormalVar: cannot find insert-after formal %s"
-                    where)
+      if where = "$" then [makeit ()]
+      else E.s (E.error "makeFormalVar: cannot find insert-after formal %s"
+                  where)
     | f :: rest when f.vname = where -> f :: makeit () :: rest
     | f :: rest -> f :: loopFormals rest
   in
   let newformals =
     if where = "^" then makeit () :: fdec.sformals else
-    loopFormals fdec.sformals in
+      loopFormals fdec.sformals in
   setFormals fdec newformals;
   !thenewone
 
-   (* Make a global variable. Your responsibility to make sure that the name
-    * is unique *)
+(* Make a global variable. Your responsibility to make sure that the name
+ * is unique *)
 let makeGlobalVar name typ =
   let vi = makeVarinfo true name typ in
   vi
 
 
-   (* Make an empty function *)
+(* Make an empty function *)
 let emptyFunction name =
   { svar  = makeGlobalVar name (TFun(voidType, Some [], false,[]));
     smaxid = 0;
@@ -5034,7 +5034,7 @@ let emptyFunction name =
   }
 
 
-    (* A dummy function declaration handy for initialization *)
+(* A dummy function declaration handy for initialization *)
 let dummyFunDec = emptyFunction "@dummy"
 let dummyFile =
   { globals = [];
@@ -5044,9 +5044,9 @@ let dummyFile =
 
 (***** Load and store files as unmarshalled Ocaml binary data. ****)
 type savedFile =
-    { savedFile: file;
-      savedNextVID: int;
-      savedNextCompinfoKey: int}
+  { savedFile: file;
+    savedNextVID: int;
+    savedNextCompinfoKey: int}
 
 let saveBinaryFileChannel (cil_file : file) (outchan : out_channel) =
   let save = {savedFile = cil_file;
@@ -5103,9 +5103,9 @@ let rec addOffset (toadd: offset) (off: offset) : offset =
   | Field(fid', offset) -> Field(fid', addOffset toadd offset)
   | Index(e, offset) -> Index(e, addOffset toadd offset)
 
- (* Add an offset at the end of an lv *)
+(* Add an offset at the end of an lv *)
 let addOffsetLval toadd (b, off) : lval =
- b, addOffset toadd off
+  b, addOffset toadd off
 
 let rec removeOffset (off: offset) : offset * offset =
   match off with
@@ -5113,11 +5113,11 @@ let rec removeOffset (off: offset) : offset * offset =
   | Field(f, NoOffset) -> NoOffset, off
   | Index(i, NoOffset) -> NoOffset, off
   | Field(f, restoff) ->
-      let off', last = removeOffset restoff in
-      Field(f, off'), last
+    let off', last = removeOffset restoff in
+    Field(f, off'), last
   | Index(i, restoff) ->
-      let off', last = removeOffset restoff in
-      Index(i, off'), last
+    let off', last = removeOffset restoff in
+    Index(i, off'), last
 
 let removeOffsetLval ((b, off): lval) : lval * offset =
   let off', last = removeOffset off in
@@ -5127,9 +5127,9 @@ let removeOffsetLval ((b, off): lval) : lval * offset =
 (*** Define the visiting engine ****)
 (* visit all the nodes in a Cil expression *)
 let doVisit (vis: cilVisitor)
-            (action: 'a visitAction)
-            (children: cilVisitor -> 'a -> 'a)
-            (node: 'a) : 'a =
+    (action: 'a visitAction)
+    (children: cilVisitor -> 'a -> 'a)
+    (node: 'a) : 'a =
   match action with
     SkipChildren -> node
   | ChangeTo node' -> node'
@@ -5140,16 +5140,16 @@ let doVisit (vis: cilVisitor)
  * change the elements. *)
 let mapNoCopy (f: 'a -> 'a) l =
   let rec aux acc changed = function
-    [] -> if changed then List.rev acc else l
-  | i :: resti ->
+      [] -> if changed then List.rev acc else l
+    | i :: resti ->
       let i' = f i in
       aux (i' :: acc) (changed || i != i') resti
   in aux [] false l
 
 let rec mapNoCopyList (f: 'a -> 'a list) l =
   let rec aux acc changed = function
-    [] -> if changed then List.rev acc else l
-  | i :: resti ->
+      [] -> if changed then List.rev acc else l
+    | i :: resti ->
       let il' = f i in
       let has_changed =
         match il' with
@@ -5160,15 +5160,15 @@ let rec mapNoCopyList (f: 'a -> 'a list) l =
 
 (* A visitor for lists *)
 let doVisitList  (vis: cilVisitor)
-                 (action: 'a list visitAction)
-                 (children: cilVisitor -> 'a -> 'a)
-                 (node: 'a) : 'a list =
+    (action: 'a list visitAction)
+    (children: cilVisitor -> 'a -> 'a)
+    (node: 'a) : 'a list =
   match action with
     SkipChildren -> [node]
   | ChangeTo nodes' -> nodes'
   | DoChildren -> [children vis node]
   | ChangeDoChildrenPost(nodes', f) ->
-      f (mapNoCopy (fun n -> children vis n) nodes')
+    f (mapNoCopy (fun n -> children vis n) nodes')
 
 let debugVisit = false
 
@@ -5180,75 +5180,75 @@ and childrenExp (vis: cilVisitor) (e: exp) : exp =
   let vLval lv = visitCilLval vis lv in
   match e with
   | Const (CEnum(v, s, ei)) ->
-      let v' = vExp v in
-      if v' != v then Const (CEnum(v', s, ei)) else e
+    let v' = vExp v in
+    if v' != v then Const (CEnum(v', s, ei)) else e
 
   | Const _ -> e
   | SizeOf t ->
-      let t'= vTyp t in
-      if t' != t then SizeOf t' else e
+    let t'= vTyp t in
+    if t' != t then SizeOf t' else e
   | SizeOfE e1 ->
-      let e1' = vExp e1 in
-      if e1' != e1 then SizeOfE e1' else e
+    let e1' = vExp e1 in
+    if e1' != e1 then SizeOfE e1' else e
   | SizeOfStr s -> e
 
   | AlignOf t ->
-      let t' = vTyp t in
-      if t' != t then AlignOf t' else e
+    let t' = vTyp t in
+    if t' != t then AlignOf t' else e
   | AlignOfE e1 ->
-      let e1' = vExp e1 in
-      if e1' != e1 then AlignOfE e1' else e
+    let e1' = vExp e1 in
+    if e1' != e1 then AlignOfE e1' else e
   | Lval lv ->
-      let lv' = vLval lv in
-      if lv' != lv then Lval lv' else e
+    let lv' = vLval lv in
+    if lv' != lv then Lval lv' else e
   | UnOp (uo, e1, t) ->
-      let e1' = vExp e1 in let t' = vTyp t in
-      if e1' != e1 || t' != t then UnOp(uo, e1', t') else e
+    let e1' = vExp e1 in let t' = vTyp t in
+    if e1' != e1 || t' != t then UnOp(uo, e1', t') else e
   | BinOp (bo, e1, e2, t) ->
-      let e1' = vExp e1 in let e2' = vExp e2 in let t' = vTyp t in
-      if e1' != e1 || e2' != e2 || t' != t then BinOp(bo, e1',e2',t') else e
+    let e1' = vExp e1 in let e2' = vExp e2 in let t' = vTyp t in
+    if e1' != e1 || e2' != e2 || t' != t then BinOp(bo, e1',e2',t') else e
   | Question (e1, e2, e3, t) ->
-      let e1' = vExp e1 in let e2' = vExp e2 in let e3' = vExp e3 in let t' = vTyp t in
-      if e1' != e1 || e2' != e2 || e3' != e3 || t' != t then Question(e1',e2',e3',t') else e
+    let e1' = vExp e1 in let e2' = vExp e2 in let e3' = vExp e3 in let t' = vTyp t in
+    if e1' != e1 || e2' != e2 || e3' != e3 || t' != t then Question(e1',e2',e3',t') else e
   | CastE (t, e1) ->
-      let t' = vTyp t in let e1' = vExp e1 in
-      if t' != t || e1' != e1 then CastE(t', e1') else e
+    let t' = vTyp t in let e1' = vExp e1 in
+    if t' != t || e1' != e1 then CastE(t', e1') else e
   | AddrOf lv ->
-      let lv' = vLval lv in
-      if lv' != lv then AddrOf lv' else e
+    let lv' = vLval lv in
+    if lv' != lv then AddrOf lv' else e
   | AddrOfLabel _ -> e
   | StartOf lv ->
-      let lv' = vLval lv in
-      if lv' != lv then StartOf lv' else e
+    let lv' = vLval lv in
+    if lv' != lv then StartOf lv' else e
 
 and visitCilInit (vis: cilVisitor) (forglob: varinfo)
-                 (atoff: offset) (i: init) : init =
+    (atoff: offset) (i: init) : init =
   let rec childrenInit (vis: cilVisitor) (i: init) : init =
     let fExp e = visitCilExpr vis e in
     let fTyp t = visitCilType vis t in
     match i with
     | SingleInit e ->
-        let e' = fExp e in
-        if e' != e then SingleInit e' else i
+      let e' = fExp e in
+      if e' != e then SingleInit e' else i
     | CompoundInit (t, initl) ->
-        let t' = fTyp t in
-        (* Collect the new initializer list, in reverse. We prefer two
-         * traversals to ensure tail-recursion. *)
-        let newinitl : (offset * init) list ref = ref [] in
-        (* Keep track whether the list has changed *)
-        let hasChanged = ref false in
-        let doOneInit ((o, i) as oi) =
-          let o' = visitCilInitOffset vis o in    (* use initializer version *)
-          let i' = visitCilInit vis forglob (addOffset o' atoff) i in
-          let newio =
-            if o' != o || i' != i then
-              begin hasChanged := true; (o', i') end else oi
-          in
-          newinitl := newio :: !newinitl
+      let t' = fTyp t in
+      (* Collect the new initializer list, in reverse. We prefer two
+       * traversals to ensure tail-recursion. *)
+      let newinitl : (offset * init) list ref = ref [] in
+      (* Keep track whether the list has changed *)
+      let hasChanged = ref false in
+      let doOneInit ((o, i) as oi) =
+        let o' = visitCilInitOffset vis o in    (* use initializer version *)
+        let i' = visitCilInit vis forglob (addOffset o' atoff) i in
+        let newio =
+          if o' != o || i' != i then
+            begin hasChanged := true; (o', i') end else oi
         in
-        List.iter doOneInit initl;
-        let initl' = if !hasChanged then List.rev !newinitl else initl in
-        if t' != t || initl' != initl then CompoundInit (t', initl') else i
+        newinitl := newio :: !newinitl
+      in
+      List.iter doOneInit initl;
+      let initl' = if !hasChanged then List.rev !newinitl else initl in
+      if t' != t || initl' != initl then CompoundInit (t', initl') else i
   in
   doVisit vis (vis#vinit forglob atoff i) childrenInit i
 
@@ -5260,13 +5260,13 @@ and childrenLval (vis: cilVisitor) (lv: lval) : lval =
   let vOff off = visitCilOffset vis off in
   match lv with
     Var v, off ->
-      let v'   = doVisit vis (vis#vvrbl v) (fun _ x -> x) v in
-      let off' = vOff off in
-      if v' != v || off' != off then Var v', off' else lv
+    let v'   = doVisit vis (vis#vvrbl v) (fun _ x -> x) v in
+    let off' = vOff off in
+    if v' != v || off' != off then Var v', off' else lv
   | Mem e, off ->
-      let e' = vExp e in
-      let off' = vOff off in
-      if e' != e || off' != off then Mem e', off' else lv
+    let e' = vExp e in
+    let off' = vOff off in
+    if e' != e || off' != off then Mem e', off' else lv
 
 and visitCilOffset (vis: cilVisitor) (off: offset) : offset =
   doVisit vis (vis#voffs off) childrenOffset off
@@ -5274,12 +5274,12 @@ and childrenOffset (vis: cilVisitor) (off: offset) : offset =
   let vOff off = visitCilOffset vis off in
   match off with
     Field (f, o) ->
-      let o' = vOff o in
-      if o' != o then Field (f, o') else off
+    let o' = vOff o in
+    if o' != o then Field (f, o') else off
   | Index (e, o) ->
-      let e' = visitCilExpr vis e in
-      let o' = vOff o in
-      if e' != e || o' != o then Index (e', o') else off
+    let e' = visitCilExpr vis e in
+    let o' = vOff o in
+    if e' != e || o' != o then Index (e', o') else off
   | NoOffset -> off
 
 (* sm: for offsets in initializers, the 'startvisit' will be the
@@ -5287,7 +5287,7 @@ and childrenOffset (vis: cilVisitor) (off: offset) : offset =
  * above since recursive offsets are visited by voffs.  (this point
  * is moot according to cil.mli which claims the offsets in
  * initializers will never recursively contain offsets)
- *)
+*)
 and visitCilInitOffset (vis: cilVisitor) (off: offset) : offset =
   doVisit vis (vis#vinitoffs off) childrenOffset off
 
@@ -5305,26 +5305,26 @@ and childrenInstr (vis: cilVisitor) (i: instr) : instr =
   let fLval lv = visitCilLval vis lv in
   match i with
   | Set(lv,e,l) ->
-      let lv' = fLval lv in let e' = fExp e in
-      if lv' != lv || e' != e then Set(lv',e',l) else i
+    let lv' = fLval lv in let e' = fExp e in
+    if lv' != lv || e' != e then Set(lv',e',l) else i
   | Call(None,f,args,l) ->
-      let f' = fExp f in let args' = mapNoCopy fExp args in
-      if f' != f || args' != args then Call(None,f',args',l) else i
+    let f' = fExp f in let args' = mapNoCopy fExp args in
+    if f' != f || args' != args then Call(None,f',args',l) else i
   | Call(Some lv,fn,args,l) ->
-      let lv' = fLval lv in let fn' = fExp fn in
-      let args' = mapNoCopy fExp args in
-      if lv' != lv || fn' != fn || args' != args
-      then Call(Some lv', fn', args', l) else i
+    let lv' = fLval lv in let fn' = fExp fn in
+    let args' = mapNoCopy fExp args in
+    if lv' != lv || fn' != fn || args' != args
+    then Call(Some lv', fn', args', l) else i
 
   | Asm(sl,isvol,outs,ins,clobs,l) ->
-      let outs' = mapNoCopy (fun ((id,s,lv) as pair) ->
-                               let lv' = fLval lv in
-                               if lv' != lv then (id,s,lv') else pair) outs in
-      let ins'  = mapNoCopy (fun ((id,s,e) as pair) ->
-                               let e' = fExp e in
-                               if e' != e then (id,s,e') else pair) ins in
-      if outs' != outs || ins' != ins then
-        Asm(sl,isvol,outs',ins',clobs,l) else i
+    let outs' = mapNoCopy (fun ((id,s,lv) as pair) ->
+        let lv' = fLval lv in
+        if lv' != lv then (id,s,lv') else pair) outs in
+    let ins'  = mapNoCopy (fun ((id,s,e) as pair) ->
+        let e' = fExp e in
+        if e' != e then (id,s,e') else pair) ins in
+    if outs' != outs || ins' != ins then
+      Asm(sl,isvol,outs',ins',clobs,l) else i
 
 
 (* visit all nodes in a Cil statement tree in preorder *)
@@ -5337,34 +5337,34 @@ and visitCilStmt (vis: cilVisitor) (s: stmt) : stmt =
   (* Now see if we have saved some instructions *)
   toPrepend := !toPrepend @ vis#unqueueInstr ();
   (match !toPrepend with
-    [] -> () (* Return the same statement *)
-  | _ ->
-      (* Make our statement contain the instructions to prepend *)
-      res.skind <- Block { battrs = []; bstmts = [ mkStmt (Instr !toPrepend);
-                                                   mkStmt res.skind ] });
+     [] -> () (* Return the same statement *)
+   | _ ->
+     (* Make our statement contain the instructions to prepend *)
+     res.skind <- Block { battrs = []; bstmts = [ mkStmt (Instr !toPrepend);
+                                                  mkStmt res.skind ] });
   currentLoc := oldloc;
   res
 
 and childrenStmt (toPrepend: instr list ref) : cilVisitor -> stmt -> stmt =
   (* this is a hack to avoid currying and reduce GC pressure *)
   () ; fun vis s ->
-  let fExp e = (visitCilExpr vis e) in
-  let fBlock b = visitCilBlock vis b in
-  let fInst i = visitCilInstr vis i in
-  (* Just change the statement kind *)
-  let skind' =
-    match s.skind with
-      Break _ | Continue _ | Goto _ | Return (None, _) -> s.skind
-    | ComputedGoto (e, l) ->
-         let e' = fExp e in
-         if e' != e then ComputedGoto (e', l) else s.skind
-    | Return (Some e, l) ->
+    let fExp e = (visitCilExpr vis e) in
+    let fBlock b = visitCilBlock vis b in
+    let fInst i = visitCilInstr vis i in
+    (* Just change the statement kind *)
+    let skind' =
+      match s.skind with
+        Break _ | Continue _ | Goto _ | Return (None, _) -> s.skind
+      | ComputedGoto (e, l) ->
+        let e' = fExp e in
+        if e' != e then ComputedGoto (e', l) else s.skind
+      | Return (Some e, l) ->
         let e' = fExp e in
         if e' != e then Return (Some e', l) else s.skind
-    | Loop (b, l, s1, s2) ->
+      | Loop (b, l, s1, s2) ->
         let b' = fBlock b in
         if b' != b then Loop (b', l, s1, s2) else s.skind
-    | If(e, s1, s2, l) ->
+      | If(e, s1, s2, l) ->
         let e' = fExp e in
         (*if e queued any instructions, pop them here and remember them so that
           they are inserted before the If stmt, not in the then block. *)
@@ -5374,7 +5374,7 @@ and childrenStmt (toPrepend: instr list ref) : cilVisitor -> stmt -> stmt =
         assertEmptyQueue vis;
         if e' != e || s1' != s1 || s2' != s2 then
           If(e', s1', s2', l) else s.skind
-    | Switch (e, b, stmts, l) ->
+      | Switch (e, b, stmts, l) ->
         let e' = fExp e in
         toPrepend := vis#unqueueInstr (); (* insert these before the switch *)
         let b' = fBlock b in
@@ -5382,17 +5382,17 @@ and childrenStmt (toPrepend: instr list ref) : cilVisitor -> stmt -> stmt =
         assertEmptyQueue vis;
         (* Don't do stmts, but we better not change those *)
         if e' != e || b' != b then Switch (e', b', stmts, l) else s.skind
-    | Instr il ->
+      | Instr il ->
         let il' = mapNoCopyList fInst il in
         if il' != il then Instr il' else s.skind
-    | Block b ->
+      | Block b ->
         let b' = fBlock b in
         if b' != b then Block b' else s.skind
-    | TryFinally (b, h, l) ->
+      | TryFinally (b, h, l) ->
         let b' = fBlock b in
         let h' = fBlock h in
         if b' != b || h' != h then TryFinally(b', h', l) else s.skind
-    | TryExcept (b, (il, e), h, l) ->
+      | TryExcept (b, (il, e), h, l) ->
         let b' = fBlock b in
         assertEmptyQueue vis;
         (* visit the instructions *)
@@ -5411,12 +5411,12 @@ and childrenStmt (toPrepend: instr list ref) : cilVisitor -> stmt -> stmt =
         if b' != b || il'' != il || e' != e || h' != h then
           TryExcept(b', (il'', e'), h', l)
         else s.skind
-  in
-  if skind' != s.skind then s.skind <- skind';
-  (* Visit the labels *)
-  let labels' =
-    let fLabel = function
-        Case (e, l) as lb ->
+    in
+    if skind' != s.skind then s.skind <- skind';
+    (* Visit the labels *)
+    let labels' =
+      let fLabel = function
+          Case (e, l) as lb ->
           let e' = fExp e in
           if e' != e then Case (e', l) else lb
         | CaseRange (e1, e2, l) as lb ->
@@ -5424,11 +5424,11 @@ and childrenStmt (toPrepend: instr list ref) : cilVisitor -> stmt -> stmt =
           let e2' = fExp e2 in
           if e1' != e1 || e2' != e2 then CaseRange (e1', e2', l) else lb
         | lb -> lb
+      in
+      mapNoCopy fLabel s.labels
     in
-    mapNoCopy fLabel s.labels
-  in
-  if labels' != s.labels then s.labels <- labels';
-  s
+    if labels' != s.labels then s.labels <- labels';
+    s
 
 
 
@@ -5448,50 +5448,50 @@ and childrenType (vis : cilVisitor) (t : typ) : typ =
   let fAttr a = visitCilAttributes vis a in
   match t with
     TPtr(t1, a) ->
-      let t1' = fTyp t1 in
-      let a' = fAttr a in
-      if t1' != t1 || a' != a then TPtr(t1', a') else t
+    let t1' = fTyp t1 in
+    let a' = fAttr a in
+    if t1' != t1 || a' != a then TPtr(t1', a') else t
   | TArray(t1, None, a) ->
-      let t1' = fTyp t1 in
-      let a' = fAttr a in
-      if t1' != t1 || a' != a  then TArray(t1', None, a') else t
+    let t1' = fTyp t1 in
+    let a' = fAttr a in
+    if t1' != t1 || a' != a  then TArray(t1', None, a') else t
   | TArray(t1, Some e, a) ->
-      let t1' = fTyp t1 in
-      let e' = visitCilExpr vis e in
-      let a' = fAttr a in
-      if t1' != t1 || e' != e  || a' != a then TArray(t1', Some e', a') else t
+    let t1' = fTyp t1 in
+    let e' = visitCilExpr vis e in
+    let a' = fAttr a in
+    if t1' != t1 || e' != e  || a' != a then TArray(t1', Some e', a') else t
 
-      (* DON'T recurse into the compinfo, this is done in visitCilGlobal.
-	 User can iterate over cinfo.cfields manually, if desired.*)
+  (* DON'T recurse into the compinfo, this is done in visitCilGlobal.
+     User can iterate over cinfo.cfields manually, if desired.*)
   | TComp(cinfo, a) ->
-      let a' = fAttr a in
-      if a != a' then TComp(cinfo, a') else t
+    let a' = fAttr a in
+    if a != a' then TComp(cinfo, a') else t
 
   | TFun(rettype, args, isva, a) ->
-      let rettype' = fTyp rettype in
-      (* iterate over formals, as variable declarations *)
-      let argslist = argsToList args in
-      let visitArg ((an,at,aa) as arg) =
-        let at' = fTyp at in
-        let aa' = fAttr aa in
-        if at' != at || aa' != aa then (an,at',aa') else arg
-      in
-      let argslist' = mapNoCopy visitArg argslist in
-      let a' = fAttr a in
-      if rettype' != rettype || argslist' != argslist || a' != a  then
-        let args' = if argslist' == argslist then args else Some argslist' in
-        TFun(rettype', args', isva, a') else t
+    let rettype' = fTyp rettype in
+    (* iterate over formals, as variable declarations *)
+    let argslist = argsToList args in
+    let visitArg ((an,at,aa) as arg) =
+      let at' = fTyp at in
+      let aa' = fAttr aa in
+      if at' != at || aa' != aa then (an,at',aa') else arg
+    in
+    let argslist' = mapNoCopy visitArg argslist in
+    let a' = fAttr a in
+    if rettype' != rettype || argslist' != argslist || a' != a  then
+      let args' = if argslist' == argslist then args else Some argslist' in
+      TFun(rettype', args', isva, a') else t
 
   | TNamed(t1, a) -> (* Do not go into the type. Will do it at the time of
                       * GType *)
-      let a' = fAttr a in
-      if a' != a  then TNamed (t1, a') else t
+    let a' = fAttr a in
+    if a' != a  then TNamed (t1, a') else t
 
   | _ ->  (* other types (TVoid, TInt, TFloat, TEnum, and TBuiltin_va_list)
              don't contain nested types, but they do have attributes. *)
-      let a = typeAttrs t in
-      let a' = fAttr a in
-      if a' != a  then setTypeAttrs t a' else t
+    let a = typeAttrs t in
+    let a' = fAttr a in
+    if a' != a  then setTypeAttrs t a' else t
 
 
 (* for declarations, we visit the types inside; but for uses, *)
@@ -5502,78 +5502,78 @@ and childrenVarDecl (vis : cilVisitor) (v : varinfo) : varinfo =
   v.vtype <- visitCilType vis v.vtype;
   v.vattr <- visitCilAttributes vis v.vattr;
   (match v.vinit.init with
-    None -> ()
-  | Some i -> let i' = visitCilInit vis v NoOffset i in
-    if i' != i then v.vinit.init <- Some i');
+     None -> ()
+   | Some i -> let i' = visitCilInit vis v NoOffset i in
+     if i' != i then v.vinit.init <- Some i');
   v
 
 and visitCilAttributes (vis: cilVisitor) (al: attribute list) : attribute list=
-   let al' =
-     mapNoCopyList (fun x -> doVisitList vis (vis#vattr x) childrenAttribute x) al in
-   if al' != al then
-     (* Must re-sort *)
-     addAttributes al' []
-   else
-     al
+  let al' =
+    mapNoCopyList (fun x -> doVisitList vis (vis#vattr x) childrenAttribute x) al in
+  if al' != al then
+    (* Must re-sort *)
+    addAttributes al' []
+  else
+    al
 and childrenAttribute (vis: cilVisitor) (a: attribute) : attribute =
   let fAttrP a = visitCilAttrParams vis a in
   match a with
     Attr (n, args) ->
-      let args' = mapNoCopy fAttrP args in
-      if args' != args then Attr(n, args') else a
+    let args' = mapNoCopy fAttrP args in
+    if args' != args then Attr(n, args') else a
 
 
 and visitCilAttrParams (vis: cilVisitor) (a: attrparam) : attrparam =
-   doVisit vis (vis#vattrparam a) childrenAttrparam a
+  doVisit vis (vis#vattrparam a) childrenAttrparam a
 and childrenAttrparam (vis: cilVisitor) (aa: attrparam) : attrparam =
   let fTyp t  = visitCilType vis t in
   let fAttrP a = visitCilAttrParams vis a in
   match aa with
-      AInt _ | AStr _ -> aa
-    | ACons(n, args) ->
-        let args' = mapNoCopy fAttrP args in
-        if args' != args then ACons(n, args') else aa
-    | ASizeOf t ->
-        let t' = fTyp t in
-        if t' != t then ASizeOf t' else aa
-    | ASizeOfE e ->
-        let e' = fAttrP e in
-        if e' != e then ASizeOfE e' else aa
-    | AAlignOf t ->
-        let t' = fTyp t in
-        if t' != t then AAlignOf t' else aa
-    | AAlignOfE e ->
-        let e' = fAttrP e in
-        if e' != e then AAlignOfE e' else aa
-    | ASizeOfS _ | AAlignOfS _ ->
-        ignore (warn "Visitor inside of a type signature.");
-        aa
-    | AUnOp (uo, e1) ->
-        let e1' = fAttrP e1 in
-        if e1' != e1 then AUnOp (uo, e1') else aa
-    | ABinOp (bo, e1, e2) ->
-        let e1' = fAttrP e1 in
-        let e2' = fAttrP e2 in
-        if e1' != e1 || e2' != e2 then ABinOp (bo, e1', e2') else aa
-    | ADot (ap, s) ->
-        let ap' = fAttrP ap in
-        if ap' != ap then ADot (ap', s) else aa
-    | AStar ap ->
-        let ap' = fAttrP ap in
-        if ap' != ap then AStar ap' else aa
-    | AAddrOf ap ->
-        let ap' = fAttrP ap in
-        if ap' != ap then AAddrOf ap' else aa
-    | AIndex (e1, e2) ->
-        let e1' = fAttrP e1 in
-        let e2' = fAttrP e2 in
-        if e1' != e1 || e2' != e2 then AIndex (e1', e2') else aa
-    | AQuestion (e1, e2, e3) ->
-        let e1' = fAttrP e1 in
-        let e2' = fAttrP e2 in
-        let e3' = fAttrP e3 in
-        if e1' != e1 || e2' != e2 || e3' != e3
-        then AQuestion (e1', e2', e3') else aa
+    AInt _ | AStr _ -> aa
+  | ACons(n, args) ->
+    let args' = mapNoCopy fAttrP args in
+    if args' != args then ACons(n, args') else aa
+  | ASizeOf t ->
+    let t' = fTyp t in
+    if t' != t then ASizeOf t' else aa
+  | ASizeOfE e ->
+    let e' = fAttrP e in
+    if e' != e then ASizeOfE e' else aa
+  | AAlignOf t ->
+    let t' = fTyp t in
+    if t' != t then AAlignOf t' else aa
+  | AAlignOfE e ->
+    let e' = fAttrP e in
+    if e' != e then AAlignOfE e' else aa
+  | ASizeOfS _ | AAlignOfS _ ->
+    ignore (warn "Visitor inside of a type signature.");
+    aa
+  | AUnOp (uo, e1) ->
+    let e1' = fAttrP e1 in
+    if e1' != e1 then AUnOp (uo, e1') else aa
+  | ABinOp (bo, e1, e2) ->
+    let e1' = fAttrP e1 in
+    let e2' = fAttrP e2 in
+    if e1' != e1 || e2' != e2 then ABinOp (bo, e1', e2') else aa
+  | ADot (ap, s) ->
+    let ap' = fAttrP ap in
+    if ap' != ap then ADot (ap', s) else aa
+  | AStar ap ->
+    let ap' = fAttrP ap in
+    if ap' != ap then AStar ap' else aa
+  | AAddrOf ap ->
+    let ap' = fAttrP ap in
+    if ap' != ap then AAddrOf ap' else aa
+  | AIndex (e1, e2) ->
+    let e1' = fAttrP e1 in
+    let e2' = fAttrP e2 in
+    if e1' != e1 || e2' != e2 then AIndex (e1', e2') else aa
+  | AQuestion (e1, e2, e3) ->
+    let e1' = fAttrP e1 in
+    let e2' = fAttrP e2 in
+    let e3' = fAttrP e3 in
+    if e1' != e1 || e2' != e2 || e3' != e3
+    then AQuestion (e1', e2', e3') else aa
 
 
 let rec visitCilFunction (vis : cilVisitor) (f : fundec) : fundec =
@@ -5615,44 +5615,44 @@ let rec visitCilGlobal (vis: cilVisitor) (g: global) : global list =
 and childrenGlobal (vis: cilVisitor) (g: global) : global =
   match g with
   | GFun (f, l) ->
-      let f' = visitCilFunction vis f in
-      if f' != f then GFun (f', l) else g
+    let f' = visitCilFunction vis f in
+    if f' != f then GFun (f', l) else g
   | GType(t, l) ->
-      t.ttype <- visitCilType vis t.ttype;
-      g
+    t.ttype <- visitCilType vis t.ttype;
+    g
 
   | GEnumTagDecl _ | GCompTagDecl _ -> g (* Nothing to visit *)
   | GEnumTag (enum, _) ->
-      (* (trace "visit" (dprintf "visiting global enum %s\n" enum.ename)); *)
-      (* Do the values and attributes of the enumerated items *)
-      let itemVisit (name, exp, loc) = (name, visitCilExpr vis exp, loc) in
-      enum.eitems <- mapNoCopy itemVisit enum.eitems;
-      enum.eattr <- visitCilAttributes vis enum.eattr;
-      g
+    (* (trace "visit" (dprintf "visiting global enum %s\n" enum.ename)); *)
+    (* Do the values and attributes of the enumerated items *)
+    let itemVisit (name, exp, loc) = (name, visitCilExpr vis exp, loc) in
+    enum.eitems <- mapNoCopy itemVisit enum.eitems;
+    enum.eattr <- visitCilAttributes vis enum.eattr;
+    g
 
   | GCompTag (comp, _) ->
-      (* (trace "visit" (dprintf "visiting global comp %s\n" comp.cname)); *)
-      (* Do the types and attirbutes of the fields *)
-      let fieldVisit = fun fi ->
-        fi.ftype <- visitCilType vis fi.ftype;
-        fi.fattr <- visitCilAttributes vis fi.fattr
-      in
-      List.iter fieldVisit comp.cfields;
-      comp.cattr <- visitCilAttributes vis comp.cattr;
-      g
+    (* (trace "visit" (dprintf "visiting global comp %s\n" comp.cname)); *)
+    (* Do the types and attirbutes of the fields *)
+    let fieldVisit = fun fi ->
+      fi.ftype <- visitCilType vis fi.ftype;
+      fi.fattr <- visitCilAttributes vis fi.fattr
+    in
+    List.iter fieldVisit comp.cfields;
+    comp.cattr <- visitCilAttributes vis comp.cattr;
+    g
 
   | GVarDecl(v, l) ->
-      let v' = visitCilVarDecl vis v in
-      if v' != v then GVarDecl (v', l) else g
+    let v' = visitCilVarDecl vis v in
+    if v' != v then GVarDecl (v', l) else g
   | GVar (v, inito, l) ->
-      let v' = visitCilVarDecl vis v in
-      if v' != v then GVar (v', inito, l) else g
+    let v' = visitCilVarDecl vis v in
+    if v' != v then GVar (v', inito, l) else g
 
   | GPragma (a, l) -> begin
       match visitCilAttributes vis [a] with
         [a'] -> if a' != a then GPragma (a', l) else g
       | _ -> E.s (E.unimp "visitCilAttributes returns more than one attribute")
-  end
+    end
   | _ -> g
 
 
@@ -5663,12 +5663,12 @@ class constFoldVisitorClass (machdep: bool) : cilVisitor = object
 
   method vinst i =
     match i with
-      (* Skip two functions to which we add Sizeof to the type arguments.
-         See the comments for these above. *)
+    (* Skip two functions to which we add Sizeof to the type arguments.
+       See the comments for these above. *)
       Call(_,(Lval (Var vi,NoOffset)),_,_)
-        when ((vi.vname = "__builtin_va_arg")
-              || (vi.vname = "__builtin_types_compatible_p")) ->
-          SkipChildren
+      when ((vi.vname = "__builtin_va_arg")
+            || (vi.vname = "__builtin_types_compatible_p")) ->
+      SkipChildren
     | _ -> DoChildren
   method vexpr (e: exp) =
     (* Do it bottom up *)
@@ -5679,28 +5679,28 @@ let constFoldVisitor (machdep: bool) = new constFoldVisitorClass machdep
 
 (* Iterate over all globals, including the global initializer *)
 let iterGlobals (fl: file)
-                (doone: global -> unit) : unit =
+    (doone: global -> unit) : unit =
   let doone' g =
-      currentLoc := get_globalLoc g;
-      doone g
+    currentLoc := get_globalLoc g;
+    doone g
   in
   List.iter doone' fl.globals;
   (match fl.globinit with
-    None -> ()
-  | Some g -> doone' (GFun(g, locUnknown)))
+     None -> ()
+   | Some g -> doone' (GFun(g, locUnknown)))
 
 (* Fold over all globals, including the global initializer *)
 let foldGlobals (fl: file)
-                (doone: 'a -> global -> 'a)
-                (acc: 'a) : 'a =
+    (doone: 'a -> global -> 'a)
+    (acc: 'a) : 'a =
   let doone' acc g =
-      currentLoc := get_globalLoc g;
-      doone acc g
+    currentLoc := get_globalLoc g;
+    doone acc g
   in
   let acc' = List.fold_left doone' acc fl.globals in
   (match fl.globinit with
-    None -> acc'
-  | Some g -> doone' acc' (GFun(g, locUnknown)))
+     None -> acc'
+   | Some g -> doone' acc' (GFun(g, locUnknown)))
 
 (** Find a function or function prototype with the given name in the file.
   * If it does not exist, create a prototype with the given type, and return
@@ -5712,17 +5712,17 @@ let foldGlobals (fl: file)
 let findOrCreateFunc (f:file) (name:string) (t:typ) : varinfo =
   let rec search glist =
     match glist with
-	GVarDecl(vi,_) :: rest | GFun ({svar = vi},_) :: rest when vi.vname = name ->
-          if not (isFunctionType vi.vtype) then
-            E.s (error ("findOrCreateFunc: can't create %s because another "
-                        ^^"global exists with that name.") name);
-          vi
-      | _ :: rest -> search rest (* tail recursive *)
-      | [] -> (*not found, so create one *)
-          let t' = unrollTypeDeep t in
-	  let new_decl = makeGlobalVar name t' in
-	  f.globals <- GVarDecl(new_decl, locUnknown) :: f.globals;
-	  new_decl
+      GVarDecl(vi,_) :: rest | GFun ({svar = vi},_) :: rest when vi.vname = name ->
+      if not (isFunctionType vi.vtype) then
+        E.s (error ("findOrCreateFunc: can't create %s because another "
+                    ^^"global exists with that name.") name);
+      vi
+    | _ :: rest -> search rest (* tail recursive *)
+    | [] -> (*not found, so create one *)
+      let t' = unrollTypeDeep t in
+      let new_decl = makeGlobalVar name t' in
+      f.globals <- GVarDecl(new_decl, locUnknown) :: f.globals;
+      new_decl
   in
   search f.globals
 
@@ -5732,9 +5732,9 @@ let findOrCreateFunc (f:file) (name:string) (t:typ) : varinfo =
 let visitCilFileSameGlobals (vis : cilVisitor) (f : file) : unit =
   let fGlob g = visitCilGlobal vis g in
   iterGlobals f (fun g ->
-    match fGlob g with
-      [g'] when g' == g || Util.equals g' g -> () (* Try to do the pointer check first *)
-    | gl ->
+      match fGlob g with
+        [g'] when g' == g || Util.equals g' g -> () (* Try to do the pointer check first *)
+      | gl ->
         ignore (E.log "You used visitCilFilSameGlobals but the global got changed:\n %a\nchanged to %a\n" d_global g (docList ~sep:line (d_global ())) gl);
         ())
 
@@ -5745,13 +5745,13 @@ let visitCilFile (vis : cilVisitor) (f : file) : unit =
   let rec loop (acc: global list) = function
       [] -> f.globals <- List.rev acc
     | g :: restg ->
-        loop ((List.rev (fGlob g)) @ acc) restg
+      loop ((List.rev (fGlob g)) @ acc) restg
   in
   loop [] f.globals;
   (* the global initializer *)
   (match f.globinit with
-    None -> ()
-  | Some g -> f.globinit <- Some (visitCilFunction vis g))
+     None -> ()
+   | Some g -> f.globinit <- Some (visitCilFunction vis g))
 
 
 
@@ -5766,17 +5766,17 @@ let getGlobInit ?(main_name="main") (fl: file) =
       let f =
         let len = String.length fl.fileName in
         (* Find the last path separator and record the first . that we see,
-        * going backwards *)
+         * going backwards *)
         let lastDot = ref len in
         let rec findLastPathSep i =
           if i < 0 then -1 else
-          let c = String.get fl.fileName i in
-          if c = '/' || c = '\\' then i
-          else begin
-            if c = '.' && !lastDot = len then
-              lastDot := i;
-            findLastPathSep (i - 1)
-          end
+            let c = String.get fl.fileName i in
+            if c = '/' || c = '\\' then i
+            else begin
+              if c = '.' && !lastDot = len then
+                lastDot := i;
+              findLastPathSep (i - 1)
+            end
         in
         let lastPathSep = findLastPathSep (len - 1) in
         let basenoext =
@@ -5792,17 +5792,17 @@ let getGlobInit ?(main_name="main") (fl: file) =
       List.iter
         (function
             GFun(m, lm) when m.svar.vname = main_name ->
-              (* Prepend a prototype to the global initializer *)
-              fl.globals <- GVarDecl (f.svar, lm) :: fl.globals;
-              m.sbody.bstmts <-
-                 compactStmts (mkStmt (Instr [Call(None,
-                                                   Lval(var f.svar),
-                                                   [], locUnknown)])
-                               :: m.sbody.bstmts);
-              inserted := true;
-              if !E.verboseFlag then
-                ignore (E.log "Inserted the globinit\n");
-              fl.globinitcalled <- true;
+            (* Prepend a prototype to the global initializer *)
+            fl.globals <- GVarDecl (f.svar, lm) :: fl.globals;
+            m.sbody.bstmts <-
+              compactStmts (mkStmt (Instr [Call(None,
+                                                Lval(var f.svar),
+                                                [], locUnknown)])
+                            :: m.sbody.bstmts);
+            inserted := true;
+            if !E.verboseFlag then
+              ignore (E.log "Inserted the globinit\n");
+            fl.globinitcalled <- true;
           | _ -> ())
         fl.globals;
 
@@ -5811,21 +5811,21 @@ let getGlobInit ?(main_name="main") (fl: file) =
                   main_name f.svar.vname);
 
       f
-  end
+    end
 
 
 
 (* Fold over all globals, including the global initializer *)
 let mapGlobals (fl: file)
-               (doone: global -> global) : unit =
+    (doone: global -> global) : unit =
   fl.globals <- Util.list_map doone fl.globals;
   (match fl.globinit with
-    None -> ()
-  | Some g -> begin
-      match doone (GFun(g, locUnknown)) with
-        GFun(g', _) -> fl.globinit <- Some g'
-      | _ -> E.s (E.bug "mapGlobals: globinit is not a function")
-  end)
+     None -> ()
+   | Some g -> begin
+       match doone (GFun(g, locUnknown)) with
+         GFun(g', _) -> fl.globinit <- Some g'
+       | _ -> E.s (E.bug "mapGlobals: globinit is not a function")
+     end)
 
 
 
@@ -5860,10 +5860,10 @@ exception NotAnAttrParam of exp
 let rec expToAttrParam (e: exp) : attrparam =
   match e with
     Const(CInt64(i,k,_)) ->
-      let i' = mkCilint k i in
-      if not (is_int_cilint i') then
-        raise (NotAnAttrParam e);
-      AInt (int_of_cilint i')
+    let i' = mkCilint k i in
+    if not (is_int_cilint i') then
+      raise (NotAnAttrParam e);
+    AInt (int_of_cilint i')
   | Lval (Var v, NoOffset) -> ACons(v.vname, [])
   | SizeOf t -> ASizeOf t
   | SizeOfE e' -> ASizeOfE (expToAttrParam e')
@@ -5875,9 +5875,9 @@ let rec expToAttrParam (e: exp) : attrparam =
 
 (******************** OPTIMIZATIONS *****)
 let rec peepHole1 (* Process one instruction and possibly replace it *)
-                  (doone: instr -> instr list option)
-                  (* Scan a block and recurse inside nested blocks *)
-                  (ss: stmt list) : unit =
+    (doone: instr -> instr list option)
+    (* Scan a block and recurse inside nested blocks *)
+    (ss: stmt list) : unit =
   let rec doInstrList (il: instr list) : instr list =
     match il with
       [] -> []
@@ -5885,61 +5885,61 @@ let rec peepHole1 (* Process one instruction and possibly replace it *)
         match doone i with
           None -> i :: doInstrList rest
         | Some sl -> doInstrList (sl @ rest)
-    end
+      end
   in
 
   List.iter
     (fun s ->
-      match s.skind with
-        Instr il -> s.skind <- Instr (doInstrList il)
-      | If (e, tb, eb, _) ->
-          peepHole1 doone tb.bstmts;
-          peepHole1 doone eb.bstmts
-      | Switch (e, b, _, _) -> peepHole1 doone b.bstmts
-      | Loop (b, l, _, _) -> peepHole1 doone b.bstmts
-      | Block b -> peepHole1 doone b.bstmts
-      | TryFinally (b, h, l) ->
-          peepHole1 doone b.bstmts;
-          peepHole1 doone h.bstmts
-      | TryExcept (b, (il, e), h, l) ->
-          peepHole1 doone b.bstmts;
-          peepHole1 doone h.bstmts;
-          s.skind <- TryExcept(b, (doInstrList il, e), h, l);
-      | Return _ | Goto _ | ComputedGoto _ | Break _ | Continue _ -> ())
+       match s.skind with
+         Instr il -> s.skind <- Instr (doInstrList il)
+       | If (e, tb, eb, _) ->
+         peepHole1 doone tb.bstmts;
+         peepHole1 doone eb.bstmts
+       | Switch (e, b, _, _) -> peepHole1 doone b.bstmts
+       | Loop (b, l, _, _) -> peepHole1 doone b.bstmts
+       | Block b -> peepHole1 doone b.bstmts
+       | TryFinally (b, h, l) ->
+         peepHole1 doone b.bstmts;
+         peepHole1 doone h.bstmts
+       | TryExcept (b, (il, e), h, l) ->
+         peepHole1 doone b.bstmts;
+         peepHole1 doone h.bstmts;
+         s.skind <- TryExcept(b, (doInstrList il, e), h, l);
+       | Return _ | Goto _ | ComputedGoto _ | Break _ | Continue _ -> ())
     ss
 
 let rec peepHole2  (* Process two instructions and possibly replace them both *)
-                   (dotwo: instr * instr -> instr list option)
-                   (ss: stmt list) : unit =
+    (dotwo: instr * instr -> instr list option)
+    (ss: stmt list) : unit =
   let rec doInstrList (il: instr list) : instr list =
     match il with
       [] -> []
     | [i] -> [i]
     | (i1 :: ((i2 :: rest) as rest2)) ->
-        begin
-          match dotwo (i1,i2) with
-            None -> i1 :: doInstrList rest2
-          | Some sl -> doInstrList (sl @ rest)
-        end
+      begin
+        match dotwo (i1,i2) with
+          None -> i1 :: doInstrList rest2
+        | Some sl -> doInstrList (sl @ rest)
+      end
   in
   List.iter
     (fun s ->
-      match s.skind with
-        Instr il -> s.skind <- Instr (doInstrList il)
-      | If (e, tb, eb, _) ->
-          peepHole2 dotwo tb.bstmts;
-          peepHole2 dotwo eb.bstmts
-      | Switch (e, b, _, _) -> peepHole2 dotwo b.bstmts
-      | Loop (b, l, _, _) -> peepHole2 dotwo b.bstmts
-      | Block b -> peepHole2 dotwo b.bstmts
-      | TryFinally (b, h, l) -> peepHole2 dotwo b.bstmts;
-                                peepHole2 dotwo h.bstmts
-      | TryExcept (b, (il, e), h, l) ->
-          peepHole2 dotwo b.bstmts;
-          peepHole2 dotwo h.bstmts;
-          s.skind <- TryExcept (b, (doInstrList il, e), h, l)
+       match s.skind with
+         Instr il -> s.skind <- Instr (doInstrList il)
+       | If (e, tb, eb, _) ->
+         peepHole2 dotwo tb.bstmts;
+         peepHole2 dotwo eb.bstmts
+       | Switch (e, b, _, _) -> peepHole2 dotwo b.bstmts
+       | Loop (b, l, _, _) -> peepHole2 dotwo b.bstmts
+       | Block b -> peepHole2 dotwo b.bstmts
+       | TryFinally (b, h, l) -> peepHole2 dotwo b.bstmts;
+         peepHole2 dotwo h.bstmts
+       | TryExcept (b, (il, e), h, l) ->
+         peepHole2 dotwo b.bstmts;
+         peepHole2 dotwo h.bstmts;
+         s.skind <- TryExcept (b, (doInstrList il, e), h, l)
 
-      | Return _ | Goto _ | ComputedGoto _ | Break _ | Continue _ -> ())
+       | Return _ | Goto _ | ComputedGoto _ | Break _ | Continue _ -> ())
     ss
 
 
@@ -5952,20 +5952,20 @@ class typeSigVisitor(typeSigConverter: typ->typsig) = object
   inherit nopCilVisitor
   method vattrparam ap =
     match ap with
-      | ASizeOf t -> ChangeTo (ASizeOfS (typeSigConverter t))
-      | AAlignOf t -> ChangeTo (AAlignOfS (typeSigConverter t))
-      | _ -> DoChildren
+    | ASizeOf t -> ChangeTo (ASizeOfS (typeSigConverter t))
+    | AAlignOf t -> ChangeTo (AAlignOfS (typeSigConverter t))
+    | _ -> DoChildren
 end
 
 let typeSigAddAttrs a0 t =
   if a0 == [] then t else
-  match t with
-    TSBase t -> TSBase (typeAddAttributes a0 t)
-  | TSPtr (ts, a) -> TSPtr (ts, addAttributes a0 a)
-  | TSArray (ts, l, a) -> TSArray(ts, l, addAttributes a0 a)
-  | TSComp (iss, n, a) -> TSComp (iss, n, addAttributes a0 a)
-  | TSEnum (n, a) -> TSEnum (n, addAttributes a0 a)
-  | TSFun(ts, tsargs, isva, a) -> TSFun(ts, tsargs, isva, addAttributes a0 a)
+    match t with
+      TSBase t -> TSBase (typeAddAttributes a0 t)
+    | TSPtr (ts, a) -> TSPtr (ts, addAttributes a0 a)
+    | TSArray (ts, l, a) -> TSArray(ts, l, addAttributes a0 a)
+    | TSComp (iss, n, a) -> TSComp (iss, n, addAttributes a0 a)
+    | TSEnum (n, a) -> TSEnum (n, addAttributes a0 a)
+    | TSFun(ts, tsargs, isva, a) -> TSFun(ts, tsargs, isva, addAttributes a0 a)
 
 (* Compute a type signature.
     Use ~ignoreSign:true to convert all signed integer types to unsigned,
@@ -5976,32 +5976,32 @@ let rec typeSigWithAttrs ?(ignoreSign=false) doattr t =
   let doattr al = visitCilAttributes attrVisitor (doattr al) in
   match t with
   | TInt (ik, al) ->
-      let ik' =
-        if ignoreSign then unsignedVersionOf ik  else ik
-      in
-      TSBase (TInt (ik', doattr al))
+    let ik' =
+      if ignoreSign then unsignedVersionOf ik  else ik
+    in
+    TSBase (TInt (ik', doattr al))
   | TFloat (fk, al) -> TSBase (TFloat (fk, doattr al))
   | TVoid al -> TSBase (TVoid (doattr al))
   | TEnum (enum, a) -> TSEnum (enum.ename, doattr a)
   | TPtr (t, a) -> TSPtr (typeSig t, doattr a)
   | TArray (t,l,a) -> (* We do not want fancy expressions in array lengths.
                        * So constant fold the lengths *)
-      let l' =
-        match l with
-          Some l -> begin
-            match constFold true l with
-              Const(CInt64(i, _, _)) -> Some i
-            | e -> E.s (E.bug "Invalid length in array type: %a\n"
-                          (!pd_exp) e)
-          end
-        | None -> None
-      in
-      TSArray(typeSig t, l', doattr a)
+    let l' =
+      match l with
+        Some l -> begin
+          match constFold true l with
+            Const(CInt64(i, _, _)) -> Some i
+          | e -> E.s (E.bug "Invalid length in array type: %a\n"
+                        (!pd_exp) e)
+        end
+      | None -> None
+    in
+    TSArray(typeSig t, l', doattr a)
 
   | TComp (comp, a) ->
-      TSComp (comp.cstruct, comp.cname, doattr (addAttributes comp.cattr a))
+    TSComp (comp.cstruct, comp.cname, doattr (addAttributes comp.cattr a))
   | TFun(rt,args,isva,a) ->
-      TSFun(typeSig rt, (Util.list_map_opt (fun (_, atype, _) -> (typeSig atype)) args), isva, doattr a)
+    TSFun(typeSig rt, (Util.list_map_opt (fun (_, atype, _) -> (typeSig atype)) args), isva, doattr a)
   | TNamed(t, a) -> typeSigAddAttrs (doattr a) (typeSig t.ttype)
   | TBuiltin_va_list al -> TSBase (TBuiltin_va_list (doattr al))
 
@@ -6039,19 +6039,19 @@ let dInstr: doc -> location -> instr =
 let dGlobal: doc -> location -> global =
   fun d l -> GAsm(sprint !lineLength d, l)
 
-  (* Make an AddrOf. Given an lval of type T will give back an expression of
-   * type ptr(T)  *)
+(* Make an AddrOf. Given an lval of type T will give back an expression of
+ * type ptr(T)  *)
 let mkAddrOf ((b, off) as lval) : exp =
   (* Never take the address of a register variable *)
   (match lval with
-    Var vi, off when vi.vstorage = Register -> vi.vstorage <- NoStorage
-  | _ -> ());
+     Var vi, off when vi.vstorage = Register -> vi.vstorage <- NoStorage
+   | _ -> ());
   match lval with
     Mem e, NoOffset -> e
   (* Don't do this:
-    | b, Index(z, NoOffset) when isZero z -> StartOf (b, NoOffset)
-    &a[0] is not the same as a, e.g. within typeof and sizeof.
-    Code must be able to handle the results without this anyway... *)
+     | b, Index(z, NoOffset) when isZero z -> StartOf (b, NoOffset)
+     &a[0] is not the same as a, e.g. within typeof and sizeof.
+     Code must be able to handle the results without this anyway... *)
   | _ -> AddrOf lval
 
 
@@ -6061,33 +6061,33 @@ let mkAddrOrStartOf (lv: lval) : exp =
   | _ -> mkAddrOf lv
 
 
-  (* Make a Mem, while optimizing AddrOf. The type of the addr must be
-   * TPtr(t) and the type of the resulting lval is t. Note that in CIL the
-   * implicit conversion between a function and a pointer to a function does
-   * not apply. You must do the conversion yourself using AddrOf *)
+(* Make a Mem, while optimizing AddrOf. The type of the addr must be
+ * TPtr(t) and the type of the resulting lval is t. Note that in CIL the
+ * implicit conversion between a function and a pointer to a function does
+ * not apply. You must do the conversion yourself using AddrOf *)
 let mkMem ~(addr: exp) ~(off: offset) : lval =
   let res =
     match addr, off with
       AddrOf lv, _ -> addOffsetLval off lv
     | StartOf lv, _ -> (* Must be an array *)
-        addOffsetLval (Index(zero, off)) lv
+      addOffsetLval (Index(zero, off)) lv
     | _, _ -> Mem addr, off
   in
-(*  ignore (E.log "memof : %a:%a\nresult = %a\n"
-            d_plainexp addr d_plainoffset off d_plainexp res); *)
+  (*  ignore (E.log "memof : %a:%a\nresult = %a\n"
+              d_plainexp addr d_plainoffset off d_plainexp res); *)
   res
 
 
 
 let splitFunctionType (ftype: typ)
-    : typ * (string * typ * attributes) list option * bool * attributes =
+  : typ * (string * typ * attributes) list option * bool * attributes =
   match unrollType ftype with
     TFun (rt, args, isva, a) -> rt, args, isva, a
   | _ -> E.s (bug "splitFunctionType invoked on a non function type %a"
                 d_type ftype)
 
 let splitFunctionTypeVI (fvi: varinfo)
-    : typ * (string * typ * attributes) list option * bool * attributes =
+  : typ * (string * typ * attributes) list option * bool * attributes =
   match unrollType fvi.vtype with
     TFun (rt, args, isva, a) -> rt, args, isva, a
   | _ -> E.s (bug "Function %s invoked on a non function type" fvi.vname)
@@ -6104,14 +6104,14 @@ let rec isConstant = function
   | BinOp (_, e1, e2, _) -> isConstant e1 && isConstant e2
   | Question (e1, e2, e3, _) -> isConstant e1 && isConstant e2 && isConstant e3
   | Lval (Var vi, NoOffset) ->
-      (vi.vglob && isArrayType vi.vtype || isFunctionType vi.vtype)
+    (vi.vglob && isArrayType vi.vtype || isFunctionType vi.vtype)
   | Lval _ -> false
   | SizeOf _ | SizeOfE _ | SizeOfStr _ | AlignOf _ | AlignOfE _ -> true
   | CastE (_, e) -> isConstant e
   | AddrOf (Var vi, off) | StartOf (Var vi, off)
-        -> vi.vglob && isConstantOffset off
+    -> vi.vglob && isConstantOffset off
   | AddrOf (Mem e, off) | StartOf(Mem e, off)
-        -> isConstant e && isConstantOffset off
+    -> isConstant e && isConstantOffset off
   | AddrOfLabel _ -> true
 
 and isConstantOffset = function
@@ -6131,10 +6131,10 @@ let rec mkCastT ~(e: exp) ~(oldt: typ) ~(newt: typ) =
   end else begin
     (* Watch out for constants *)
     match newt, e with
-      (* Casts to _Bool are special: they behave like "!= 0" ISO C99 6.3.1.2 *)
+    (* Casts to _Bool are special: they behave like "!= 0" ISO C99 6.3.1.2 *)
       TInt(IBool, []), Const(CInt64(i, _, _)) ->
-	let v = if i = Int64.zero then Int64.zero else Int64.one in
-	Const (CInt64(v, IBool,  None))
+      let v = if i = Int64.zero then Int64.zero else Int64.one in
+      Const (CInt64(v, IBool,  None))
     | TInt(newik, []), Const(CInt64(i, _, _)) -> kinteger64 newik i
     | _ -> CastE(newt,e)
   end
@@ -6155,15 +6155,15 @@ let existsType (f: typ -> existsAction) (t: typ) : bool =
       ExistsTrue -> true
     | ExistsFalse -> false
     | ExistsMaybe ->
-        (match t with
-          TNamed (t', _) -> loop t'.ttype
-        | TComp (c, _) -> loopComp c
-        | TArray (t', _, _) -> loop t'
-        | TPtr (t', _) -> loop t'
-        | TFun (rt, args, _, _) ->
-            (loop rt || List.exists (fun (_, at, _) -> loop at)
-              (argsToList args))
-        | _ -> false)
+      (match t with
+         TNamed (t', _) -> loop t'.ttype
+       | TComp (c, _) -> loopComp c
+       | TArray (t', _, _) -> loop t'
+       | TPtr (t', _) -> loop t'
+       | TFun (rt, args, _, _) ->
+         (loop rt || List.exists (fun (_, at, _) -> loop at)
+            (argsToList args))
+       | _ -> false)
   and loopComp c =
     if H.mem memo c.ckey then
       (* We are looping, the answer must be false *)
@@ -6189,9 +6189,9 @@ let lenOfArray (eo: exp option) : int =
   | Some e -> begin
       match constFold true e with
       | Const(CInt64(ni, _, _)) when ni >= Int64.zero ->
-          i64_to_int ni
+        i64_to_int ni
       | e -> raise LenOfArray
-  end
+    end
 
 
 (*** Make an initializer for zeroe-ing a data type ***)
@@ -6201,72 +6201,72 @@ let rec makeZeroInit (t: typ) : init =
   | TFloat(fk, _) -> SingleInit(Const(CReal(0.0, fk, None)))
   | TEnum (e, _) -> SingleInit (kinteger e.ekind 0)
   | TComp (comp, _) as t' when comp.cstruct ->
-      let inits =
-        List.fold_right
-          (fun f acc ->
-            if f.fname <> missingFieldName then
-              (Field(f, NoOffset), makeZeroInit f.ftype) :: acc
-            else
-              acc)
-          comp.cfields []
-      in
-      CompoundInit (t', inits)
+    let inits =
+      List.fold_right
+        (fun f acc ->
+           if f.fname <> missingFieldName then
+             (Field(f, NoOffset), makeZeroInit f.ftype) :: acc
+           else
+             acc)
+        comp.cfields []
+    in
+    CompoundInit (t', inits)
 
   | TComp (comp, _) when not comp.cstruct ->
-      let fstfield, rest =
-        match comp.cfields with
-          f :: rest -> f, rest
-        | [] -> E.s (unimp "Cannot create init for empty union")
-      in
-      let fieldToInit =
-        if !msvcMode then
-          (* ISO C99 [6.7.8.10] says that the first field of the union
-             is the one we should initialize. *)
-          fstfield
-        else begin
-          (* gcc initializes the whole union to zero.  So choose the largest
-             field, and set that to zero.  Choose the first field if possible.
-             MSVC also initializes the whole union, but use the ISO behavior
-             for MSVC because it only allows compound initializers to refer
-             to the first union field. *)
-          let fieldSize f = try bitsSizeOf f.ftype with SizeOfError _ -> 0 in
-          let widestField, widestFieldWidth =
-            List.fold_left (fun acc thisField ->
-                              let widestField, widestFieldWidth = acc in
-                              let thisSize = fieldSize thisField in
-                              if thisSize > widestFieldWidth then
-                                thisField, thisSize
-                              else
-                                acc)
-              (fstfield, fieldSize fstfield)
-              rest
-          in
-          widestField
-        end
-      in
-      CompoundInit(t, [(Field(fieldToInit, NoOffset),
-                        makeZeroInit fieldToInit.ftype)])
+    let fstfield, rest =
+      match comp.cfields with
+        f :: rest -> f, rest
+      | [] -> E.s (unimp "Cannot create init for empty union")
+    in
+    let fieldToInit =
+      if !msvcMode then
+        (* ISO C99 [6.7.8.10] says that the first field of the union
+           is the one we should initialize. *)
+        fstfield
+      else begin
+        (* gcc initializes the whole union to zero.  So choose the largest
+           field, and set that to zero.  Choose the first field if possible.
+           MSVC also initializes the whole union, but use the ISO behavior
+           for MSVC because it only allows compound initializers to refer
+           to the first union field. *)
+        let fieldSize f = try bitsSizeOf f.ftype with SizeOfError _ -> 0 in
+        let widestField, widestFieldWidth =
+          List.fold_left (fun acc thisField ->
+              let widestField, widestFieldWidth = acc in
+              let thisSize = fieldSize thisField in
+              if thisSize > widestFieldWidth then
+                thisField, thisSize
+              else
+                acc)
+            (fstfield, fieldSize fstfield)
+            rest
+        in
+        widestField
+      end
+    in
+    CompoundInit(t, [(Field(fieldToInit, NoOffset),
+                      makeZeroInit fieldToInit.ftype)])
 
   | TArray(bt, Some len, _) as t' ->
-      let n =
-        match constFold true len with
-          Const(CInt64(n, _, _)) -> i64_to_int n
-        | _ -> E.s (E.unimp "Cannot understand length of array")
-      in
-      let initbt = makeZeroInit bt in
-      let rec loopElems acc i =
-        if i < 0 then acc
-        else loopElems ((Index(integer i, NoOffset), initbt) :: acc) (i - 1)
-      in
-      CompoundInit(t', loopElems [] (n - 1))
+    let n =
+      match constFold true len with
+        Const(CInt64(n, _, _)) -> i64_to_int n
+      | _ -> E.s (E.unimp "Cannot understand length of array")
+    in
+    let initbt = makeZeroInit bt in
+    let rec loopElems acc i =
+      if i < 0 then acc
+      else loopElems ((Index(integer i, NoOffset), initbt) :: acc) (i - 1)
+    in
+    CompoundInit(t', loopElems [] (n - 1))
 
   | TArray (bt, None, at) as t' ->
-      (* Unsized array, allow it and fill it in later
-       * (see cabs2cil.ml, collectInitializer) *)
-      CompoundInit (t', [])
+    (* Unsized array, allow it and fill it in later
+     * (see cabs2cil.ml, collectInitializer) *)
+    CompoundInit (t', [])
 
   | TPtr _ as t ->
-      SingleInit(if !insertImplicitCasts then mkCast zero t else zero)
+    SingleInit(if !insertImplicitCasts then mkCast zero t else zero)
   | x -> E.s (unimp "Cannot initialize type: %a" d_type x)
 
 
@@ -6294,19 +6294,19 @@ let foldLeftCompound
         Some lene when implicit -> begin
           match constFold true lene with
             Const(CInt64(i, _, _)) ->
-              let len_array = i64_to_int i in
-              let len_init = List.length initl in
-              if len_array > len_init then
-                let zi = makeZeroInit bt in
-                let rec loop acc i =
-                  if i >= len_array then acc
-                  else
-                    loop (doinit (Index(integer i, NoOffset)) zi bt acc)
-                         (i + 1)
-                in
-                loop part (len_init + 1)
-              else
-                part
+            let len_array = i64_to_int i in
+            let len_init = List.length initl in
+            if len_array > len_init then
+              let zi = makeZeroInit bt in
+              let rec loop acc i =
+                if i >= len_array then acc
+                else
+                  loop (doinit (Index(integer i, NoOffset)) zi bt acc)
+                    (i + 1)
+              in
+              loop part (len_init + 1)
+            else
+              part
           | _ -> E.s (unimp "foldLeftCompound: array with initializer and non-constant length\n")
         end
 
@@ -6316,12 +6316,12 @@ let foldLeftCompound
     end
 
   | TComp (comp, _) ->
-      let getTypeOffset = function
-          Field(f, NoOffset) -> f.ftype
-        | _ -> E.s (bug "foldLeftCompound: malformed initializer")
-      in
-      List.fold_left
-        (fun acc (o, i) -> doinit o i (getTypeOffset o) acc) acc initl
+    let getTypeOffset = function
+        Field(f, NoOffset) -> f.ftype
+      | _ -> E.s (bug "foldLeftCompound: malformed initializer")
+    in
+    List.fold_left
+      (fun acc (o, i) -> doinit o i (getTypeOffset o) acc) acc initl
 
   | _ -> E.s (E.unimp "Type of Compound is not array or struct or union")
 
@@ -6333,7 +6333,7 @@ let rec isCompleteType t =
   | TArray(t, None, _) -> false
   | TArray(t, Some z, _) when isZero z -> false
   | TComp (comp, _) -> (* Struct or union *)
-      List.for_all (fun fi -> isCompleteType fi.ftype) comp.cfields
+    List.for_all (fun fi -> isCompleteType fi.ftype) comp.cfields
   | _ -> true
 
 
@@ -6355,21 +6355,21 @@ let uniqueVarNames (f: file) : unit =
         GVarDecl(vi, l)
       | GVar(vi, _, l)
       | GFun({svar = vi}, l) ->
-          (* See if we have used this name already for something else *)
-          (try
-            let oldid = H.find globalNames vi.vname in
-            if oldid <> vi.vid then
-              ignore (warn "The name %s is used for two distinct globals"
-                        vi.vname);
-            (* Here if we have used this name already. Go ahead *)
-            ()
-          with Not_found -> begin
-            (* Here if this is the first time we define a name *)
-            H.add globalNames vi.vname vi.vid;
-            (* And register it *)
-            A.registerAlphaName gAlphaTable None vi.vname !currentLoc;
-            ()
-          end)
+        (* See if we have used this name already for something else *)
+        (try
+           let oldid = H.find globalNames vi.vname in
+           if oldid <> vi.vid then
+             ignore (warn "The name %s is used for two distinct globals"
+                       vi.vname);
+           (* Here if we have used this name already. Go ahead *)
+           ()
+         with Not_found -> begin
+             (* Here if this is the first time we define a name *)
+             H.add globalNames vi.vname vi.vid;
+             (* And register it *)
+             A.registerAlphaName gAlphaTable None vi.vname !currentLoc;
+             ()
+           end)
       | _ -> ());
 
   (* Now we must scan the function bodies and rename the locals *)
@@ -6384,7 +6384,7 @@ let uniqueVarNames (f: file) : unit =
           let processLocal (v: varinfo) =
             let newname, oldloc =
               A.newAlphaName gAlphaTable (Some undolist) v.vname
-               !currentLoc
+                !currentLoc
             in
             if false && newname <> v.vname then (* Disable this warning *)
               ignore (warn "uniqueVarNames: Changing the name of local %s in %s to %s (due to duplicate at %a)"
@@ -6409,22 +6409,22 @@ let uniqueVarNames (f: file) : unit =
 class copyFunctionVisitor (newname: string) = object (self)
   inherit nopCilVisitor
 
-      (* Keep here a maping from locals to their copies *)
+  (* Keep here a maping from locals to their copies *)
   val map : (string, varinfo) H.t = H.create 113
-      (* Keep here a maping from statements to their copies *)
+  (* Keep here a maping from statements to their copies *)
   val stmtmap : (int, stmt) H.t = H.create 113
   val sid = ref 0 (* Will have to assign ids to statements *)
-      (* Keep here a list of statements to be patched *)
+  (* Keep here a list of statements to be patched *)
   val patches : stmt list ref = ref []
 
   val argid = ref 0
 
-      (* This is the main function *)
+  (* This is the main function *)
   method vfunc (f: fundec) : fundec visitAction =
     (* We need a map from the old locals/formals to the new ones *)
     H.clear map;
     argid := 0;
-     (* Make a copy of the fundec. *)
+    (* Make a copy of the fundec. *)
     let f' = {f with svar = f.svar} in
     let patchfunction (f' : fundec) =
       (* Change the name. Only this late to allow the visitor to copy the
@@ -6437,12 +6437,12 @@ class copyFunctionVisitor (newname: string) = object (self)
       let patchstmt (s: stmt) =
         match s.skind with
           Goto (sr, l) ->
-            (* Make a copy of the reference *)
-            let sr' = ref (findStmt !sr.sid) in
-            s.skind <- Goto (sr',l)
+          (* Make a copy of the reference *)
+          let sr' = ref (findStmt !sr.sid) in
+          s.skind <- Goto (sr',l)
         | Switch (e, body, cases, l) ->
-            s.skind <- Switch (e, body,
-                               Util.list_map (fun cs -> findStmt cs.sid) cases, l)
+          s.skind <- Switch (e, body,
+                             Util.list_map (fun cs -> findStmt cs.sid) cases, l)
         | _ -> ()
       in
       List.iter patchstmt !patches;
@@ -6453,8 +6453,8 @@ class copyFunctionVisitor (newname: string) = object (self)
     H.clear stmtmap;
     ChangeDoChildrenPost (f', patchfunction)
 
-      (* We must create a new varinfo for each declaration. Memoize to
-       * maintain sharing *)
+  (* We must create a new varinfo for each declaration. Memoize to
+   * maintain sharing *)
   method vvdec (v: varinfo) =
     (* Some varinfo have empty names. Give them some name *)
     if v.vname = "" then begin
@@ -6463,33 +6463,33 @@ class copyFunctionVisitor (newname: string) = object (self)
     try
       ChangeTo (H.find map v.vname)
     with Not_found -> begin
-      let v' = {v with vid = newVID () } in
-      H.add map v.vname v';
-      ChangeDoChildrenPost (v', fun x -> x)
-    end
+        let v' = {v with vid = newVID () } in
+        H.add map v.vname v';
+        ChangeDoChildrenPost (v', fun x -> x)
+      end
 
-      (* We must replace references to local variables *)
+  (* We must replace references to local variables *)
   method vvrbl (v: varinfo) =
     if v.vglob then SkipChildren else
-    try
-      ChangeTo (H.find map v.vname)
-    with Not_found ->
-      E.s (bug "Cannot find the new copy of local variable %s" v.vname)
+      try
+        ChangeTo (H.find map v.vname)
+      with Not_found ->
+        E.s (bug "Cannot find the new copy of local variable %s" v.vname)
 
 
-        (* Replace statements. *)
+  (* Replace statements. *)
   method vstmt (s: stmt) : stmt visitAction =
     s.sid <- !sid; incr sid;
     let s' = {s with sid = s.sid} in
     H.add stmtmap s.sid s'; (* Remember where we copied this *)
     (* if we have a Goto or a Switch remember them to fixup at end *)
     (match s'.skind with
-      (Goto _ | Switch _) -> patches := s' :: !patches
-    | _ -> ());
+       (Goto _ | Switch _) -> patches := s' :: !patches
+     | _ -> ());
     (* Do the children *)
     ChangeDoChildrenPost (s', fun x -> x)
 
-      (* Copy blocks since they are mutable *)
+  (* Copy blocks since they are mutable *)
   method vblock (b: block) =
     ChangeDoChildrenPost ({b with bstmts = b.bstmts}, fun x -> x)
 
@@ -6533,16 +6533,16 @@ let link source dest = begin
     dest.preds <- source :: dest.preds
 end
 let trylink source dest_option = match dest_option with
-  None -> ()
-| Some(dest) -> link source dest
+    None -> ()
+  | Some(dest) -> link source dest
 
 
 (** Cmopute the successors and predecessors of a block, given a fallthrough *)
 let rec succpred_block b fallthrough rlabels =
   let rec handle sl = match sl with
-    [] -> ()
-  | [a] -> succpred_stmt a fallthrough rlabels
-  | hd :: ((next :: _) as tl) ->
+      [] -> ()
+    | [a] -> succpred_stmt a fallthrough rlabels
+    | hd :: ((next :: _) as tl) ->
       succpred_stmt hd (Some next) rlabels;
       handle tl
   in handle b.bstmts
@@ -6560,37 +6560,37 @@ and succpred_stmt s fallthrough rlabels =
     failwith "computeCFGInfo: cannot be called on functions with break, continue or switch statements. Use prepareCFG first to remove them."
 
   | If(e1,b1,b2,l) ->
-      (match b1.bstmts with
-        [] -> trylink s fallthrough
-      | hd :: tl -> (link s hd ; succpred_block b1 fallthrough rlabels )) ;
-      (match b2.bstmts with
-        [] -> trylink s fallthrough
-      | hd :: tl -> (link s hd ; succpred_block b2 fallthrough rlabels ))
+    (match b1.bstmts with
+       [] -> trylink s fallthrough
+     | hd :: tl -> (link s hd ; succpred_block b1 fallthrough rlabels )) ;
+    (match b2.bstmts with
+       [] -> trylink s fallthrough
+     | hd :: tl -> (link s hd ; succpred_block b2 fallthrough rlabels ))
 
   | Loop(b,l,_,_) ->
-      begin match b.bstmts with
+    begin match b.bstmts with
         [] -> failwith "computeCFGInfo: empty loop"
       | hd :: tl ->
-          link s hd ;
-          succpred_block b (Some(hd)) rlabels
-      end
+        link s hd ;
+        succpred_block b (Some(hd)) rlabels
+    end
 
   | Block(b) -> begin match b.bstmts with
-                  [] -> trylink s fallthrough
-                | hd :: tl -> link s hd ;
-                    succpred_block b fallthrough rlabels
-                end
+        [] -> trylink s fallthrough
+      | hd :: tl -> link s hd ;
+        succpred_block b fallthrough rlabels
+    end
   | TryExcept _ | TryFinally _ ->
-      failwith "computeCFGInfo: structured exception handling not implemented"
+    failwith "computeCFGInfo: structured exception handling not implemented"
 
 let caseRangeFold (l: label list) =
   let rec fold acc = function
-  | ((Case _ | Default _ | Label _) as x) :: xs -> fold (x :: acc) xs
-  | CaseRange(el, eh, loc) :: xs ->
+    | ((Case _ | Default _ | Label _) as x) :: xs -> fold (x :: acc) xs
+    | CaseRange(el, eh, loc) :: xs ->
       let il, ih, ik =
         match constFold true el, constFold true eh with
           Const(CInt64(il, ilk, _)), Const(CInt64(ih, ihk, _)) ->
-            mkCilint ilk il, mkCilint ihk ih, commonIntKind ilk ihk
+          mkCilint ilk il, mkCilint ihk ih, commonIntKind ilk ihk
         | _ -> E.s (error "Cannot understand the constants in case range")
       in
       if compare_cilint il ih > 0 then
@@ -6600,8 +6600,8 @@ let caseRangeFold (l: label list) =
         else mkAll (add_cilint i one_cilint) (Case(kintegerCilint ik i, loc) :: acc)
       in
       fold (mkAll il acc) xs
-   | [] -> List.rev acc
-   in fold [] l
+    | [] -> List.rev acc
+  in fold [] l
 
 (* [weimer] Sun May  5 12:25:24 PDT 2002
  * This code was pulled from ext/switch.ml because it looks like we really
@@ -6612,7 +6612,7 @@ let caseRangeFold (l: label list) =
  *  (2) remove "break"
  *  (3) remove "default"
  *  (4) remove "continue"
- *)
+*)
 
 (* This alphaTable is used to prevent collision of label names when
    transforming switch statements and loops. It uses a *unit*
@@ -6626,166 +6626,166 @@ let freshLabel (base:string) =
 
 let rec xform_switch_stmt s break_dest cont_dest = begin
   let suffix e = match getInteger e with
-  | Some value ->
+    | Some value ->
       if compare_cilint value zero_cilint < 0 then
         "neg_" ^ string_of_cilint (neg_cilint value)
-        else
-          string_of_cilint value
-  | None -> "exp"
+      else
+        string_of_cilint value
+    | None -> "exp"
   in
   s.labels <- Util.list_map (fun lab -> match lab with
-    Label _ -> lab
-  | Case(e,l) ->
-      let str = Printf.sprintf "case_%s" (suffix e) in
-      Label(freshLabel str,l,false)
-  | CaseRange(e1,e2,l) ->
-      let str = Printf.sprintf "caserange_%s_%s" (suffix e1) (suffix e2) in
-      Label(freshLabel str,l,false)
-  | Default(l) -> Label(freshLabel "switch_default",l,false)
-  ) s.labels ;
+        Label _ -> lab
+      | Case(e,l) ->
+        let str = Printf.sprintf "case_%s" (suffix e) in
+        Label(freshLabel str,l,false)
+      | CaseRange(e1,e2,l) ->
+        let str = Printf.sprintf "caserange_%s_%s" (suffix e1) (suffix e2) in
+        Label(freshLabel str,l,false)
+      | Default(l) -> Label(freshLabel "switch_default",l,false)
+    ) s.labels ;
   match s.skind with
   | Instr _ | Return _ | Goto _ | ComputedGoto _ -> ()
   | Break(l) -> begin try
-                  s.skind <- Goto(break_dest (),l)
-                with e ->
-                  ignore (error "prepareCFG: break: %a@!" d_stmt s) ;
-                  raise e
-                end
+        s.skind <- Goto(break_dest (),l)
+      with e ->
+        ignore (error "prepareCFG: break: %a@!" d_stmt s) ;
+        raise e
+    end
   | Continue(l) -> begin try
-                  s.skind <- Goto(cont_dest (),l)
-                with e ->
-                  ignore (error "prepareCFG: continue: %a@!" d_stmt s) ;
-                  raise e
-                end
+        s.skind <- Goto(cont_dest (),l)
+      with e ->
+        ignore (error "prepareCFG: continue: %a@!" d_stmt s) ;
+        raise e
+    end
   | If(e,b1,b2,l) -> xform_switch_block b1 break_dest cont_dest ;
-                     xform_switch_block b2 break_dest cont_dest
+    xform_switch_block b2 break_dest cont_dest
   | Switch(e,b,sl,l) ->
-      (* change
-       * switch (se) {
-       *   case 0: s0 ;
-       *   case 1: s1 ; break;
-       *   ...
-       * }
-       *
-       * into:
-       *
-       * if (se == 0) goto label_0;
-       * if (se == 1) goto label_1;
-       * ...
-       * goto label_default; // If there is a [Default]
-       * goto label_break; // If there is no [Default]
-       * label_0: s0;
-       * label_1: s1; goto label_break;
-       * ...
-       * label_break: ; // break_stmt
-       *
-       * The default case, if present, must be used only if *all*
-       * non-default cases fail [ISO/IEC 9899:1999, §6.8.4.2, ¶5]. As
-       * a result, we test all cases first, and hit 'default' only if
-       * no case matches. However, we do not reorder the switch's
-       * body, so fall-through still works as expected.
-       *
-       *)
+    (* change
+     * switch (se) {
+     *   case 0: s0 ;
+     *   case 1: s1 ; break;
+     *   ...
+     * }
+     *
+     * into:
+     *
+     * if (se == 0) goto label_0;
+     * if (se == 1) goto label_1;
+     * ...
+     * goto label_default; // If there is a [Default]
+     * goto label_break; // If there is no [Default]
+     * label_0: s0;
+     * label_1: s1; goto label_break;
+     * ...
+     * label_break: ; // break_stmt
+     *
+     * The default case, if present, must be used only if *all*
+     * non-default cases fail [ISO/IEC 9899:1999, §6.8.4.2, ¶5]. As
+     * a result, we test all cases first, and hit 'default' only if
+     * no case matches. However, we do not reorder the switch's
+     * body, so fall-through still works as expected.
+     *
+    *)
 
-      let break_stmt = mkStmt (Instr []) in
-      break_stmt.labels <- [Label(freshLabel "switch_break",l,false)] ;
+    let break_stmt = mkStmt (Instr []) in
+    break_stmt.labels <- [Label(freshLabel "switch_break",l,false)] ;
 
-      (* To be changed into goto default if there if a [Default] *)
-      let goto_break = mkStmt (Goto (ref break_stmt, l)) in
+    (* To be changed into goto default if there if a [Default] *)
+    let goto_break = mkStmt (Goto (ref break_stmt, l)) in
 
-      (* Return a list of [If] statements, equivalent to the cases of [stmt].
-       * Use a single [If] and || operators if useLogicalOperators is true.
-       * If [stmt] is a [Default], update goto label_break into goto
-       * label_default.
-       *)
-      let xform_choice stmt =
-        let cases = List.filter (function Label _ -> false | _ -> true ) stmt.labels in
-        try (* is this the default case? *)
-          match List.find (function Default _ -> true | _ -> false) cases with
-          | Default dl ->
-              (* We found a [Default], update the fallthrough goto *)
-              goto_break.skind <- Goto(ref stmt, dl);
-              []
-          | _ -> E.s (bug "Unexpected pattern-matching failure")
-        with
+    (* Return a list of [If] statements, equivalent to the cases of [stmt].
+     * Use a single [If] and || operators if useLogicalOperators is true.
+     * If [stmt] is a [Default], update goto label_break into goto
+     * label_default.
+    *)
+    let xform_choice stmt =
+      let cases = List.filter (function Label _ -> false | _ -> true ) stmt.labels in
+      try (* is this the default case? *)
+        match List.find (function Default _ -> true | _ -> false) cases with
+        | Default dl ->
+          (* We found a [Default], update the fallthrough goto *)
+          goto_break.skind <- Goto(ref stmt, dl);
+          []
+        | _ -> E.s (bug "Unexpected pattern-matching failure")
+      with
         Not_found -> (* this is a list of specific cases *)
-          match cases with
-          | ((Case (_, cl) | CaseRange (_, _, cl)) as lab) :: lab_tl ->
-            (* assume that integer promotion and type conversion of cases is
-             * performed by cabs2cil. *)
-            let comp_case_range e1 e2 =
-                  BinOp(Ge, e, e1, intType), BinOp(Le, e, e2, intType) in
-            let make_comp lab = begin match lab with
-              | Case (exp, _) -> BinOp(Eq, e, exp, intType)
-              | CaseRange (e1, e2, _) when !useLogicalOperators ->
-                  let c1, c2 = comp_case_range e1 e2 in
-                  BinOp(LAnd, c1, c2, intType)
-              | _ -> E.s (bug "Unexpected pattern-matching failure")
-            end in
-            let make_or_from_cases () =
-              List.fold_left
-                  (fun pred label -> BinOp(LOr, pred, make_comp label, intType))
-                  (make_comp lab) lab_tl
-            in
-            let make_if_stmt pred cl =
-              let then_block = mkBlock [ mkStmt (Goto(ref stmt,cl)) ] in
-              let else_block = mkBlock [] in
-              mkStmt(If(pred,then_block,else_block,cl)) in
-            let make_double_if_stmt (pred1, pred2) cl =
-              let then_block = mkBlock [ make_if_stmt pred2 cl ] in
-              let else_block = mkBlock [] in
-              mkStmt(If(pred1,then_block,else_block,cl)) in
-            if !useLogicalOperators then
-              [make_if_stmt (make_or_from_cases ()) cl]
-            else
-              List.map (function
+        match cases with
+        | ((Case (_, cl) | CaseRange (_, _, cl)) as lab) :: lab_tl ->
+          (* assume that integer promotion and type conversion of cases is
+           * performed by cabs2cil. *)
+          let comp_case_range e1 e2 =
+            BinOp(Ge, e, e1, intType), BinOp(Le, e, e2, intType) in
+          let make_comp lab = begin match lab with
+            | Case (exp, _) -> BinOp(Eq, e, exp, intType)
+            | CaseRange (e1, e2, _) when !useLogicalOperators ->
+              let c1, c2 = comp_case_range e1 e2 in
+              BinOp(LAnd, c1, c2, intType)
+            | _ -> E.s (bug "Unexpected pattern-matching failure")
+          end in
+          let make_or_from_cases () =
+            List.fold_left
+              (fun pred label -> BinOp(LOr, pred, make_comp label, intType))
+              (make_comp lab) lab_tl
+          in
+          let make_if_stmt pred cl =
+            let then_block = mkBlock [ mkStmt (Goto(ref stmt,cl)) ] in
+            let else_block = mkBlock [] in
+            mkStmt(If(pred,then_block,else_block,cl)) in
+          let make_double_if_stmt (pred1, pred2) cl =
+            let then_block = mkBlock [ make_if_stmt pred2 cl ] in
+            let else_block = mkBlock [] in
+            mkStmt(If(pred1,then_block,else_block,cl)) in
+          if !useLogicalOperators then
+            [make_if_stmt (make_or_from_cases ()) cl]
+          else
+            List.map (function
                 | Case _ as lab -> make_if_stmt (make_comp lab) cl
                 | CaseRange (e1, e2, _) -> make_double_if_stmt (comp_case_range e1 e2) cl
                 | _ -> E.s (bug "Unexpected pattern-matching failure"))
-                cases
-          | Default _ :: _ | Label _ :: _ ->
-              E.s (bug "Unexpected pattern-matching failure")
-          | [] -> E.s (bug "Block missing 'case' and 'default' in switch statement")
-      in
-      b.bstmts <-
-        (List.flatten (List.map xform_choice sl)) @
-        [goto_break] @
-        b.bstmts @
-        [break_stmt];
-      s.skind <- Block b;
-      xform_switch_block b (fun () -> ref break_stmt) cont_dest
+              cases
+        | Default _ :: _ | Label _ :: _ ->
+          E.s (bug "Unexpected pattern-matching failure")
+        | [] -> E.s (bug "Block missing 'case' and 'default' in switch statement")
+    in
+    b.bstmts <-
+      (List.flatten (List.map xform_choice sl)) @
+      [goto_break] @
+      b.bstmts @
+      [break_stmt];
+    s.skind <- Block b;
+    xform_switch_block b (fun () -> ref break_stmt) cont_dest
   | Loop(b,l,_,_) ->
-          let break_stmt = mkStmt (Instr []) in
-          break_stmt.labels <- [Label(freshLabel "while_break",l,false)] ;
-          let cont_stmt = mkStmt (Instr []) in
-          cont_stmt.labels <- [Label(freshLabel "while_continue",l,false)] ;
-          b.bstmts <- cont_stmt :: b.bstmts ;
-          let this_stmt = mkStmt
-            (Loop(b,l,Some(cont_stmt),Some(break_stmt))) in
-          let break_dest () = ref break_stmt in
-          let cont_dest () = ref cont_stmt in
-          xform_switch_block b break_dest cont_dest ;
-          break_stmt.succs <- s.succs ;
-          let new_block = mkBlock [ this_stmt ; break_stmt ] in
-          s.skind <- Block new_block
+    let break_stmt = mkStmt (Instr []) in
+    break_stmt.labels <- [Label(freshLabel "while_break",l,false)] ;
+    let cont_stmt = mkStmt (Instr []) in
+    cont_stmt.labels <- [Label(freshLabel "while_continue",l,false)] ;
+    b.bstmts <- cont_stmt :: b.bstmts ;
+    let this_stmt = mkStmt
+        (Loop(b,l,Some(cont_stmt),Some(break_stmt))) in
+    let break_dest () = ref break_stmt in
+    let cont_dest () = ref cont_stmt in
+    xform_switch_block b break_dest cont_dest ;
+    break_stmt.succs <- s.succs ;
+    let new_block = mkBlock [ this_stmt ; break_stmt ] in
+    s.skind <- Block new_block
   | Block(b) -> xform_switch_block b break_dest cont_dest
 
   | TryExcept _ | TryFinally _ ->
-      failwith "xform_switch_statement: structured exception handling not implemented"
+    failwith "xform_switch_statement: structured exception handling not implemented"
 
 end and xform_switch_block b break_dest cont_dest =
-  try
-    let rec link_succs sl = match sl with
-    | [] -> ()
-    | hd :: tl -> (if hd.succs = [] then hd.succs <- tl) ; link_succs tl
-    in
-    link_succs b.bstmts ;
-    List.iter (fun stmt ->
-      xform_switch_stmt stmt break_dest cont_dest) b.bstmts ;
-  with e ->
-    List.iter (fun stmt -> ignore
-      (warn "prepareCFG: %a@!" d_stmt stmt)) b.bstmts ;
-    raise e
+      try
+        let rec link_succs sl = match sl with
+          | [] -> ()
+          | hd :: tl -> (if hd.succs = [] then hd.succs <- tl) ; link_succs tl
+        in
+        link_succs b.bstmts ;
+        List.iter (fun stmt ->
+            xform_switch_stmt stmt break_dest cont_dest) b.bstmts ;
+      with e ->
+        List.iter (fun stmt -> ignore
+                      (warn "prepareCFG: %a@!" d_stmt stmt)) b.bstmts ;
+        raise e
 
 (* Enter all the labels in a function into an alpha renaming table to
    prevent duplicate labels when transforming loops and switch
@@ -6795,8 +6795,8 @@ class registerLabelsVisitor : cilVisitor = object
   method vstmt { labels = labels } = begin
     List.iter
       (function
-           Label (name,_,_) -> A.registerAlphaName labelAlphaTable None name ()
-         | _ -> ())
+          Label (name,_,_) -> A.registerAlphaName labelAlphaTable None name ()
+        | _ -> ())
       labels;
     DoChildren
   end
@@ -6808,21 +6808,21 @@ end
 (* Find all labels-as-value in a function to use them as successors of computed
  * gotos. Duplicated in src/ext/cfg.ml. *)
 class addrOfLabelFinder slr = object(self)
-    inherit nopCilVisitor
+  inherit nopCilVisitor
 
-    method vexpr e = match e with
+  method vexpr e = match e with
     | AddrOfLabel sref ->
-        slr := !sref :: (!slr);
-        SkipChildren
+      slr := !sref :: (!slr);
+      SkipChildren
     | _ -> DoChildren
 
 end
 
 let findAddrOfLabelStmts (b : block) : stmt list =
-    let slr = ref [] in
-    let vis = new addrOfLabelFinder slr in
-    ignore(visitCilBlock vis b);
-    !slr
+  let slr = ref [] in
+  let vis = new addrOfLabelFinder slr in
+  ignore(visitCilBlock vis b);
+  !slr
 
 (* prepare a function for computeCFGInfo by removing break, continue,
  * default and switch statements/labels and replacing them with Ifs and
@@ -6833,8 +6833,8 @@ let prepareCFG (fd : fundec) : unit =
   H.clear labelAlphaTable;
   ignore (visitCilFunction (new registerLabelsVisitor) fd);
   xform_switch_block fd.sbody
-      (fun () -> failwith "prepareCFG: break with no enclosing loop")
-      (fun () -> failwith "prepareCFG: continue with no enclosing loop")
+    (fun () -> failwith "prepareCFG: break with no enclosing loop")
+    (fun () -> failwith "prepareCFG: continue with no enclosing loop")
 
 (* make the cfg and return a list of statements *)
 let computeCFGInfo (f : fundec) (global_numbering : bool) : unit =
@@ -6861,13 +6861,13 @@ let initCIL () =
     end;
     (* Pick type for string literals *)
     stringLiteralType := if !M.theMachine.M.const_string_literals then
-      charConstPtrType
-    else
-      charPtrType;
+        charConstPtrType
+      else
+        charPtrType;
     (* Find the right ikind given the size *)
     let findIkindSz (unsigned: bool) (sz: int) : ikind =
       try
-	intKindForSize sz unsigned
+        intKindForSize sz unsigned
       with Not_found ->
         E.s(E.unimp "initCIL: cannot find the right ikind for size %d\n" sz)
     in
@@ -6895,8 +6895,8 @@ let initCIL () =
     char_is_unsigned := !M.theMachine.M.char_is_unsigned;
     little_endian := !M.theMachine.M.little_endian;
     underscore_name := !M.theMachine.M.underscore_name;
-(*     nextGlobalVID := 1; *)
-(*     nextCompinfoKey := 1; *)
+    (*     nextGlobalVID := 1; *)
+    (*     nextCompinfoKey := 1; *)
 
     initCIL_called := true;
     if !msvcMode then
@@ -6924,7 +6924,7 @@ let initCIL () =
 let pullTypesForward = true
 
 
-    (* Scan a type and collect the variables that are refered *)
+(* Scan a type and collect the variables that are refered *)
 class getVarsInGlobalClass (pacc: varinfo list ref) = object
   inherit nopCilVisitor
   method vvrbl (vi: varinfo) =
@@ -6948,8 +6948,8 @@ let hasPrefix p s =
   (String.length s >= pl) && String.sub s 0 pl = p
 
 let pushGlobal (g: global)
-               ~(types:global list ref)
-               ~(variables: global list ref) =
+    ~(types:global list ref)
+    ~(variables: global list ref) =
   if not pullTypesForward then
     variables := g :: !variables
   else
@@ -6962,20 +6962,20 @@ let pushGlobal (g: global)
           GType (_, l) | GCompTag (_, l) -> Some (getVarsInGlobal g, l)
         | GEnumTag (_, l) | GPragma (Attr("pack", _), l)
         | GCompTagDecl (_, l) | GEnumTagDecl (_, l) -> Some ([], l)
-          (** Move the warning pragmas early
-        | GPragma(Attr(s, _), l) when hasPrefix "warning" s -> Some ([], l)
-          *)
+        (** Move the warning pragmas early
+            | GPragma(Attr(s, _), l) when hasPrefix "warning" s -> Some ([], l)
+        *)
         | _ -> None (* Does not go with the types *)
       in
       match varsintype with
-      None -> variables := g :: !variables
-    | Some (vl, loc) ->
+        None -> variables := g :: !variables
+      | Some (vl, loc) ->
         types :=
-           (* insert declarations for referred variables ('vl'), before
-            * the type definition 'g' itself *)
-           g :: (List.fold_left (fun acc v -> GVarDecl(v, loc) :: acc)
-                                !types vl)
-  end
+          (* insert declarations for referred variables ('vl'), before
+           * the type definition 'g' itself *)
+          g :: (List.fold_left (fun acc v -> GVarDecl(v, loc) :: acc)
+                  !types vl)
+    end
 
 
 type formatArg =
@@ -7054,7 +7054,7 @@ let rec isInteger : exp -> int64 option = function
   | _ -> None
 
 (** Deprecated.  For compatibility with older programs, these are
-  aliases for {!Cil.builtinFunctions} *)
+    aliases for {!Cil.builtinFunctions} *)
 let gccBuiltins = builtinFunctions
 let msvcBuiltins = builtinFunctions
 
@@ -7082,10 +7082,10 @@ let truncateInteger64 (k: ikind) (i: int64) : int64 * bool =
          * Suppress the truncation warning in this case.      *)
         let chopped = Int64.shift_right i nrBits in
         chopped <> Int64.zero
-          (* matth: also suppress the warning if we only chop off 1s.
-             This is probably due to a negative number being cast to an
-             unsigned value.  While potentially a bug, this is almost
-             always what the programmer intended. *)
+        (* matth: also suppress the warning if we only chop off 1s.
+           This is probably due to a negative number being cast to an
+           unsigned value.  While potentially a bug, this is almost
+           always what the programmer intended. *)
         && chopped <> Int64.minus_one
     in
     i2, truncated
@@ -7099,8 +7099,8 @@ let convertInts (i1:int64) (ik1:ikind) (i2:int64) (ik2:ikind)
     i1, i2, ik1
   else begin
     let rank : ikind -> int = function
-        (* these are just unique numbers representing the integer
-           conversion rank. *)
+      (* these are just unique numbers representing the integer
+         conversion rank. *)
       | IBool -> 0
       | IChar | ISChar | IUChar -> 1
       | IShort | IUShort -> 2
@@ -7133,4 +7133,3 @@ let convertInts (i1:int64) (ik1:ikind) (i2:int64) (ik2:ikind)
     let i2',_ = truncateInteger64 ik' i2 in
     i1', i2', ik'
   end
-
