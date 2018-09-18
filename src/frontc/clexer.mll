@@ -179,6 +179,7 @@ let init_lexicon _ =
       ("typeof", fun loc -> TYPEOF loc);
       ("__alignof", fun loc -> ALIGNOF loc);
       ("__alignof__", fun loc -> ALIGNOF loc);
+      ("_Alignof", fun loc -> ALIGNOF loc);
       ("__volatile__", fun loc -> VOLATILE loc);
       ("__volatile", fun loc -> VOLATILE loc);
 
