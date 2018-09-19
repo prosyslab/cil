@@ -6191,6 +6191,8 @@ and doDecl (isglobal: bool) : A.definition -> chunk = function
       dl;
     empty
 
+  | STATIC_ASSERT_DECLARATION _ -> empty
+
   | _ -> E.s (error "unexpected form of declaration")
 
 and doTypedef ((specs, nl): A.name_group) =

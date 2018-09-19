@@ -255,7 +255,7 @@ let transformOffsetOf (speclist, dtype) member =
 
 %token EOF
 %token<Cabs.cabsloc> CHAR INT BOOL DOUBLE FLOAT VOID INT64 INT32
-%token<Cabs.cabsloc> ENUM STRUCT TYPEDEF UNION
+%token<Cabs.cabsloc> ENUM STRUCT TYPEDEF UNION STATIC_ASSERT
 %token<Cabs.cabsloc> SIGNED UNSIGNED LONG SHORT
 %token<Cabs.cabsloc> VOLATILE EXTERN STATIC CONST RESTRICT AUTO REGISTER COMPLEX
 %token<Cabs.cabsloc> THREAD
@@ -927,6 +927,8 @@ declaration:                                /* ISO 6.7.*/
                                        { doDeclaration ((*handleLoc*)(snd $1)) (fst $1) $2 }
 |   decl_spec_list SEMICOLON
                                        { doDeclaration ((*handleLoc*)(snd $1)) (fst $1) [] }
+|   STATIC_ASSERT LPAREN expression COMMA string_constant RPAREN SEMICOLON
+                                       { STATIC_ASSERT_DECLARATION ((fst $3), (fst $5), $1) }
 ;
 init_declarator_list:                       /* ISO 6.7 */
     init_declarator                              { [$1] }

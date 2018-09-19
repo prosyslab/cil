@@ -188,6 +188,7 @@ let init_lexicon _ =
       ("__PRETTY_FUNCTION__", fun loc -> PRETTY_FUNCTION__ loc);
       ("_Noreturn", fun loc -> NORETURN loc);
       ("__label__", fun _ -> LABEL__);
+      ("_Static_assert", fun loc -> STATIC_ASSERT loc);
       (*** weimer: GCC arcana ***)
       ("__restrict", fun loc -> RESTRICT loc);
       ("__restrict__", fun loc -> RESTRICT loc);
