@@ -490,6 +490,9 @@ and varinfo = {
   mutable vinline: bool;
   (** Whether this varinfo is for an inline function. *)
 
+  mutable vnoreturn: bool;
+  (** Whether this varinfo is for a noreturn function. *)
+
   mutable vdecl: location;
   (** Location of variable declaration. *)
 

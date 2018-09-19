@@ -186,6 +186,7 @@ let init_lexicon _ =
       ("__FUNCTION__", fun loc -> FUNCTION__ loc);
       ("__func__", fun loc -> FUNCTION__ loc); (* ISO 6.4.2.2 *)
       ("__PRETTY_FUNCTION__", fun loc -> PRETTY_FUNCTION__ loc);
+      ("_Noreturn", fun loc -> NORETURN loc);
       ("__label__", fun _ -> LABEL__);
       (*** weimer: GCC arcana ***)
       ("__restrict", fun loc -> RESTRICT loc);

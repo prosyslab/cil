@@ -424,6 +424,9 @@ and varinfo = {
   (** Whether this varinfo is for an inline function. *)
   mutable vinline: bool;
 
+  (** Whether this varinfo is for a noreturn function. *)
+  mutable vnoreturn: bool;
+
   mutable vdecl: location;            (** Location of variable declaration *)
 
   vinit: initinfo;
@@ -4888,6 +4891,7 @@ let makeVarinfo global name ?init typ =
       vdecl = lu;
       vinit = {init=init};
       vinline = false;
+      vnoreturn = false;
       vattr = [];
       vstorage = NoStorage;
       vaddrof = false;

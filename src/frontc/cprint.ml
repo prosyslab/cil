@@ -145,6 +145,7 @@ let rec print_specifiers (specs: spec_elem list) =
   let print_spec_elem = function
       SpecTypedef -> print "typedef"
     | SpecInline -> printu "inline"
+    | SpecNoreturn -> printu "noreturn"
     | SpecStorage sto ->
         printu (match sto with
           NO_STORAGE -> (comstring "/*no storage*/")

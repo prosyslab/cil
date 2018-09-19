@@ -82,7 +82,7 @@ and storage =
     NO_STORAGE | AUTO | STATIC | EXTERN | REGISTER
 
 and funspec =
-    INLINE | VIRTUAL | EXPLICIT
+    INLINE | NORETURN | VIRTUAL | EXPLICIT
 
 and cvspec =
     CV_CONST | CV_VOLATILE | CV_RESTRICT | CV_COMPLEX
@@ -98,6 +98,7 @@ and spec_elem =
   | SpecAttr of attribute       (* __attribute__ *)
   | SpecStorage of storage
   | SpecInline
+  | SpecNoreturn
   | SpecType of typeSpecifier
   | SpecPattern of string       (* specifier pattern variable *)
 
