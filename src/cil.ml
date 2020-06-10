@@ -5995,8 +5995,8 @@ let rec typeSigWithAttrs ?(ignoreSign=false) doattr t =
         Some l -> begin
           match constFold true l with
             Const(CInt64(i, _, _)) -> Some i
-          | e -> E.s (E.bug "Invalid length in array type: %a\n"
-                        (!pd_exp) e)
+          | e -> E.warn "Variable length in array type: %a\n"
+                   (!pd_exp) e; None
         end
       | None -> None
     in
