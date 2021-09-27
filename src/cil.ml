@@ -6910,6 +6910,11 @@ let initCIL () =
     ()
   end
 
+let resetCIL () =
+  initCIL_called := false;
+  H.reset builtinFunctions;
+  E.hadErrors := false;
+  initCIL ()
 
 (* We want to bring all type declarations before the data declarations. This
  * is needed for code of the following form:
