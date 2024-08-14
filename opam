@@ -1,10 +1,11 @@
 opam-version: "2.0"
 synopsis: "C Intermediate Language"
 authors: ["gabriel@kerneis.info"]
-maintainer: "gabriel@kerneis.info"
-homepage: "https://cil-project.github.io/cil/"
-bug-reports: "https://github.com/cil-project/cil/issues/"
-dev-repo: "git+https://github.com/cil-project/cil/"
+maintainer: "Kihong Heo"
+version: "1.7.4"
+homepage: "https://github.com/prosyslab/cil"
+bug-reports: "https://github.com/prosyslab/cil/issues/"
+dev-repo: "git+https://github.com/prosyslab/cil/"
 build: [
   ["env" "FORCE_PERL_PREFIX=1" "./configure" "--prefix" prefix]
   [make]
