@@ -21,8 +21,8 @@ remove: [
   [make "uninstall"]
 ]
 depends: [
-  "num"
   "ocamlfind"
   "ocamlbuild" {build}
   "hevea" {with-doc & with-test}
+  "zarith"
 ]
