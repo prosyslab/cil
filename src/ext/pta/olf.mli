@@ -1,9 +1,9 @@
 (*
  *
- * Copyright (c) 2001-2002, 
+ * Copyright (c) 2001-2002,
  *  John Kodumal        <jkodumal@eecs.berkeley.edu>
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
@@ -32,14 +32,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *)
+open ProsysCil
+
 type lvalue
 type tau
 type absloc
 
+exception UnknownLocation
 (** Raised if a pointer flows to an undefined function.
   We assume that such a function can have any effect on the pointer's contents
 *)
-exception UnknownLocation
 
 val debug : bool ref
 val debug_constraints : bool ref
@@ -59,22 +61,21 @@ val address : lvalue -> tau
 val instantiate : lvalue -> int -> lvalue
 val assign : lvalue -> tau -> unit
 val assign_ret : int -> lvalue -> tau -> unit
-val apply : tau -> tau list -> (tau * int)
-val apply_undefined : tau list -> (tau * int)
+val apply : tau -> tau list -> tau * int
+val apply_undefined : tau list -> tau * int
 val assign_undefined : lvalue -> unit
-val make_function :  string -> lvalue list -> tau -> tau
-val make_lvalue : bool -> string -> (Cil.varinfo option) -> lvalue
+val make_function : string -> lvalue list -> tau -> tau
+val make_lvalue : bool -> string -> Cil.varinfo option -> lvalue
 val bottom : unit -> tau
 val return : tau -> tau -> unit
 val make_fresh : string -> tau
 val points_to_names : lvalue -> string list
 val points_to : lvalue -> Cil.varinfo list
-val epoints_to : tau -> Cil.varinfo list   
+val epoints_to : tau -> Cil.varinfo list
 val string_of_lvalue : lvalue -> string
 val may_alias : tau -> tau -> bool
-
 val absloc_points_to : lvalue -> absloc list
 val absloc_epoints_to : tau -> absloc list
-val absloc_of_lvalue : lvalue -> absloc 
-val absloc_eq : (absloc * absloc) -> bool
+val absloc_of_lvalue : lvalue -> absloc
+val absloc_eq : absloc * absloc -> bool
 val d_absloc : unit -> absloc -> Pretty.doc

@@ -16,11 +16,12 @@
  *
  *)
 
+open ProsysCil
 open Cil
 open Pretty
 module E = Errormsg
 module DF = Dataflow
-module UD = Usedef
+module UD = Liveness.UD
 module L = Liveness
 module IH = Inthash
 module U = Util
@@ -314,8 +315,8 @@ let getDefRhs didstmh stmdat defId =
 
 let prettyprint didstmh stmdat () (_, s, iosh) =
   (*text ""*)
-  seq line
-    (fun (vid, ios) ->
+  seq ~sep:line
+    ~doit:(fun (vid, ios) ->
       num vid ++ text ": "
       ++ IOS.fold
            (fun io d ->
@@ -329,7 +330,7 @@ let prettyprint didstmh stmdat () (_, s, iosh) =
                  | Some (RDCall c, _, _) ->
                      d ++ num i ++ text " " ++ d_instr () c))
            ios nil)
-    (IH.tolist iosh)
+    ~elements:(IH.tolist iosh)
 
 module ReachingDef = struct
   let name = "Reaching Definitions"
@@ -505,11 +506,11 @@ let isDefInstr i defId =
 (* Pretty print the reaching definition data for
    a function *)
 let ppFdec fdec =
-  seq line
-    (fun stm ->
+  seq ~sep:line
+    ~doit:(fun stm ->
       let ivih = IH.find ReachingDef.stmtStartData stm.sid in
       ReachingDef.pretty () ivih)
-    fdec.sbody.bstmts
+    ~elements:fdec.sbody.bstmts
 
 (* If this class is extended with a visitor on expressions,
    then the current rd data is available at each expression *)
@@ -529,7 +530,7 @@ class rdVisitorClass =
        instruction if there is one *)
     val mutable cur_rd_dat = None
 
-    method vstmt stm =
+    method! vstmt stm =
       sid <- stm.sid;
       match getRDs sid with
       | None ->
@@ -547,7 +548,7 @@ class rdVisitorClass =
               cur_rd_dat <- None;
               DoChildren)
 
-    method vinst i =
+    method! vinst i =
       if !debug then
         ignore
           (E.log "rdVis: before %a, rd_dat_lst is %d long\n" d_instr i

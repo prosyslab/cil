@@ -1,10 +1,10 @@
 (*
  *
- * Copyright (c) 2004, 
+ * Copyright (c) 2004,
  *  Jeremy Condit       <jcondit@cs.berkeley.edu>
  *  George C. Necula    <necula@cs.berkeley.edu>
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
@@ -33,48 +33,36 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *)
+open ProsysCil
 open Cil
 open Feature
-open Pretty
 module E = Errormsg
 
 let debug = false
-
 let numRegions : int = 2
-
 let newGlobals : global list ref = ref []
-
 let curFundec : fundec ref = ref dummyFunDec
 let curLocation : location ref = ref locUnknown
 
 let applyOption (fn : 'a -> 'b) (ao : 'a option) : 'b option =
-  match ao with
-  | Some a -> Some (fn a)
-  | None -> None
+  match ao with Some a -> Some (fn a) | None -> None
 
 let getRegion (attrs : attributes) : int =
   try
     match List.hd (filterAttributes "region" attrs) with
-    | Attr (_, [AInt i]) -> i
+    | Attr (_, [ AInt i ]) -> i
     | _ -> E.s (bug "bad region attribute")
-  with Failure _ ->
-    1
+  with Failure _ -> 1
 
-let checkRegion (i : int) (attrs : attributes) : bool =
-  (getRegion attrs) = i
-
-let regionField (i : int) : string =
-  "r" ^ (string_of_int i)
+let checkRegion (i : int) (attrs : attributes) : bool = getRegion attrs = i
+let regionField (i : int) : string = "r" ^ string_of_int i
 
 let regionStruct (i : int) (name : string) : string =
-  name ^ "_r" ^ (string_of_int i)
+  name ^ "_r" ^ string_of_int i
 
 let foldRegions (fn : int -> 'a -> 'a) (base : 'a) : 'a =
   let rec helper (i : int) : 'a =
-    if i <= numRegions then
-      fn i (helper (i + 1))
-    else
-      base
+    if i <= numRegions then fn i (helper (i + 1)) else base
   in
   helper 1
 
@@ -85,8 +73,8 @@ let rec getTypeName (t : typ) : string =
   | TFloat _ -> "float"
   | TComp (cinfo, _) -> "comp_" ^ cinfo.cname
   | TNamed (tinfo, _) -> "td_" ^ tinfo.tname
-  | TPtr (bt, _) -> "ptr_" ^ (getTypeName bt)
-  | TArray (bt, _, _) -> "array_" ^ (getTypeName bt)
+  | TPtr (bt, _) -> "ptr_" ^ getTypeName bt
+  | TArray (bt, _, _) -> "array_" ^ getTypeName bt
   | TFun _ -> "fn"
   | _ -> E.s (unimp "typename")
 
@@ -107,38 +95,37 @@ let varTypes : (typsig, typ) Hashtbl.t = Hashtbl.create 113
 let varCompInfos : (typsig, compinfo) Hashtbl.t = Hashtbl.create 113
 
 let rec sliceCompInfo (i : int) (cinfo : compinfo) : compinfo =
-  try
-    Hashtbl.find compInfos (i, cinfo.ckey)
+  try Hashtbl.find compInfos (i, cinfo.ckey)
   with Not_found ->
-    mkCompInfo cinfo.cstruct (regionStruct i cinfo.cname)
-      (fun cinfo' -> 
-         Hashtbl.add compInfos (i, cinfo.ckey) cinfo';
-         List.fold_right
-           (fun finfo rest ->
-              let t = sliceType i finfo.ftype in
-              if not (isVoidType t) then
-                (finfo.fname, t, finfo.fbitfield,
-                 finfo.fattr, finfo.floc) :: rest
-              else
-                rest)
-           cinfo.cfields [])
+    mkCompInfo cinfo.cstruct
+      (regionStruct i cinfo.cname)
+      (fun cinfo' ->
+        Hashtbl.add compInfos (i, cinfo.ckey) cinfo';
+        List.fold_right
+          (fun finfo rest ->
+            let t = sliceType i finfo.ftype in
+            if not (isVoidType t) then
+              (finfo.fname, t, finfo.fbitfield, finfo.fattr, finfo.floc) :: rest
+            else rest)
+          cinfo.cfields [])
       cinfo.cattr
 
 and sliceTypeInfo (i : int) (tinfo : typeinfo) : typeinfo =
-  try
-    Hashtbl.find typeInfos (i, tinfo.tname)
+  try Hashtbl.find typeInfos (i, tinfo.tname)
   with Not_found ->
     let result =
-      { tinfo with tname = regionStruct i tinfo.tname;
-                   ttype = sliceType i tinfo.ttype; }
+      {
+        tinfo with
+        tname = regionStruct i tinfo.tname;
+        ttype = sliceType i tinfo.ttype;
+      }
     in
     Hashtbl.add typeInfos (i, tinfo.tname) result;
     result
 
 and sliceType (i : int) (t : typ) : typ =
   let ts = typeSig t in
-  try
-    Hashtbl.find types (i, ts)
+  try Hashtbl.find types (i, ts)
   with Not_found ->
     let result =
       match t with
@@ -155,14 +142,15 @@ and sliceType (i : int) (t : typ) : typ =
           TArray (sliceType i bt, applyOption (sliceExp 1) eo, attrs)
       | TFun (ret, args, va, attrs) ->
           if checkRegion i attrs then
-            TFun (sliceTypeAll ret,
-                  applyOption
-                    (Util.list_map (fun (aname, atype, aattrs) ->
-                               (aname, sliceTypeAll atype, aattrs)))
-                    args,
-                  va, attrs)
-          else
-            TVoid []
+            TFun
+              ( sliceTypeAll ret,
+                applyOption
+                  (Util.list_map (fun (aname, atype, aattrs) ->
+                       (aname, sliceTypeAll atype, aattrs)))
+                  args,
+                va,
+                attrs )
+          else TVoid []
       | TBuiltin_va_list _ -> t
       | _ -> E.s (unimp "type %a" d_type t)
     in
@@ -170,43 +158,35 @@ and sliceType (i : int) (t : typ) : typ =
     result
 
 and sliceTypeAll (t : typ) : typ =
-  begin
-  match t with
+  (match t with
   | TComp (cinfo, _) when hasAttribute "var_type_sliced" cinfo.cattr ->
       E.s (bug "tried to slice twice")
-  | _ -> ()
-  end;
+  | _ -> ());
   let ts = typeSig t in
-  try
-    Hashtbl.find varTypes ts
+  try Hashtbl.find varTypes ts
   with Not_found ->
     let cinfo =
-      let name = ("var_" ^ (getTypeName t)) in
+      let name = "var_" ^ getTypeName t in
       if debug then ignore (E.log "creating %s\n" name);
-      try
-        Hashtbl.find varCompInfos ts
+      try Hashtbl.find varCompInfos ts
       with Not_found ->
         mkCompInfo true name
           (fun cinfo ->
-             Hashtbl.add varCompInfos ts cinfo;
-             foldRegions
-               (fun i rest ->
-                  let t' = sliceType i t in
-                  if not (isVoidType t') then
-                    (regionField i, t', None, [], !curLocation) :: rest
-                  else
-                    rest)
-             [])
-          [Attr ("var_type_sliced", [])]
+            Hashtbl.add varCompInfos ts cinfo;
+            foldRegions
+              (fun i rest ->
+                let t' = sliceType i t in
+                if not (isVoidType t') then
+                  (regionField i, t', None, [], !curLocation) :: rest
+                else rest)
+              [])
+          [ Attr ("var_type_sliced", []) ]
     in
     let t' =
-      if List.length cinfo.cfields > 1 then
-        begin
+      if List.length cinfo.cfields > 1 then (
         newGlobals := GCompTag (cinfo, !curLocation) :: !newGlobals;
-        TComp (cinfo, [])
-        end
-      else
-        t
+        TComp (cinfo, []))
+      else t
     in
     Hashtbl.add varTypes ts t';
     t'
@@ -223,9 +203,8 @@ and sliceLval (i : int) (lv : lval) : lval =
             Field (getCompField cinfo (regionField i), offset)
         | _ -> offset
       in
-      Var vinfo, offset'
-  | Mem e ->
-      Mem (sliceExp i e), offset
+      (Var vinfo, offset')
+  | Mem e -> (Mem (sliceExp i e), offset)
 
 and sliceExp (i : int) (e : exp) : exp =
   if debug then ignore (E.log "exp %a\n" d_exp e);
@@ -233,8 +212,8 @@ and sliceExp (i : int) (e : exp) : exp =
   | Const c -> Const c
   | Lval lv -> Lval (sliceLval i lv)
   | UnOp (op, e1, t) -> UnOp (op, sliceExp i e1, sliceType i t)
-  | BinOp (op, e1, e2, t) -> BinOp (op, sliceExp i e1, sliceExp i e2,
-                                    sliceType i t)
+  | BinOp (op, e1, e2, t) ->
+      BinOp (op, sliceExp i e1, sliceExp i e2, sliceType i t)
   | CastE (t, e) -> sliceCast i t e
   | AddrOf lv -> AddrOf (sliceLval i lv)
   | StartOf lv -> StartOf (sliceLval i lv)
@@ -243,19 +222,17 @@ and sliceExp (i : int) (e : exp) : exp =
 
 and sliceCast (i : int) (t : typ) (e : exp) : exp =
   let te = typeOf e in
-  match t, te with
+  match (t, te) with
   | TInt (k1, _), TInt (k2, attrs2) when k1 = k2 ->
       (* Note: We strip off integer cast operations. *)
       sliceExp (getRegion attrs2) e
   | TInt (k1, _), TPtr _ ->
       (* Note: We strip off integer cast operations. *)
       sliceExp i e
-  | TPtr _, _ when isZero e ->
+  | TPtr _, _ when isZero e -> CastE (sliceType i t, sliceExp i e)
+  | TPtr (bt1, _), TPtr (bt2, _) when typeSig bt1 = typeSig bt2 ->
       CastE (sliceType i t, sliceExp i e)
-  | TPtr (bt1, _), TPtr (bt2, _) when (typeSig bt1) = (typeSig bt2) ->
-      CastE (sliceType i t, sliceExp i e)
-  | _ ->
-      E.s (unimp "sketchy cast (%a) -> (%a)\n" d_type te d_type t)
+  | _ -> E.s (unimp "sketchy cast (%a) -> (%a)\n" d_type te d_type t)
 
 and sliceExpAll (e : exp) (l : location) : instr list * exp =
   let t = typeOf e in
@@ -266,19 +243,17 @@ and sliceExpAll (e : exp) (l : location) : instr list * exp =
       let instrs =
         foldRegions
           (fun i rest ->
-             try
-               let finfo = getCompField cinfo (regionField i) in
-               if not (isVoidType finfo.ftype) then
-                 Set ((Var vinfo, Field (finfo, NoOffset)),
-                      sliceExp i e, l) :: rest
-               else
-                 rest
-             with Not_found ->
-               rest)
+            try
+              let finfo = getCompField cinfo (regionField i) in
+              if not (isVoidType finfo.ftype) then
+                Set ((Var vinfo, Field (finfo, NoOffset)), sliceExp i e, l)
+                :: rest
+              else rest
+            with Not_found -> rest)
           []
       in
-      instrs, Lval (var vinfo)
-  | _ -> [], sliceExp 1 e
+      (instrs, Lval (var vinfo))
+  | _ -> ([], sliceExp 1 e)
 
 let sliceVar (vinfo : varinfo) : unit =
   if hasAttribute "var_sliced" vinfo.vattr then
@@ -295,10 +270,9 @@ let sliceInstr (inst : instr) : instr list =
       let t = typeOfLval lv in
       foldRegions
         (fun i rest ->
-           if not (isVoidType (sliceType i t)) then
-             Set (sliceLval i lv, sliceExp i e, loc) :: rest
-           else
-             rest)
+          if not (isVoidType (sliceType i t)) then
+            Set (sliceLval i lv, sliceExp i e, loc) :: rest
+          else rest)
         []
   | Call (ret, fn, args, l) when isAllocFunction fn ->
       let lv =
@@ -309,29 +283,36 @@ let sliceInstr (inst : instr) : instr list =
       let t = typeOfLval lv in
       foldRegions
         (fun i rest ->
-           if not (isVoidType (sliceType i t)) then
-             Call (Some (sliceLval i lv), sliceExp 1 fn,
-                   Util.list_map (sliceExp i) args, l) :: rest
-           else
-             rest)
+          if not (isVoidType (sliceType i t)) then
+            Call
+              ( Some (sliceLval i lv),
+                sliceExp 1 fn,
+                Util.list_map (sliceExp i) args,
+                l )
+            :: rest
+          else rest)
         []
   | Call (ret, fn, args, l) when isExternalFunction fn ->
-      [Call (applyOption (sliceLval 1) ret, sliceExp 1 fn,
-             Util.list_map (sliceExp 1) args, l)]
+      [
+        Call
+          ( applyOption (sliceLval 1) ret,
+            sliceExp 1 fn,
+            Util.list_map (sliceExp 1) args,
+            l );
+      ]
   | Call (ret, fn, args, l) ->
       let ret', set =
         match ret with
         | Some lv ->
             let vinfo = makeTempVar !curFundec (typeOfLval lv) in
-            Some (var vinfo), [Set (lv, Lval (var vinfo), l)]
-        | None ->
-            None, []
+            (Some (var vinfo), [ Set (lv, Lval (var vinfo), l) ])
+        | None -> (None, [])
       in
       let instrs, args' =
         List.fold_right
           (fun arg (restInstrs, restArgs) ->
-             let instrs, arg' = sliceExpAll arg l in
-             instrs @ restInstrs, (arg' :: restArgs))
+            let instrs, arg' = sliceExpAll arg l in
+            (instrs @ restInstrs, arg' :: restArgs))
           args ([], [])
       in
       instrs @ (Call (ret', sliceExp 1 fn, args', l) :: set)
@@ -339,13 +320,12 @@ let sliceInstr (inst : instr) : instr list =
 
 let sliceReturnExp (eo : exp option) (l : location) : stmtkind =
   match eo with
-  | Some e ->
-      begin
+  | Some e -> (
       match sliceExpAll e l with
       | [], e' -> Return (Some e', l)
-      | instrs, e' -> Block (mkBlock [mkStmt (Instr instrs);
-                                      mkStmt (Return (Some e', l))])
-      end
+      | instrs, e' ->
+          Block
+            (mkBlock [ mkStmt (Instr instrs); mkStmt (Return (Some e', l)) ]))
   | None -> Return (None, l)
 
 let rec sliceStmtKind (sk : stmtkind) : stmtkind =
@@ -356,11 +336,11 @@ let rec sliceStmtKind (sk : stmtkind) : stmtkind =
   | Break l -> Break l
   | Continue l -> Continue l
   | Return (eo, l) -> sliceReturnExp eo l
-  | Switch (e, b, sl, l) -> Switch (sliceExp 1 e, sliceBlock b,
-                                    Util.list_map sliceStmt sl, l)
-  | Loop (b, l, so1, so2) -> Loop (sliceBlock b, l,
-                                   applyOption sliceStmt so1,
-                                   applyOption sliceStmt so2)
+  | Switch (e, b, sl, l) ->
+      Switch (sliceExp 1 e, sliceBlock b, Util.list_map sliceStmt sl, l)
+  | Loop (b, l, so1, so2) ->
+      Loop
+        (sliceBlock b, l, applyOption sliceStmt so1, applyOption sliceStmt so2)
   | Goto _ -> sk
   | _ -> E.s (unimp "statement")
 
@@ -384,26 +364,26 @@ let sliceGlobal (g : global) : unit =
   match g with
   | GType (tinfo, l) ->
       newGlobals :=
-        foldRegions (fun i rest -> GType (sliceTypeInfo i tinfo, l) :: rest)
-                    !newGlobals
+        foldRegions
+          (fun i rest -> GType (sliceTypeInfo i tinfo, l) :: rest)
+          !newGlobals
   | GCompTag (cinfo, l) ->
       newGlobals :=
-        foldRegions (fun i rest -> GCompTag (sliceCompInfo i cinfo, l) :: rest)
-                    !newGlobals
+        foldRegions
+          (fun i rest -> GCompTag (sliceCompInfo i cinfo, l) :: rest)
+          !newGlobals
   | GCompTagDecl (cinfo, l) ->
       newGlobals :=
-        foldRegions (fun i rest -> GCompTagDecl (sliceCompInfo i cinfo, l) ::
-                                   rest)
-                    !newGlobals
+        foldRegions
+          (fun i rest -> GCompTagDecl (sliceCompInfo i cinfo, l) :: rest)
+          !newGlobals
   | GFun (fd, l) ->
       sliceFundec fd l;
       newGlobals := GFun (fd, l) :: !newGlobals
-  | GVarDecl _
-  | GVar _ ->
+  | GVarDecl _ | GVar _ ->
       (* Defer processing of vars until end. *)
       newGlobals := g :: !newGlobals
-  | _ ->
-      E.s (unimp "global %a\n" d_global g)
+  | _ -> E.s (unimp "global %a\n" d_global g)
 
 let sliceGlobalVars (g : global) : unit =
   match g with
@@ -414,29 +394,28 @@ let sliceGlobalVars (g : global) : unit =
       List.iter sliceVar fd.sformals;
       setFunctionType fd (sliceType 1 fd.svar.vtype);
       curFundec := dummyFunDec;
-      curLocation := locUnknown;
+      curLocation := locUnknown
   | GVar (vinfo, _, l) ->
       curLocation := l;
       sliceVar vinfo;
       curLocation := locUnknown
   | _ -> ()
 
-class dropAttrsVisitor = object
-  inherit nopCilVisitor
+class dropAttrsVisitor =
+  object
+    inherit nopCilVisitor
 
-  method vvrbl (vinfo : varinfo) =
-    vinfo.vattr <- dropAttribute "var_sliced" vinfo.vattr;
-    DoChildren
+    method! vvrbl (vinfo : varinfo) =
+      vinfo.vattr <- dropAttribute "var_sliced" vinfo.vattr;
+      DoChildren
 
-  method vglob (g : global) =
-    begin
-    match g with
-    | GCompTag (cinfo, _) ->
-        cinfo.cattr <- dropAttribute "var_type_sliced" cinfo.cattr;
-    | _ -> ()
-    end;
-    DoChildren
-end
+    method! vglob (g : global) =
+      (match g with
+      | GCompTag (cinfo, _) ->
+          cinfo.cattr <- dropAttribute "var_type_sliced" cinfo.cattr
+      | _ -> ());
+      DoChildren
+  end
 
 let sliceFile (f : file) : unit =
   newGlobals := [];
@@ -445,13 +424,14 @@ let sliceFile (f : file) : unit =
   f.globals <- List.rev !newGlobals;
   visitCilFile (new dropAttrsVisitor) f
 
-let feature = 
-  { fd_name = "DataSlicing";
+let feature =
+  {
+    fd_name = "DataSlicing";
     fd_enabled = false;
     fd_description = "data slicing";
     fd_extraopt = [];
     fd_doit = sliceFile;
     fd_post_check = true;
-  } 
+  }
 
 let () = Feature.register feature

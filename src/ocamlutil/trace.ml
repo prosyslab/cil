@@ -1,11 +1,11 @@
 (*
  *
- * Copyright (c) 2001-2002, 
+ * Copyright (c) 2001-2002,
  *  George C. Necula    <necula@cs.berkeley.edu>
  *  Scott McPeak        <smcpeak@cs.berkeley.edu>
  *  Wes Weimer          <weimer@cs.berkeley.edu>
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
@@ -39,68 +39,46 @@
  * see trace.mli
  *)
 
-open Pretty;;
-
+open Pretty
 
 (* --------- traceSubsystems --------- *)
 (* this is the list of tags (usually subsystem names) for which
  * trace output will appear *)
-let traceSubsystems : string list ref = ref [];;
-
+let traceSubsystems : string list ref = ref []
 
 let traceAddSys (subsys : string) : unit =
   (* (ignore (printf "traceAddSys %s\n" subsys)); *)
   traceSubsystems := subsys :: !traceSubsystems
-;;
-
 
 let traceActive (subsys : string) : bool =
   (* (List.mem elt list) returns true if something in list equals ('=') elt *)
-  (List.mem subsys !traceSubsystems)
-;;
-
+  List.mem subsys !traceSubsystems
 
 let rec parseString (str : string) (delim : char) : string list =
-begin
-  if (not (String.contains str delim)) then 
-    if ((String.length str) = 0) then
-      [] 
-    else
-      [str]
-
+  if not (String.contains str delim) then
+    if String.length str = 0 then [] else [ str ]
   else
-    let d = ((String.index str delim) + 1) in
-    if (d = 1) then
+    let d = String.index str delim + 1 in
+    if d = 1 then
       (* leading delims are eaten *)
-      (parseString (String.sub str d ((String.length str) - d)) delim)
+      parseString (String.sub str d (String.length str - d)) delim
     else
-      (String.sub str 0 (d-1)) ::
-        (parseString (String.sub str d ((String.length str) - d)) delim)
-end;;
+      String.sub str 0 (d - 1)
+      :: parseString (String.sub str d (String.length str - d)) delim
 
 let traceAddMulti (systems : string) : unit =
-begin
-  let syslist = (parseString systems ',') in
-  (List.iter traceAddSys syslist)
-end;;
-
-
+  let syslist = parseString systems ',' in
+  List.iter traceAddSys syslist
 
 (* --------- traceIndent --------- *)
-let traceIndentLevel : int ref = ref 0;;
-
+let traceIndentLevel : int ref = ref 0
 
 let traceIndent (sys : string) : unit =
-  if (traceActive sys) then
-    traceIndentLevel := !traceIndentLevel + 2
-;;
+  if traceActive sys then traceIndentLevel := !traceIndentLevel + 2
 
 let traceOutdent (sys : string) : unit =
-  if ((traceActive sys) &&
-      (!traceIndentLevel >= 2)) then
+  if traceActive sys && !traceIndentLevel >= 2 then
     traceIndentLevel := !traceIndentLevel - 2
-;;
-
 
 (* --------- trace --------- *)
 (* return a tag to prepend to a trace output
@@ -108,62 +86,45 @@ let traceOutdent (sys : string) : unit =
  *)
 let traceTag (sys : string) : Pretty.doc =
   (* return string of 'i' spaces *)
-  let rec ind (i : int) : string =
-    if (i <= 0) then
-      ""
-    else
-      " " ^ (ind (i-1))
+  let rec ind (i : int) : string = if i <= 0 then "" else " " ^ ind (i - 1) in
 
-  in
-  (text ((ind !traceIndentLevel) ^ "%%% " ^ sys ^ ": "))
-;;
-
+  text (ind !traceIndentLevel ^ "%%% " ^ sys ^ ": ")
 
 (* this is the trace function; its first argument is a string
  * tag, and subsequent arguments are like printf formatting
  * strings ("%a" and whatnot) *)
-let trace
-    (subsys : string)                   (* subsystem identifier for enabling tracing *)
-    (d : Pretty.doc)                    (* something made by 'dprintf' *)
-    : unit =                            (* no return value *)
+let trace (subsys : string) (* subsystem identifier for enabling tracing *)
+    (d : Pretty.doc) : unit =
+  (* something made by 'dprintf' *)
+  (* no return value *)
   (* (ignore (printf "trace %s\n" subsys)); *)
 
   (* see if the subsystem's tracing is turned on *)
-  if (traceActive subsys) then
-    begin
-      (fprint stderr 80			(* print it *)
-         ((traceTag subsys) ++ d));	(* with prepended subsys tag *)
-      (* mb: flush after every message; useful if the program hangs in an
-	 infinite loop... *)
-      (flush stderr)
-    end
-  else
-    ()			                         (* eat it *)
-;;
-
+  if traceActive subsys then (
+    fprint stderr ~width:80 (* print it *) (traceTag subsys ++ d);
+    (* with prepended subsys tag *)
+    (* mb: flush after every message; useful if the program hangs in an
+       infinite loop... *)
+    flush stderr)
+  else () (* eat it *)
 
 let tracei (sys : string) (d : Pretty.doc) : unit =
   (* trace before indent *)
-  (trace sys d);
-  (traceIndent sys)
-;;
+  trace sys d;
+  traceIndent sys
 
 let traceu (sys : string) (d : Pretty.doc) : unit =
   (* trace after outdent *)
   (* no -- I changed my mind -- I want trace *then* outdent *)
-  (trace sys d);
-  (traceOutdent sys)
-;;
-
-
-
+  trace sys d;
+  traceOutdent sys
 
 (* -------------------------- trash --------------------- *)
 (* TRASH START
 
-(* sm: more experimenting *)
-(trace "no" (dprintf "no %d\n" 5));
-(trace "yes" (dprintf "yes %d\n" 6));
-(trace "maybe" (dprintf "maybe %d\n" 7));
+   (* sm: more experimenting *)
+   (trace "no" (dprintf "no %d\n" 5));
+   (trace "yes" (dprintf "yes %d\n" 6));
+   (trace "maybe" (dprintf "maybe %d\n" 7));
 
-TRASH END *)
+   TRASH END *)

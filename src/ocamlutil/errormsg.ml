@@ -1,11 +1,11 @@
 (*
  *
- * Copyright (c) 2001-2002, 
+ * Copyright (c) 2001-2002,
  *  George C. Necula    <necula@cs.berkeley.edu>
  *  Scott McPeak        <smcpeak@cs.berkeley.edu>
  *  Wes Weimer          <weimer@cs.berkeley.edu>
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
@@ -37,66 +37,60 @@
 
 open Pretty
 
-
-
-let debugFlag  = ref false              (* If set then print debugging info *)
+let debugFlag = ref false (* If set then print debugging info *)
 let verboseFlag = ref false
-
 let colorFlag = ref false
 
-(**** Error reporting ****)  
+(**** Error reporting ****)
 exception Error
+
 let s (d : 'a) = raise Error
-
 let hadErrors = ref false
-
 let logChannel : out_channel ref = ref stderr
-
 let errorContext = ref []
-let pushContext f = errorContext := f :: (!errorContext)
-let popContext () = 
-  match !errorContext with 
-    _ :: t -> errorContext := t
+let pushContext f = errorContext := f :: !errorContext
+
+let popContext () =
+  match !errorContext with
+  | _ :: t -> errorContext := t
   | [] -> s (fprintf !logChannel "Bug: cannot pop error context")
 
-
-let withContext ctx f x = 
+let withContext ctx f x =
   pushContext ctx;
   try
     let res = f x in
     popContext ();
     res
-  with e -> begin
+  with e ->
     popContext ();
     raise e
-  end
-  
-                                        (* Make sure that showContext calls 
-                                         * each f with its appropriate 
-                                         * errorContext as it was when it was 
-                                         * pushed *)
-let showContext () = 
+
+(* Make sure that showContext calls
+ * each f with its appropriate
+ * errorContext as it was when it was
+ * pushed *)
+let showContext () =
   let rec loop = function
-      [] -> ()
-    | f :: rest -> (errorContext := rest; (* Just in case f raises an error *)
-                    ignore (fprintf !logChannel "  Context : %t@!" f);
-                    loop rest)
+    | [] -> ()
+    | f :: rest ->
+        errorContext := rest;
+        (* Just in case f raises an error *)
+        ignore (fprintf !logChannel "  Context : %t@!" f);
+        loop rest
   in
   let old = !errorContext in
-  try 
+  try
     loop old;
     errorContext := old
-  with e -> begin
+  with e ->
     errorContext := old;
     raise e
-  end
 
-let contextMessage (name: string) (d: doc) = 
+let contextMessage (name : string) (d : doc) =
   ignore (fprintf !logChannel "%s: %a@!" name insert d);
   showContext ()
 
 let warnFlag = ref false
-
 let redEscStr = "\027[31;1m"
 let greenEscStr = "\027[32;1m"
 let yellowEscStr = "\027[33;1m"
@@ -106,8 +100,8 @@ let cyanEscStr = "\027[36m"
 let whiteEscStr = "\027[37m"
 let resetEscStr = "\027[m"
 
-let bug (fmt : ('a,unit,doc,unit) format4) : 'a = 
-  let f d =  
+let bug (fmt : ('a, unit, doc, unit) format4) : 'a =
+  let f d =
     hadErrors := true;
     if !colorFlag then output_string !logChannel greenEscStr;
     contextMessage "Bug" d;
@@ -116,7 +110,7 @@ let bug (fmt : ('a,unit,doc,unit) format4) : 'a =
   in
   Pretty.gprintf f fmt
 
-let error (fmt : ('a,unit,doc,unit) format4) : 'a =
+let error (fmt : ('a, unit, doc, unit) format4) : 'a =
   let f d =
     hadErrors := true;
     if !colorFlag then output_string !logChannel redEscStr;
@@ -126,13 +120,15 @@ let error (fmt : ('a,unit,doc,unit) format4) : 'a =
   in
   Pretty.gprintf f fmt
 
-let unimp (fmt : ('a,unit,doc,unit) format4) : 'a = 
-  let f d = hadErrors := true; contextMessage "Unimplemented" d; 
+let unimp (fmt : ('a, unit, doc, unit) format4) : 'a =
+  let f d =
+    hadErrors := true;
+    contextMessage "Unimplemented" d;
     flush !logChannel
   in
   Pretty.gprintf f fmt
 
-let warn (fmt : ('a,unit,doc,unit) format4) : 'a = 
+let warn (fmt : ('a, unit, doc, unit) format4) : 'a =
   let f d =
     if !colorFlag then output_string !logChannel yellowEscStr;
     contextMessage "Warning" d;
@@ -141,223 +137,223 @@ let warn (fmt : ('a,unit,doc,unit) format4) : 'a =
   in
   Pretty.gprintf f fmt
 
-let warnOpt (fmt : ('a,unit,doc,unit) format4) : 'a = 
-    let f d = 
-      if !warnFlag then begin
-        if !colorFlag then output_string !logChannel yellowEscStr;
-        contextMessage "Warning" d;
-        if !colorFlag then output_string !logChannel resetEscStr;
-      end;
-      flush !logChannel in
-    Pretty.gprintf f fmt
-
-
-let log (fmt : ('a,unit,doc,unit) format4) : 'a = 
-  let f d = fprint !logChannel 80 d; flush !logChannel in
+let warnOpt (fmt : ('a, unit, doc, unit) format4) : 'a =
+  let f d =
+    if !warnFlag then (
+      if !colorFlag then output_string !logChannel yellowEscStr;
+      contextMessage "Warning" d;
+      if !colorFlag then output_string !logChannel resetEscStr);
+    flush !logChannel
+  in
   Pretty.gprintf f fmt
 
-let logg (fmt : ('a,unit,doc,unit) format4) : 'a =
-  let f d = fprint !logChannel 10000000 d; flush !logChannel in
+let log (fmt : ('a, unit, doc, unit) format4) : 'a =
+  let f d =
+    fprint !logChannel ~width:80 d;
+    flush !logChannel
+  in
   Pretty.gprintf f fmt
 
-let null (fmt : ('a,unit,doc,unit) format4) : 'a =
+let logg (fmt : ('a, unit, doc, unit) format4) : 'a =
+  let f d =
+    fprint !logChannel ~width:10000000 d;
+    flush !logChannel
+  in
+  Pretty.gprintf f fmt
+
+let null (fmt : ('a, unit, doc, unit) format4) : 'a =
   let f d = () in
   Pretty.gprintf f fmt
 
-
 let theLexbuf = ref (Lexing.from_string "")
 
-let fail format = Pretty.gprintf (fun x -> Pretty.fprint stderr 80 x; 
-                                           raise (Failure "")) format
-
-
+let fail format =
+  Pretty.gprintf
+    (fun x ->
+      Pretty.fprint stderr ~width:80 x;
+      raise (Failure ""))
+    format
 
 (***** Handling parsing errors ********)
-type parseinfo =
-    { mutable  linenum: int      ; (* Current line *)
-      mutable  linestart: int    ; (* The position in the buffer where the 
-                                    * current line starts *)
-      mutable fileName : string   ; (* Current file *)
-      mutable hfile   : string   ; (* High-level file *)
-      mutable hline   : int;       (* High-level line *)
-      lexbuf          : Lexing.lexbuf;
-      inchan          : in_channel option; (* None, if from a string *)
-      mutable   num_errors : int;  (* Errors so far *)
-    }
-      
-let dummyinfo = 
-    { linenum   = 1;
-      linestart = 0;
-      fileName  = "" ;
-      lexbuf    = Lexing.from_string "";
-      inchan    = None;
-      hfile     = "";
-      hline     = 0;
-      num_errors = 0;
-    }
+type parseinfo = {
+  mutable linenum : int; (* Current line *)
+  mutable linestart : int;
+      (* The position in the buffer where the
+       * current line starts *)
+  mutable fileName : string; (* Current file *)
+  mutable hfile : string; (* High-level file *)
+  mutable hline : int; (* High-level line *)
+  lexbuf : Lexing.lexbuf;
+  inchan : in_channel option; (* None, if from a string *)
+  mutable num_errors : int; (* Errors so far *)
+}
+
+let dummyinfo =
+  {
+    linenum = 1;
+    linestart = 0;
+    fileName = "";
+    lexbuf = Lexing.from_string "";
+    inchan = None;
+    hfile = "";
+    hline = 0;
+    num_errors = 0;
+  }
 
 let current = ref dummyinfo
-
-let setHLine (l: int) : unit =
-    !current.hline <- l
-let setHFile (f: string) : unit =
-    !current.hfile <- f
-    
-let rem_quotes str = String.sub str 1 ((String.length str) - 2)
+let setHLine (l : int) : unit = !current.hline <- l
+let setHFile (f : string) : unit = !current.hfile <- f
+let rem_quotes str = String.sub str 1 (String.length str - 2)
 
 (* Change \ into / in file names. To avoid complications with escapes *)
-let cleanFileName str = 
-  let str1 = 
-    if str <> "" && String.get str 0 = '"' (* '"' ( *) 
-    then Bytes.of_string (rem_quotes str) else Bytes.of_string str in
+let cleanFileName str =
+  let str1 =
+    if str <> "" && String.get str 0 = '"' (* '"' ( *) then
+      Bytes.of_string (rem_quotes str)
+    else Bytes.of_string str
+  in
   let l = Bytes.length str1 in
-  let rec loop (copyto: int) (i: int) = 
-    if i >= l then
-      Bytes.sub_string str1 0 copyto
+  let rec loop (copyto : int) (i : int) =
+    if i >= l then Bytes.sub_string str1 0 copyto
     else
       let c = Bytes.get str1 i in
-      if c <> '\\' then begin
-        Bytes.set str1 copyto c; loop (copyto + 1) (i + 1)
-      end else begin
+      if c <> '\\' then (
+        Bytes.set str1 copyto c;
+        loop (copyto + 1) (i + 1))
+      else (
         Bytes.set str1 copyto '/';
-          if i < l - 2 && Bytes.get str1 (i + 1) = '\\' then
-            loop (copyto + 1) (i + 2)
-      else
-        loop (copyto + 1) (i + 1)
-      end
+        if i < l - 2 && Bytes.get str1 (i + 1) = '\\' then
+          loop (copyto + 1) (i + 2)
+        else loop (copyto + 1) (i + 1))
   in
   loop 0 0
 
 let readingFromStdin = ref false
 
-let startParsing ?(useBasename=true) (fname: string) = 
+let startParsing ?(useBasename = true) (fname : string) =
   (* We only support one open file at a time *)
-  if !current != dummyinfo then begin
-     s (error "Errormsg.startParsing supports only one open file: You want to open %s and %s is still open\n" fname !current.fileName); 
-  end; 
-  let inchan = 
-    try if fname = "-" then begin 
-           readingFromStdin := true;
-           stdin 
-        end else begin
-           readingFromStdin := false;
-           open_in fname 
-        end
-    with e -> s (error "Cannot find input file %s (exception %s" 
-                    fname (Printexc.to_string e)) in
+  if !current != dummyinfo then
+    s
+      (error
+         "Errormsg.startParsing supports only one open file: You want to open \
+          %s and %s is still open\n"
+         fname !current.fileName);
+  let inchan =
+    try
+      if fname = "-" then (
+        readingFromStdin := true;
+        stdin)
+      else (
+        readingFromStdin := false;
+        open_in fname)
+    with e ->
+      s
+        (error "Cannot find input file %s (exception %s" fname
+           (Printexc.to_string e))
+  in
   let lexbuf = Lexing.from_channel inchan in
-  let i = 
-    { linenum = 1; linestart = 0; 
-      fileName = 
+  let i =
+    {
+      linenum = 1;
+      linestart = 0;
+      fileName =
         cleanFileName (if useBasename then Filename.basename fname else fname);
-      lexbuf = lexbuf; inchan = Some inchan;
-      hfile = ""; hline = 0;
-      num_errors = 0 } in
+      lexbuf;
+      inchan = Some inchan;
+      hfile = "";
+      hline = 0;
+      num_errors = 0;
+    }
+  in
 
   current := i;
   lexbuf
 
-let startParsingFromString ?(file="<string>") ?(line=1) (str: string) = 
+let startParsingFromString ?(file = "<string>") ?(line = 1) (str : string) =
   let lexbuf = Lexing.from_string str in
-  let i = 
-    { linenum = line; linestart = line - 1;
+  let i =
+    {
+      linenum = line;
+      linestart = line - 1;
       fileName = file;
-      hfile = ""; hline = 0;
-      lexbuf = lexbuf; 
+      hfile = "";
+      hline = 0;
+      lexbuf;
       inchan = None;
-      num_errors = 0 }
+      num_errors = 0;
+    }
   in
   current := i;
   lexbuf
 
-let finishParsing () = 
+let finishParsing () =
   let i = !current in
   (match i.inchan with Some c -> close_in c | _ -> ());
   current := dummyinfo
 
-
 (* Call this function to announce a new line *)
-let newline () = 
+let newline () =
   let i = !current in
   i.linenum <- 1 + i.linenum;
   i.linestart <- Lexing.lexeme_start i.lexbuf
 
-let newHline () = 
+let newHline () =
   let i = !current in
   i.hline <- 1 + i.hline
 
-let setCurrentLine (i: int) = 
-  !current.linenum <- i
+let setCurrentLine (i : int) = !current.linenum <- i
+let setCurrentFile (n : string) = !current.fileName <- cleanFileName n
+let max_errors = 20 (* Stop after 20 errors *)
 
-let setCurrentFile (n: string) = 
-  !current.fileName <- cleanFileName n
-
-
-let max_errors = 20  (* Stop after 20 errors *)
-
-let parse_error (msg: string) : 'a =
+let parse_error (msg : string) : 'a =
   (* Sometimes the Ocaml parser raises errors in symbol_start and symbol_end *)
-  let token_start, token_end = 
-    try Parsing.symbol_start (), Parsing.symbol_end ()
-    with e -> begin 
+  let token_start, token_end =
+    try (Parsing.symbol_start (), Parsing.symbol_end ())
+    with e ->
       ignore (warn "Parsing raised %s\n" (Printexc.to_string e));
-      0, 0
-    end
+      (0, 0)
   in
   let i = !current in
-  let adjStart = 
-    if token_start < i.linestart then 0 else token_start - i.linestart in
-  let adjEnd = 
-    if token_end < i.linestart then 0 else token_end - i.linestart in
-  output_string 
-    stderr
-    (i.fileName ^ "[" ^ (string_of_int i.linenum) ^ ":" 
-                        ^ (string_of_int adjStart) ^ "-" 
-                        ^ (string_of_int adjEnd) 
-                  ^ "]"
-     ^ " : " ^ msg);
+  let adjStart =
+    if token_start < i.linestart then 0 else token_start - i.linestart
+  in
+  let adjEnd = if token_end < i.linestart then 0 else token_end - i.linestart in
+  output_string stderr
+    (i.fileName ^ "[" ^ string_of_int i.linenum ^ ":" ^ string_of_int adjStart
+   ^ "-" ^ string_of_int adjEnd ^ "]" ^ " : " ^ msg);
   output_string stderr "\n";
-  flush stderr ;
+  flush stderr;
   i.num_errors <- i.num_errors + 1;
-  if i.num_errors > max_errors then begin
-    output_string stderr "Too many errors. Aborting.\n" ;
-    exit 1 
-  end;
+  if i.num_errors > max_errors then (
+    output_string stderr "Too many errors. Aborting.\n";
+    exit 1);
   hadErrors := true;
   raise Parsing.Parse_error
 
-
-
-
 (* More parsing support functions: line, file, char count *)
-let getPosition () : int * string * int = 
-  let i = !current in 
-  i.linenum, i.fileName, Lexing.lexeme_start i.lexbuf
+let getPosition () : int * string * int =
+  let i = !current in
+  (i.linenum, i.fileName, Lexing.lexeme_start i.lexbuf)
 
+let getHPosition () = (!current.hline, !current.hfile)
 
-let getHPosition () = 
-  !current.hline, !current.hfile
-
+type location = {
+  file : string;  (** The file name *)
+  line : int;  (** The line number *)
+  hfile : string;  (** The high-level file name, or "" if not present *)
+  hline : int;  (** The high-level line number, or 0 if not present *)
+}
 (** Type for source-file locations *)
-type location = 
-    { file: string; (** The file name *)
-      line: int;    (** The line number *)
-      hfile: string; (** The high-level file name, or "" if not present *)
-      hline: int;    (** The high-level line number, or 0 if not present *)
-    } 
 
-let d_loc () l = 
-  text (l.file ^ ":" ^ string_of_int l.line)
-    
-let d_hloc () (l: location) = 
-  dprintf "%s:%d%a" l.file l.line
-    insert (if l.hline > 0 then dprintf " (%s:%d)" l.hfile l.hline else nil)
+let d_loc () l = text (l.file ^ ":" ^ string_of_int l.line)
+
+let d_hloc () (l : location) =
+  dprintf "%s:%d%a" l.file l.line insert
+    (if l.hline > 0 then dprintf " (%s:%d)" l.hfile l.hline else nil)
 
 let locUnknown = { file = ""; hfile = ""; line = -1; hline = -1 }
 
-let getLocation () = 
+let getLocation () =
   let hl, hf = getHPosition () in
   let l, f, c = getPosition () in
-  { hfile = hf; hline = hl;
-    file = f; line = l } 
-
+  { hfile = hf; hline = hl; file = f; line = l }

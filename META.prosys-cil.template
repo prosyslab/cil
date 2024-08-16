@@ -1,0 +1,11 @@
+# DUNE_GEN
+
+package "default-features" (
+requires="prosys-cil.dataslicing prosys-cil.liveness prosys-cil.pta"
+version = "2.0.4"
+)
+
+package "all-features" (
+requires="prosys-cil.dataslicing prosys-cil.liveness prosys-cil.partial prosys-cil.pta prosys-cil.zrapp"
+version = "2.0.4"
+)

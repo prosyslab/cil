@@ -1,11 +1,11 @@
 (*
  *
- * Copyright (c) 2001-2002, 
+ * Copyright (c) 2001-2002,
  *  George C. Necula    <necula@cs.berkeley.edu>
  *  Scott McPeak        <smcpeak@cs.berkeley.edu>
  *  Wes Weimer          <weimer@cs.berkeley.edu>
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
@@ -35,7 +35,6 @@
  *
  *)
 
-
 module E = Errormsg
 open Trace
 open Pretty
@@ -46,28 +45,29 @@ let close_me = ref false
 
 let close_output _ =
   match !out with
-    None -> ()
-  | Some o -> begin
+  | None -> ()
+  | Some o ->
       flush o;
       if !close_me then close_out o else ();
       close_me := false
-  end
 
 let set_output filename =
   close_output ();
-  let out_chan = try open_out filename 
-    with Sys_error msg -> 
-    (output_string stderr ("Error while opening output: " ^ msg); exit 1) in
+  let out_chan =
+    try open_out filename
+    with Sys_error msg ->
+      output_string stderr ("Error while opening output: " ^ msg);
+      exit 1
+  in
   out := Some out_chan;
   Whitetrack.setOutput out_chan;
   close_me := true
 
-   (* Signal that we are in MS VC mode *)
-let setMSVCMode () =
-  Cprint.msvcMode := true
+(* Signal that we are in MS VC mode *)
+let setMSVCMode () = Cprint.msvcMode := true
 
 (* filename for patching *)
-let patchFileName : string ref = ref ""      (* by default do no patching *)
+let patchFileName : string ref = ref "" (* by default do no patching *)
 
 (* patching file contents *)
 let patchFile : Cabs.file option ref = ref None
@@ -80,11 +80,7 @@ let doPrintProtos : bool ref = ref false
 
 (* this seems like something that should be built-in.. *)
 let isNone (o : 'a option) : bool =
-begin
-  match o with
-  | Some _ -> false
-  | None -> true
-end
+  match o with Some _ -> false | None -> true
 
 let printNotice = ref false
 
@@ -92,175 +88,167 @@ let printNotice = ref false
 ** Argument definition
 *)
 let args : (string * Arg.spec * string) list =
-[
-  "--cabsonly", Arg.String set_output, "<fname> CABS output file name";
-  "--printComments", Arg.Unit (fun _ -> Cprint.printComments := true),
-             " print cabs tree structure in comments in cabs output";
-  "--patchFile", Arg.String (fun pf -> patchFileName := pf),
-             "<fname> name the file containing patching transformations";
-  "--printPatched", Arg.Unit (fun _ -> printPatchedFiles := true),
-             " print patched CABS files after patching, to *.patched";
-  "--printProtos", Arg.Unit (fun _ -> doPrintProtos := true),
-             " print prototypes to safec.proto.h after parsing";
-  "--printNotice", Arg.Set printNotice,
-             " include a comment saying printed by FrontC";
-]
+  [
+    ("--cabsonly", Arg.String set_output, "<fname> CABS output file name");
+    ( "--printComments",
+      Arg.Unit (fun _ -> Cprint.printComments := true),
+      " print cabs tree structure in comments in cabs output" );
+    ( "--patchFile",
+      Arg.String (fun pf -> patchFileName := pf),
+      "<fname> name the file containing patching transformations" );
+    ( "--printPatched",
+      Arg.Unit (fun _ -> printPatchedFiles := true),
+      " print patched CABS files after patching, to *.patched" );
+    ( "--printProtos",
+      Arg.Unit (fun _ -> doPrintProtos := true),
+      " print prototypes to safec.proto.h after parsing" );
+    ( "--printNotice",
+      Arg.Set printNotice,
+      " include a comment saying printed by FrontC" );
+  ]
 
 exception ParseError of string
 exception CabsOnly
 
 (* parse, and apply patching *)
 let rec parse_to_cabs fname =
-begin
   (* parse the patch file if it isn't parsed already *)
-  if ((!patchFileName <> "") && (isNone !patchFile)) then (
+  if !patchFileName <> "" && isNone !patchFile then (
     (* parse the patch file *)
-    patchFile := Some(parse_to_cabs_inner !patchFileName);
-    if !E.hadErrors then
-      (failwith "There were parsing errors in the patch file")
-  );
+    patchFile := Some (parse_to_cabs_inner !patchFileName);
+    if !E.hadErrors then failwith "There were parsing errors in the patch file");
 
   (* now parse the file we came here to parse *)
   let cabs = parse_to_cabs_inner fname in
-  if !E.hadErrors then 
-    E.s (E.error "There were parsing errors in %s" fname);
+  if !E.hadErrors then E.s (E.error "There were parsing errors in %s" fname);
 
   (* and apply the patch file, return transformed file *)
-  let patched = match !patchFile with
-
-    | Some(pf) -> (
+  let patched =
+    match !patchFile with
+    | Some pf ->
         (* save old value of out so I can use it for debugging during patching *)
         let oldOut = !out in
 
         (* reset out so we don't try to print the patch file to it *)
         out := None;
 
-        (trace "patch" (dprintf "newpatching %s\n" fname));
-        let result = (Stats.time "newpatch" (Patch.applyPatch pf) cabs) in
+        trace "patch" (dprintf "newpatching %s\n" fname);
+        let result = Stats.time "newpatch" (Patch.applyPatch pf) cabs in
 
-        if (!printPatchedFiles) then begin                              
-          let outFname:string = fname ^ ".patched" in
-          (trace "patch" (dprintf "printing patched version of %s to %s\n"
-                                  fname outFname));
-          let o = (open_out outFname) in
-          (Cprint.printFile o result);
-          (close_out o)
-        end;
+        if !printPatchedFiles then (
+          let outFname : string = fname ^ ".patched" in
+          trace "patch"
+            (dprintf "printing patched version of %s to %s\n" fname outFname);
+          let o = open_out outFname in
+          Cprint.printFile o result;
+          close_out o);
 
         (* restore out *)
         Cprint.flush ();
         out := oldOut;
 
         result
-      )
     | None -> cabs
   in
 
   (* print it ... *)
   (match !out with
-    Some o -> begin
-      (trace "sm" (dprintf "writing the cabs output\n"));
-      if !printNotice then output_string o ("/* Generated by Frontc */\n");
+  | Some o ->
+      trace "sm" (dprintf "writing the cabs output\n");
+      if !printNotice then output_string o "/* Generated by Frontc */\n";
       Stats.time "printCABS" (Cprint.printFile o) patched;
       close_output ();
       raise CabsOnly
-    end
   | None -> ());
-  if !E.hadErrors then
-    raise Parsing.Parse_error;
+  if !E.hadErrors then raise Parsing.Parse_error;
 
   (* and return the patched source *)
   patched
-end
 
 and clexer lexbuf =
-    Clexer.clear_white ();
-    Clexer.clear_lexeme ();
-    let token = Clexer.initial lexbuf in
-    let white = Clexer.get_white () in
-    let cabsloc = Clexer.currentLoc () in
-    let lexeme = Clexer.get_extra_lexeme () ^ Lexing.lexeme lexbuf in
-    white,lexeme,token,cabsloc
+  Clexer.clear_white ();
+  Clexer.clear_lexeme ();
+  let token = Clexer.initial lexbuf in
+  let white = Clexer.get_white () in
+  let cabsloc = Clexer.currentLoc () in
+  let lexeme = Clexer.get_extra_lexeme () ^ Lexing.lexeme lexbuf in
+  (white, lexeme, token, cabsloc)
 
 (* just parse *)
 and parse_to_cabs_inner (fname : string) =
   try
     if !E.verboseFlag then ignore (E.log "Frontc is parsing %s\n" fname);
     flush !E.logChannel;
-    let lexbuf = Clexer.init fname in
-    let cabs = Stats.time "parse" (Cparser.interpret (Whitetrack.wraplexer clexer)) lexbuf in
+    let lexbuf = Clexer.init ~filename:fname in
+    let cabs =
+      Stats.time "parse"
+        (Cparser.interpret (Whitetrack.wraplexer clexer))
+        lexbuf
+    in
     Whitetrack.setFinalWhite (Clexer.get_white ());
     Clexer.finish ();
     (fname, cabs)
-  with (Sys_error msg) -> begin
-    ignore (E.log "Cannot open %s : %s\n" fname msg);
-    Clexer.finish ();
-    close_output ();
-    raise (ParseError("Cannot open " ^ fname ^ ": " ^ msg ^ "\n"))
-  end
-  | Parsing.Parse_error -> begin
+  with
+  | Sys_error msg ->
+      ignore (E.log "Cannot open %s : %s\n" fname msg);
+      Clexer.finish ();
+      close_output ();
+      raise (ParseError ("Cannot open " ^ fname ^ ": " ^ msg ^ "\n"))
+  | Parsing.Parse_error ->
       ignore (E.log "Parsing error");
       Clexer.finish ();
       close_output ();
-      raise (ParseError("Parse error"))
-  end
-  | e -> begin
+      raise (ParseError "Parse error")
+  | e ->
       ignore (E.log "Caught %s while parsing\n" (Printexc.to_string e));
       Clexer.finish ();
       raise e
-  end
 
-  
 (* print to safec.proto.h the prototypes of all functions that are defined *)
 let printPrototypes ((fname, file) : Cabs.file) : unit =
-begin
   (*ignore (E.log "file has %d defns\n" (List.length file));*)
-
   let chan = open_out "safec.proto.h" in
-  ignore (fprintf chan "/* generated prototypes file, %d defs */\n" (List.length file));
-  Whitetrack.setOutput  chan;
+  ignore
+    (fprintf chan "/* generated prototypes file, %d defs */\n"
+       (List.length file));
+  Whitetrack.setOutput chan;
 
   let counter : int ref = ref 0 in
 
-  let rec loop (d : Cabs.definition) = begin
+  let loop (d : Cabs.definition) =
     match d with
-    | Cabs.FUNDEF(name, _, loc, _) -> (
+    | Cabs.FUNDEF (name, _, loc, _) -> (
         match name with
-        | (_, (funcname, Cabs.PROTO(_,_,_), _, _)) -> (
-            incr counter;          
-            ignore (fprintf chan "\n/* %s from %s:%d */\n"
-                                 funcname loc.Cabs.filename loc.Cabs.lineno);
+        | _, (funcname, Cabs.PROTO (_, _, _), _, _) ->
+            incr counter;
+            ignore
+              (fprintf chan "\n/* %s from %s:%d */\n" funcname loc.Cabs.filename
+                 loc.Cabs.lineno);
             flush chan;
             Cprint.print_single_name name;
             Cprint.print_unescaped_string ";";
             Cprint.force_new_line ();
             Cprint.flush ()
-          )
-        | _ -> ()
-      )
-
+        | _ -> ())
     | _ -> ()
-  end in
-  (List.iter loop file);
+  in
+  List.iter loop file;
 
   ignore (fprintf chan "\n/* wrote %d prototypes */\n" !counter);
   close_out chan;
-  ignore (E.log "printed %d prototypes from %d defns to safec.proto.h\n"
-                !counter (List.length file))
-end
-
-
+  ignore
+    (E.log "printed %d prototypes from %d defns to safec.proto.h\n" !counter
+       (List.length file))
 
 let parse_helper fname =
-  (trace "sm" (dprintf "parsing %s to Cabs\n" fname));
+  trace "sm" (dprintf "parsing %s to Cabs\n" fname);
   let cabs = parse_to_cabs fname in
   (* Now (return a function that will) convert to CIL *)
   fun _ ->
-    (trace "sm" (dprintf "converting %s from Cabs to CIL\n" fname));
+    trace "sm" (dprintf "converting %s from Cabs to CIL\n" fname);
     let cil = Stats.time "convert to CIL" Cabs2cil.convFile cabs in
-    if !doPrintProtos then (printPrototypes cabs);
-    cabs, cil
+    if !doPrintProtos then printPrototypes cabs;
+    (cabs, cil)
 
-let parse fname = (fun () -> snd(parse_helper fname ()))
-
-let parse_with_cabs fname = (fun () -> parse_helper fname ())
+let parse fname () = snd (parse_helper fname ())
+let parse_with_cabs fname () = parse_helper fname ()

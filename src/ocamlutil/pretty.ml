@@ -42,11 +42,6 @@
 *)
 
 let debug = false
-
-(* Choose an algorithm *)
-type algo = George | Aman | Gap
-
-let algo = George
 let fastMode = ref false
 
 (** Whether to print identation or not (for faster printing and smaller
@@ -157,7 +152,7 @@ let docOpt delem () = function
   | Some e -> text "Some(" ++ delem e ++ chr ')'
 
 let docList ?(sep = chr ',') (doit : 'a -> doc) () (elements : 'a list) =
-  seq sep doit elements
+  seq ~sep ~doit ~elements
 
 let insert () d = d
 
@@ -582,7 +577,7 @@ let fprint (chn : out_channel) ~(width : int) doc =
   ignore
     (emitDoc
        (fun s nrcopies ->
-         for i = 1 to nrcopies do
+         for _ = 1 to nrcopies do
            output_string chn s
          done)
        doc);
@@ -802,7 +797,7 @@ let dprintf format = gprintf (fun x -> x) format
 
 let fprintf chn format =
   let f d =
-    fprint chn 80 d;
+    fprint chn ~width:80 d;
     d
   in
   (* weimeric hack begins -- flush output to streams *)
@@ -816,10 +811,6 @@ let fprintf chn format =
 
 let printf format = fprintf stdout format
 let eprintf format = fprintf stderr format
-
-(******************************************************************************)
-let getAlgoName = function George -> "George" | Aman -> "Aman" | Gap -> "Gap"
-let getAboutString () : string = "(Pretty: ALGO=" ^ getAlgoName algo ^ ")"
 
 (************************************************)
 let auto_printer (typ : string) =

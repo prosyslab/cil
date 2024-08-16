@@ -51,13 +51,6 @@ type checkFlags =
 
 let checkGlobalIds = ref true
 let ignoreInstr = ref (fun i -> false)
-
-(* Attributes must be sorted *)
-type ctxAttr =
-  | CALocal (* Attribute of a local variable *)
-  | CAGlobal (* Attribute of a global variable *)
-  | CAType (* Attribute of a type *)
-
 let valid = ref true
 
 let warn fmt =
@@ -326,7 +319,7 @@ and checkCompInfo (isadef : defuse) comp =
     if isadef = Defined then (
       checkAttributes comp.cattr;
       let fctx = if comp.cstruct then CTStruct else CTUnion in
-      let rec checkField f =
+      let checkField f =
         if
           not
             (f.fcomp == comp
@@ -599,7 +592,7 @@ and checkInit (i : init) : typ =
                 | Some e -> (
                     ignore (checkExp true e);
                     match isInteger (constFold true e) with
-                    | Some len -> len
+                    | Some len -> Z.to_int64 len
                     | None ->
                         ignore (warn "Array length is not a constant");
                         0L)
@@ -609,10 +602,11 @@ and checkInit (i : init) : typ =
                     if i > len then
                       ignore (warn "Wrong number of initializers in array")
                 | (Index (Const (CInt64 (i', _, _)), NoOffset), ei) :: rest ->
-                    if i' <> i then
+                    if Int64.compare (Z.to_int64 i') i <> 0 then
                       ignore
-                        (warn "Initializer for index %Ld when %Ld was expected"
-                           i' i);
+                        (warn "Initializer for index %s when %s was expected"
+                           (Printf.sprintf "%Ld" (Z.to_int64 i'))
+                           (Printf.sprintf "%Ld" i));
                     checkInitType ei bt;
                     loopIndex (Int64.succ i) rest
                 | _ :: rest ->

@@ -1,12 +1,12 @@
 (*
  *
- * Copyright (c) 2001-2002, 
+ * Copyright (c) 2001-2002,
  *  George C. Necula    <necula@cs.berkeley.edu>
  *  Scott McPeak        <smcpeak@cs.berkeley.edu>
  *  Wes Weimer          <weimer@cs.berkeley.edu>
  *  Ben Liblit          <liblit@cs.berkeley.edu>
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
@@ -48,11 +48,7 @@ module U = Util
 (* Set on the command-line: *)
 let keepUnused = ref false
 let rmUnusedInlines = ref false
-
-
 let trace = Trace.trace "rmtmps"
-
-
 
 (***********************************************************************
  *
@@ -60,43 +56,33 @@ let trace = Trace.trace "rmtmps"
  *
  *)
 
-
 let clearReferencedBits file =
   let considerGlobal global =
     match global with
     | GType (info, _) ->
-	trace (dprintf "clearing mark: %a\n" d_shortglobal global);
-	info.treferenced <- false
-
-    | GEnumTag (info, _)
-    | GEnumTagDecl (info, _) ->
-	trace (dprintf "clearing mark: %a\n" d_shortglobal global);
-	info.ereferenced <- false
-
-    | GCompTag (info, _)
-    | GCompTagDecl (info, _) ->
-	trace (dprintf "clearing mark: %a\n" d_shortglobal global);
-	info.creferenced <- false
-
-    | GVar ({vname = name} as info, _, _)
-    | GVarDecl ({vname = name} as info, _) ->
-	trace (dprintf "clearing mark: %a\n" d_shortglobal global);
-	info.vreferenced <- false
-
-    | GFun ({svar = info} as func, _) ->
-	trace (dprintf "clearing mark: %a\n" d_shortglobal global);
-	info.vreferenced <- false;
-	let clearMark local =
-	  trace (dprintf "clearing mark: local %s\n" local.vname);
-	  local.vreferenced <- false
-	in
-	List.iter clearMark func.slocals
-
-    | _ ->
-	()
+        trace (dprintf "clearing mark: %a\n" d_shortglobal global);
+        info.treferenced <- false
+    | GEnumTag (info, _) | GEnumTagDecl (info, _) ->
+        trace (dprintf "clearing mark: %a\n" d_shortglobal global);
+        info.ereferenced <- false
+    | GCompTag (info, _) | GCompTagDecl (info, _) ->
+        trace (dprintf "clearing mark: %a\n" d_shortglobal global);
+        info.creferenced <- false
+    | GVar (({ vname = name; _ } as info), _, _)
+    | GVarDecl (({ vname = name; _ } as info), _) ->
+        trace (dprintf "clearing mark: %a\n" d_shortglobal global);
+        info.vreferenced <- false
+    | GFun (({ svar = info; _ } as func), _) ->
+        trace (dprintf "clearing mark: %a\n" d_shortglobal global);
+        info.vreferenced <- false;
+        let clearMark local =
+          trace (dprintf "clearing mark: local %s\n" local.vname);
+          local.vreferenced <- false
+        in
+        List.iter clearMark func.slocals
+    | _ -> ()
   in
   iterGlobals file considerGlobal
-
 
 (***********************************************************************
  *
@@ -104,22 +90,22 @@ let clearReferencedBits file =
  *
  *)
 
-
 (* collections of names of things to keep *)
 type collection = (string, unit) H.t
-type keepers = {
-    typedefs : collection;
-    enums : collection;
-    structs : collection;
-    unions : collection;
-    defines : collection;
-  }
 
+type keepers = {
+  typedefs : collection;
+  enums : collection;
+  structs : collection;
+  unions : collection;
+  defines : collection;
+}
 
 (* rapid transfer of control when we find a malformed pragma *)
 exception Bad_pragma
 
 let ccureddeepcopystring = "ccureddeepcopy"
+
 (* Save this length so we don't recompute it each time. *)
 let ccureddeepcopystring_length = String.length ccureddeepcopystring
 
@@ -129,123 +115,97 @@ let ccureddeepcopystring_length = String.length ccureddeepcopystring
  *)
 
 let categorizePragmas file =
-
   (* names of things which should be retained *)
-  let keepers = {
-    typedefs = H.create 0;
-    enums = H.create 0;
-    structs = H.create 0;
-    unions = H.create 0;
-    defines = H.create 1
-  } in
-  
+  let keepers =
+    {
+      typedefs = H.create 0;
+      enums = H.create 0;
+      structs = H.create 0;
+      unions = H.create 0;
+      defines = H.create 1;
+    }
+  in
+
   (* populate these name collections in light of each pragma *)
   let considerPragma =
-
     let badPragma location pragma =
       ignore (warnLoc location "Invalid argument to pragma %s" pragma)
     in
-    
-    function
-      | GPragma (Attr ("cilnoremove" as directive, args), location) ->
-	  (* a very flexible pragma: can retain typedefs, enums,
-	   * structs, unions, or globals (functions or variables) *)
-	  begin
-	    let processArg arg =
-	      try
-		match arg with
-		| AStr specifier ->
-		    (* isolate and categorize one symbol name *)
-		    let collection, name =
-		      (* Two words denotes a typedef, enum, struct, or
-		       * union, as in "type foo" or "enum bar".  A
-		       * single word denotes a global function or
-		       * variable. *)
-		      let whitespace = Str.regexp "[ \t]+" in
-		      let words = Str.split whitespace specifier in
-		      match words with
-		      | ["type"; name] ->
-			  keepers.typedefs, name
-		      | ["enum"; name] ->
-			  keepers.enums, name
-		      | ["struct"; name] ->
-			  keepers.structs, name
-		      | ["union"; name] ->
-			  keepers.unions, name
-		      | [name] ->
-			  keepers.defines, name
-		      | _ ->
-			  raise Bad_pragma
-		    in
-		    H.add collection name ()
-		| _ ->
-		    raise Bad_pragma
-	      with Bad_pragma ->
-		badPragma location directive
-	    in
-	    List.iter processArg args
-	  end
-      | GVarDecl (v, _) -> begin
-          (* Look for alias attributes, e.g. Linux modules *)
-          match filterAttributes "alias" v.vattr with
-              [] -> ()  (* ordinary prototype. *)
-            | [Attr("alias", [AStr othername])] ->
-                H.add keepers.defines othername ()
-           | _ -> E.s (error "Bad alias attribute at %a" d_loc !currentLoc)
-        end          
 
-      (*** Begin CCured-specific checks:  ***)
-      (* these pragmas indirectly require that we keep the function named in
-	  -- the first arguments of boxmodelof and ccuredwrapperof, and
-	  -- the third argument of ccureddeepcopy*. *)
-      | GPragma (Attr("ccuredwrapper" as directive, attribute :: _), location) ->
-	  begin
-	    match attribute with
-	    | AStr name ->
-		H.add keepers.defines name ()
-	    | _ ->
-		badPragma location directive
-	  end
-      | GPragma (Attr("ccuredvararg", funcname :: (ASizeOf t) :: _), location) ->
-	  begin
-	    match t with
-	    | TComp(c,_) when c.cstruct -> (* struct *)
-		H.add keepers.structs c.cname ()
-	    | TComp(c,_) -> (* union *)
-		H.add keepers.unions c.cname ()
-	    | TNamed(ti,_) ->
-		H.add keepers.typedefs ti.tname ()
-	    | TEnum(ei, _) ->
-		H.add keepers.enums ei.ename ()
-	    | _ ->
-		()
-	  end
-      | GPragma (Attr(directive, _ :: _ :: attribute :: _), location)
-           when String.length directive > ccureddeepcopystring_length
-	       && (Str.first_chars directive ccureddeepcopystring_length)
-	           = ccureddeepcopystring ->
-	  begin
-	    match attribute with
-	    | AStr name ->
-		H.add keepers.defines name ()
-	    | _ ->
-		badPragma location directive
-	  end
-      (** end CCured-specific stuff **)
-      |	_ ->
-	  ()
+    function
+    | GPragma (Attr (("cilnoremove" as directive), args), location) ->
+        (* a very flexible pragma: can retain typedefs, enums,
+           * structs, unions, or globals (functions or variables) *)
+        let processArg arg =
+          try
+            match arg with
+            | AStr specifier ->
+                (* isolate and categorize one symbol name *)
+                let collection, name =
+                  (* Two words denotes a typedef, enum, struct, or
+                     * union, as in "type foo" or "enum bar".  A
+                     * single word denotes a global function or
+                     * variable. *)
+                  let whitespace = Str.regexp "[ \t]+" in
+                  let words = Str.split whitespace specifier in
+                  match words with
+                  | [ "type"; name ] -> (keepers.typedefs, name)
+                  | [ "enum"; name ] -> (keepers.enums, name)
+                  | [ "struct"; name ] -> (keepers.structs, name)
+                  | [ "union"; name ] -> (keepers.unions, name)
+                  | [ name ] -> (keepers.defines, name)
+                  | _ -> raise Bad_pragma
+                in
+                H.add collection name ()
+            | _ -> raise Bad_pragma
+          with Bad_pragma -> badPragma location directive
+        in
+        List.iter processArg args
+    | GVarDecl (v, _) -> (
+        (* Look for alias attributes, e.g. Linux modules *)
+        match filterAttributes "alias" v.vattr with
+        | [] -> () (* ordinary prototype. *)
+        | [ Attr ("alias", [ AStr othername ]) ] ->
+            H.add keepers.defines othername ()
+        | _ -> E.s (error "Bad alias attribute at %a" d_loc !currentLoc))
+    (*** Begin CCured-specific checks:  ***)
+    (* these pragmas indirectly require that we keep the function named in
+       -- the first arguments of boxmodelof and ccuredwrapperof, and
+       -- the third argument of ccureddeepcopy*. *)
+    | GPragma (Attr (("ccuredwrapper" as directive), attribute :: _), location)
+      -> (
+        match attribute with
+        | AStr name -> H.add keepers.defines name ()
+        | _ -> badPragma location directive)
+    | GPragma (Attr ("ccuredvararg", funcname :: ASizeOf t :: _), location) -> (
+        match t with
+        | TComp (c, _) when c.cstruct ->
+            (* struct *)
+            H.add keepers.structs c.cname ()
+        | TComp (c, _) ->
+            (* union *)
+            H.add keepers.unions c.cname ()
+        | TNamed (ti, _) -> H.add keepers.typedefs ti.tname ()
+        | TEnum (ei, _) -> H.add keepers.enums ei.ename ()
+        | _ -> ())
+    | GPragma (Attr (directive, _ :: _ :: attribute :: _), location)
+      when String.length directive > ccureddeepcopystring_length
+           && Str.first_chars directive ccureddeepcopystring_length
+              = ccureddeepcopystring -> (
+        match attribute with
+        | AStr name -> H.add keepers.defines name ()
+        | _ -> badPragma location directive)
+    (* end CCured-specific stuff **)
+    | _ -> ()
   in
   iterGlobals file considerPragma;
   keepers
-
-
 
 (***********************************************************************
  *
  *  Function body elimination from pragmas
  *
  *)
-
 
 (* When performing global slicing, any functions not explicitly marked
  * as pragma roots are reduced to mere declarations.  This leaves one
@@ -255,16 +215,13 @@ let categorizePragmas file =
 
 let amputateFunctionBodies keptGlobals file =
   let considerGlobal = function
-    | GFun ({svar = {vname = name} as info}, location)
+    | GFun ({ svar = { vname = name; _ } as info; _ }, location)
       when not (H.mem keptGlobals name) ->
-	trace (dprintf "slicing: reducing to prototype: function %s\n" name);
-	GVarDecl (info, location)
-    | other ->
-	other
+        trace (dprintf "slicing: reducing to prototype: function %s\n" name);
+        GVarDecl (info, location)
+    | other -> other
   in
   mapGlobals file considerGlobal
-
-
 
 (***********************************************************************
  *
@@ -272,26 +229,19 @@ let amputateFunctionBodies keptGlobals file =
  *
  *)
 
-
 let isPragmaRoot keepers = function
-  | GType ({tname = name}, _) ->
-      H.mem keepers.typedefs name
-  | GEnumTag ({ename = name}, _)
-  | GEnumTagDecl ({ename = name}, _) ->
+  | GType ({ tname = name; _ }, _) -> H.mem keepers.typedefs name
+  | GEnumTag ({ ename = name; _ }, _) | GEnumTagDecl ({ ename = name; _ }, _) ->
       H.mem keepers.enums name
-  | GCompTag ({cname = name; cstruct = structure}, _)
-  | GCompTagDecl ({cname = name; cstruct = structure}, _) ->
+  | GCompTag ({ cname = name; cstruct = structure; _ }, _)
+  | GCompTagDecl ({ cname = name; cstruct = structure; _ }, _) ->
       let collection = if structure then keepers.structs else keepers.unions in
       H.mem collection name
-  | GVar ({vname = name; vattr = attrs}, _, _)
-  | GVarDecl ({vname = name; vattr = attrs}, _)
-  | GFun ({svar = {vname = name; vattr = attrs}}, _) ->
-      H.mem keepers.defines name ||
-      hasAttribute "used" attrs
-  | _ ->
-      false
-
-
+  | GVar ({ vname = name; vattr = attrs; _ }, _, _)
+  | GVarDecl ({ vname = name; vattr = attrs; _ }, _)
+  | GFun ({ svar = { vname = name; vattr = attrs; _ }; _ }, _) ->
+      H.mem keepers.defines name || hasAttribute "used" attrs
+  | _ -> false
 
 (***********************************************************************
  *
@@ -299,33 +249,27 @@ let isPragmaRoot keepers = function
  *
  *)
 
-
 let traceRoot reason global =
   trace (dprintf "root (%s): %a@!" reason d_shortglobal global);
   true
-
 
 let traceNonRoot reason global =
   trace (dprintf "non-root (%s): %a@!" reason d_shortglobal global);
   false
 
-
 let hasExportingAttribute funvar =
-  let rec isExportingAttribute = function
+  let isExportingAttribute = function
     | Attr ("constructor", []) -> true
     | Attr ("destructor", []) -> true
     | _ -> false
   in
   List.exists isExportingAttribute funvar.vattr
 
-
-
 (***********************************************************************
  *
  *  Root collection from external linkage
  *
  *)
-
 
 (* Exported roots are those global symbols which are visible to the
  * linker and dynamic loader.  For variables, this consists of
@@ -340,32 +284,25 @@ let hasExportingAttribute funvar =
  *)
 
 let isExportedRoot global =
-  let result, reason = match global with
-  | GVar ({vstorage = Static}, _, _) ->
-      false, "static variable"
-  | GVar _ ->
-      true, "non-static variable"
-  | GFun ({svar = v}, _) -> begin 
-      if hasExportingAttribute v then 
-	true, "constructor or destructor function"
-      else if v.vstorage = Static then 
-        false, "static function"
-      else if v.vinline && v.vstorage != Extern
-              && (!msvcMode || !rmUnusedInlines) then 
-        false, "inline function"
-      else
-	true, "other function"
-  end
-  | GVarDecl(v,_) when hasAttribute "alias" v.vattr ->
-      true, "has GCC alias attribute"
-  | _ ->
-      false, "neither function nor variable"
+  let result, reason =
+    match global with
+    | GVar ({ vstorage = Static; _ }, _, _) -> (false, "static variable")
+    | GVar _ -> (true, "non-static variable")
+    | GFun ({ svar = v; _ }, _) ->
+        if hasExportingAttribute v then
+          (true, "constructor or destructor function")
+        else if v.vstorage = Static then (false, "static function")
+        else if
+          v.vinline && v.vstorage != Extern && (!msvcMode || !rmUnusedInlines)
+        then (false, "inline function")
+        else (true, "other function")
+    | GVarDecl (v, _) when hasAttribute "alias" v.vattr ->
+        (true, "has GCC alias attribute")
+    | _ -> (false, "neither function nor variable")
   in
-  trace (dprintf "isExportedRoot %a -> %b, %s@!" 
-           d_shortglobal global result reason);
+  trace
+    (dprintf "isExportedRoot %a -> %b, %s@!" d_shortglobal global result reason);
   result
-
-
 
 (***********************************************************************
  *
@@ -373,25 +310,22 @@ let isExportedRoot global =
  *
  *)
 
-
 (* Exported roots are "main()" and functions bearing a "constructor"
  * or "destructor" attribute.  These are the only things which must be
  * retained in a complete program.
  *)
 
 let isCompleteProgramRoot global =
-  let result = match global with
-  | GFun ({svar = {vname = "main"; vstorage = vstorage}}, _) ->
-      vstorage <> Static
-  | GFun (fundec, _)
-    when hasExportingAttribute fundec.svar ->
-      true
-  | _ ->
-      false
+  let result =
+    match global with
+    | GFun ({ svar = { vname = "main"; vstorage; _ }; _ }, _) ->
+        vstorage <> Static
+    | GFun (fundec, _) when hasExportingAttribute fundec.svar -> true
+    | _ -> false
   in
-  trace (dprintf "complete program root -> %b for %a@!" result d_shortglobal global);
+  trace
+    (dprintf "complete program root -> %b for %a@!" result d_shortglobal global);
   result
-
 
 (***********************************************************************
  *
@@ -399,175 +333,151 @@ let isCompleteProgramRoot global =
  *
  *)
 
-
 (* This visitor recursively marks all reachable types and variables as used. *)
-class markReachableVisitor 
-    ((globalMap: (string, Cil.global) H.t),
-     (currentFunc: fundec option ref)) = object (self)
-  inherit nopCilVisitor
+class markReachableVisitor
+  ((globalMap : (string, Cil.global) H.t), (currentFunc : fundec option ref)) =
+  object (self)
+    inherit nopCilVisitor
 
-  method vglob = function
-    | GType (typeinfo, _) ->
-	typeinfo.treferenced <- true;
-	DoChildren
-    | GCompTag (compinfo, _)
-    | GCompTagDecl (compinfo, _) ->
-	compinfo.creferenced <- true;
-	DoChildren
-    | GEnumTag (enuminfo, _)
-    | GEnumTagDecl (enuminfo, _) ->
-	enuminfo.ereferenced <- true;
-	DoChildren
-    | GVar (varinfo, _, _)
-    | GVarDecl (varinfo, _)
-    | GFun ({svar = varinfo}, _) ->
-	varinfo.vreferenced <- true;
-	DoChildren
-    | _ ->
-	SkipChildren
+    method! vglob =
+      function
+      | GType (typeinfo, _) ->
+          typeinfo.treferenced <- true;
+          DoChildren
+      | GCompTag (compinfo, _) | GCompTagDecl (compinfo, _) ->
+          compinfo.creferenced <- true;
+          DoChildren
+      | GEnumTag (enuminfo, _) | GEnumTagDecl (enuminfo, _) ->
+          enuminfo.ereferenced <- true;
+          DoChildren
+      | GVar (varinfo, _, _)
+      | GVarDecl (varinfo, _)
+      | GFun ({ svar = varinfo; _ }, _) ->
+          varinfo.vreferenced <- true;
+          DoChildren
+      | _ -> SkipChildren
 
-  method vinst = function
-      Asm (_, tmpls, _, _, _, _) when !msvcMode -> 
-          (* If we have inline assembly on MSVC, we cannot tell which locals 
+    method! vinst =
+      function
+      | Asm (_, tmpls, _, _, _, _) when !msvcMode ->
+          (* If we have inline assembly on MSVC, we cannot tell which locals
            * are referenced. Keep thsem all *)
-        (match !currentFunc with 
-          Some fd -> 
-            List.iter (fun v -> 
-              let vre = Str.regexp_string (Str.quote v.vname) in 
-              if List.exists (fun tmp -> 
-                try ignore (Str.search_forward vre tmp 0); true
-                with Not_found -> false)
-                  tmpls 
-              then
-                v.vreferenced <- true) fd.slocals
-        | _ -> assert false);
-        DoChildren
-    | _ -> DoChildren
+          (match !currentFunc with
+          | Some fd ->
+              List.iter
+                (fun v ->
+                  let vre = Str.regexp_string (Str.quote v.vname) in
+                  if
+                    List.exists
+                      (fun tmp ->
+                        try
+                          ignore (Str.search_forward vre tmp 0);
+                          true
+                        with Not_found -> false)
+                      tmpls
+                  then v.vreferenced <- true)
+                fd.slocals
+          | _ -> assert false);
+          DoChildren
+      | _ -> DoChildren
 
-  method vvrbl v =
-    if not v.vreferenced then
-      begin
-	let name = v.vname in
-	if v.vglob then
-	  trace (dprintf "marking transitive use: global %s\n" name)
-	else
-	  trace (dprintf "marking transitive use: local %s\n" name);
-	
+    method! vvrbl v =
+      if not v.vreferenced then (
+        let name = v.vname in
+        if v.vglob then
+          trace (dprintf "marking transitive use: global %s\n" name)
+        else trace (dprintf "marking transitive use: local %s\n" name);
+
         (* If this is a global, we need to keep everything used in its
-	 * definition and declarations. *)
-	if v.vglob then
-	  begin
-	    trace (dprintf "descending: global %s\n" name);
-	    let descend global =
-	      ignore (visitCilGlobal (self :> cilVisitor) global)
-	    in
-	    let globals = Hashtbl.find_all globalMap name in
-	    List.iter descend globals
-	  end
-	else
-	  v.vreferenced <- true;
-      end;
-    SkipChildren
+           * definition and declarations. *)
+        if v.vglob then (
+          trace (dprintf "descending: global %s\n" name);
+          let descend global =
+            ignore (visitCilGlobal (self :> cilVisitor) global)
+          in
+          let globals = Hashtbl.find_all globalMap name in
+          List.iter descend globals)
+        else v.vreferenced <- true);
+      SkipChildren
 
-  method vexpr (e: exp) = 
-    match e with 
-      Const (CEnum (_, _, ei)) -> ei.ereferenced <- true;
-                                  DoChildren
-    | _ -> DoChildren
+    method! vexpr (e : exp) =
+      match e with
+      | Const (CEnum (_, _, ei)) ->
+          ei.ereferenced <- true;
+          DoChildren
+      | _ -> DoChildren
 
-  method vtype typ =
-    let old : bool =
-      let visitAttrs attrs =
-	ignore (visitCilAttributes (self :> cilVisitor) attrs)
-      in
-      let visitType typ =
-	ignore (visitCilType (self :> cilVisitor) typ)
-      in
-      match typ with
-      | TEnum(e, attrs) ->
-	  let old = e.ereferenced in
-	  if not old then
-	    begin
-	      trace (dprintf "marking transitive use: enum %s\n" e.ename);
-	      e.ereferenced <- true;
-	      visitAttrs attrs;
-	      visitAttrs e.eattr
-	    end;
-	  old
-
-      | TComp(c, attrs) ->
-	  let old = c.creferenced in
-          if not old then
-            begin
-	      trace (dprintf "marking transitive use: compound %s\n" c.cname);
-	      c.creferenced <- true;
+    method! vtype typ =
+      let old : bool =
+        let visitAttrs attrs =
+          ignore (visitCilAttributes (self :> cilVisitor) attrs)
+        in
+        let visitType typ = ignore (visitCilType (self :> cilVisitor) typ) in
+        match typ with
+        | TEnum (e, attrs) ->
+            let old = e.ereferenced in
+            if not old then (
+              trace (dprintf "marking transitive use: enum %s\n" e.ename);
+              e.ereferenced <- true;
+              visitAttrs attrs;
+              visitAttrs e.eattr);
+            old
+        | TComp (c, attrs) ->
+            let old = c.creferenced in
+            if not old then (
+              trace (dprintf "marking transitive use: compound %s\n" c.cname);
+              c.creferenced <- true;
 
               (* to recurse, we must ask explicitly *)
-	      let recurse f = visitType f.ftype in
-	      List.iter recurse c.cfields;
-	      visitAttrs attrs;
-	      visitAttrs c.cattr
-	    end;
-	  old
+              let recurse f = visitType f.ftype in
+              List.iter recurse c.cfields;
+              visitAttrs attrs;
+              visitAttrs c.cattr);
+            old
+        | TNamed (ti, attrs) ->
+            let old = ti.treferenced in
+            if not old then (
+              trace (dprintf "marking transitive use: typedef %s\n" ti.tname);
+              ti.treferenced <- true;
 
-      | TNamed(ti, attrs) ->
-	  let old = ti.treferenced in
-          if not old then
-	    begin
-	      trace (dprintf "marking transitive use: typedef %s\n" ti.tname);
-	      ti.treferenced <- true;
-	      
-	      (* recurse deeper into the type referred-to by the typedef *)
-	      (* to recurse, we must ask explicitly *)
-	      visitType ti.ttype;
-	      visitAttrs attrs
-	    end;
-	  old
-
-      | _ ->
-          (* for anything else, just look inside it *)
-	  false
-    in
-    if old then
-      SkipChildren
-    else
-      DoChildren
-end
-
+              (* recurse deeper into the type referred-to by the typedef *)
+              (* to recurse, we must ask explicitly *)
+              visitType ti.ttype;
+              visitAttrs attrs);
+            old
+        | _ ->
+            (* for anything else, just look inside it *)
+            false
+      in
+      if old then SkipChildren else DoChildren
+  end
 
 let markReachable file isRoot =
-  (* build a mapping from global names back to their definitions & 
+  (* build a mapping from global names back to their definitions &
    * declarations *)
   let globalMap = Hashtbl.create 137 in
   let considerGlobal global =
     match global with
-    | GFun ({svar = info}, _)
-    | GVar (info, _, _)
-    | GVarDecl (info, _) ->
-	Hashtbl.add globalMap info.vname global
-    | _ ->
-	()
+    | GFun ({ svar = info; _ }, _) | GVar (info, _, _) | GVarDecl (info, _) ->
+        Hashtbl.add globalMap info.vname global
+    | _ -> ()
   in
   iterGlobals file considerGlobal;
 
-  let currentFunc = ref None in 
+  let currentFunc = ref None in
 
   (* mark everything reachable from the global roots *)
   let visitor = new markReachableVisitor (globalMap, currentFunc) in
   let visitIfRoot global =
-    if isRoot global then
-      begin
-	trace (dprintf "traversing root global: %a\n" d_shortglobal global);
-        (match global with 
-          GFun(fd, _) -> currentFunc := Some fd
-        | _ -> currentFunc := None);
-	ignore (visitCilGlobal visitor global)
-      end
-    else
-      trace (dprintf "skipping non-root global: %a\n" d_shortglobal global)
+    if isRoot global then (
+      trace (dprintf "traversing root global: %a\n" d_shortglobal global);
+      (match global with
+      | GFun (fd, _) -> currentFunc := Some fd
+      | _ -> currentFunc := None);
+      ignore (visitCilGlobal visitor global))
+    else trace (dprintf "skipping non-root global: %a\n" d_shortglobal global)
   in
   iterGlobals file visitIfRoot
-
 
 (**********************************************************************
  *
@@ -575,133 +485,162 @@ let markReachable file isRoot =
  *
  **********************************************************************)
 
-(* We keep only one label, preferably one that was not introduced by CIL. 
- * Scan a list of labels and return the data for the label that should be 
+(* We keep only one label, preferably one that was not introduced by CIL.
+ * Scan a list of labels and return the data for the label that should be
  * kept, and the remaining filtered list of labels. After this cleanup,
  * every statement's labels will be either a single 'Default' or any
  * number of 'Case's, in either case possibly preceded by a single 'Label'. *)
-let labelsToKeep (ll: label list) : (string * location * bool) * label list = 
-  let rec loop (sofar: string * location * bool) = function
-      [] -> sofar, []
-    | l :: rest -> 
-        let newlabel, keepl = 
+let labelsToKeep (ll : label list) : (string * location * bool) * label list =
+  let rec loop (sofar : string * location * bool) = function
+    | [] -> (sofar, [])
+    | l :: rest ->
+        let newlabel, keepl =
           match l with
-          | CaseRange _ | Case _ | Default _ -> sofar, true
-          | Label (ln, lloc, isorig) -> begin
-              match isorig, sofar with 
-              | false, ("", _, _) -> 
+          | CaseRange _ | Case _ | Default _ -> (sofar, true)
+          | Label (ln, lloc, isorig) -> (
+              match (isorig, sofar) with
+              | false, ("", _, _) ->
                   (* keep this one only if we have no label so far *)
-                  (ln, lloc, isorig), false
-              | false, _ -> sofar, false
-              | true, (_, _, false) -> 
-                  (* this is an original label; prefer it to temporary or 
+                  ((ln, lloc, isorig), false)
+              | false, _ -> (sofar, false)
+              | true, (_, _, false) ->
+                  (* this is an original label; prefer it to temporary or
                    * missing labels *)
-                  (ln, lloc, isorig), false
-              | true, _ -> sofar, false
-          end
+                  ((ln, lloc, isorig), false)
+              | true, _ -> (sofar, false))
         in
         let newlabel', rest' = loop newlabel rest in
-        newlabel', (if keepl then l :: rest' else rest')
+        (newlabel', if keepl then l :: rest' else rest')
   in
   let sofar, labels = loop ("", locUnknown, false) ll in
   try
-      (* If there is a 'default' label, remove all 'case' labels, as they are unnecessary *)
-      let default = List.find (function Default _ -> true | _ -> false) labels
-      in sofar, [ default ]
-  with Not_found ->
-      sofar, labels
+    (* If there is a 'default' label, remove all 'case' labels, as they are unnecessary *)
+    let default =
+      List.find (function Default _ -> true | _ -> false) labels
+    in
+    (sofar, [ default ])
+  with Not_found -> (sofar, labels)
 
 (* Remove some trivial gotos, typically inserted at the end of for loops,
  * because they are not printed by CIL which might yield an unused label
  * warning. See test/small1/warnings-unused-label.c for a regression test. *)
 
-class removeUnusedGoto = object(self)
-  inherit nopCilVisitor
+class removeUnusedGoto =
+  object (self)
+    inherit nopCilVisitor
 
-  method private pStmtNext (next: stmt) (s: stmt) = match s.skind with
-        (* Else-if: don't call visitCilStmt, recurse manually instead *)
-      | If(_,t,{ bstmts=[{skind=If _} as elsif]; battrs=[] },_) ->
-              ignore(visitCilBlock (self:>cilVisitor) t);
-              self#pStmtNext next elsif
-      | If(_,_,({bstmts=[{skind=Goto(gref,_);labels=[]}];
-                  battrs=[]} as b),_)
-      | If(_,({bstmts=[{skind=Goto(gref,_);labels=[]}];
-                  battrs=[]} as b),_,_)
-                when !gref == next ->
-              b.bstmts <- [];
-              ignore(visitCilStmt (self:>cilVisitor) s)
-      | _ -> ignore(visitCilStmt (self:>cilVisitor) s)
+    method private pStmtNext (next : stmt) (s : stmt) =
+      match s.skind with
+      (* Else-if: don't call visitCilStmt, recurse manually instead *)
+      | If
+          ( _,
+            t,
+            { bstmts = [ ({ skind = If _; _ } as elsif) ]; battrs = []; _ },
+            _ ) ->
+          ignore (visitCilBlock (self :> cilVisitor) t);
+          self#pStmtNext next elsif
+      | If
+          ( _,
+            _,
+            ({
+               bstmts = [ { skind = Goto (gref, _); labels = []; _ } ];
+               battrs = [];
+             } as b),
+            _ )
+        when !gref == next ->
+          b.bstmts <- [];
+          ignore (visitCilStmt (self :> cilVisitor) s)
+      | If
+          ( _,
+            ({
+               bstmts = [ { skind = Goto (gref, _); labels = []; _ } ];
+               battrs = [];
+             } as b),
+            _,
+            _ )
+        when !gref == next ->
+          b.bstmts <- [];
+          ignore (visitCilStmt (self :> cilVisitor) s)
+      | _ -> ignore (visitCilStmt (self :> cilVisitor) s)
 
-  method vblock blk =
-    let rec dofirst = function
-        [] -> ()
-      | [x] -> self#pStmtNext invalidStmt x
-      | x :: rest -> dorest x rest
-    and dorest prev = function
-        [] -> self#pStmtNext invalidStmt prev
-      | x :: rest ->
-          self#pStmtNext x prev;
-          dorest x rest
-    in
+    method! vblock blk =
+      let rec dofirst = function
+        | [] -> ()
+        | [ x ] -> self#pStmtNext invalidStmt x
+        | x :: rest -> dorest x rest
+      and dorest prev = function
+        | [] -> self#pStmtNext invalidStmt prev
+        | x :: rest ->
+            self#pStmtNext x prev;
+            dorest x rest
+      in
       dofirst blk.bstmts;
       SkipChildren
 
-   (* No need to go into expressions or instructions *)
-  method vexpr _ = SkipChildren
-  method vinst _ = SkipChildren
-  method vtype _ = SkipChildren
-end
-          
-class markUsedLabels (labelMap: (string, unit) H.t) = object
-  inherit nopCilVisitor
+    (* No need to go into expressions or instructions *)
+    method! vexpr _ = SkipChildren
+    method! vinst _ = SkipChildren
+    method! vtype _ = SkipChildren
+  end
 
-  method vstmt (s: stmt) = 
-    match s.skind with 
-      Goto (dest, _) -> 
-        let (ln, _, _), _ = labelsToKeep !dest.labels in
-        if ln = "" then 
-          E.s (E.bug "rmtmps: destination of statement does not have labels");
-        (* Mark it as used *)
-        H.replace labelMap ln ();
-        DoChildren
+class markUsedLabels (labelMap : (string, unit) H.t) =
+  object
+    inherit nopCilVisitor
 
-    | _ -> DoChildren
+    method! vstmt (s : stmt) =
+      match s.skind with
+      | Goto (dest, _) ->
+          let (ln, _, _), _ = labelsToKeep !dest.labels in
+          if ln = "" then
+            E.s (E.bug "rmtmps: destination of statement does not have labels");
+          (* Mark it as used *)
+          H.replace labelMap ln ();
+          DoChildren
+      | _ -> DoChildren
 
-  method vexpr e = match e with
-  | AddrOfLabel dest ->
-      let (ln, _, _), _ = labelsToKeep !dest.labels in
-      if ln = "" then
-        E.s (E.bug "rmtmps: destination of address of label does not have labels");
-      (* Mark it as used *)
-      H.replace labelMap ln ();
-      SkipChildren
-  | _ -> DoChildren
-end
+    method! vexpr e =
+      match e with
+      | AddrOfLabel dest ->
+          let (ln, _, _), _ = labelsToKeep !dest.labels in
+          if ln = "" then
+            E.s
+              (E.bug
+                 "rmtmps: destination of address of label does not have labels");
+          (* Mark it as used *)
+          H.replace labelMap ln ();
+          SkipChildren
+      | _ -> DoChildren
+  end
 
-class removeUnusedLabels (labelMap: (string, unit) H.t) = object
-  inherit nopCilVisitor
+class removeUnusedLabels (labelMap : (string, unit) H.t) =
+  object
+    inherit nopCilVisitor
 
-  method vstmt (s: stmt) = 
-    let (ln, lloc, lorig), lrest = labelsToKeep s.labels in
-    (* Check our desired invariants for labels: 'lrest' must be either a
-       single 'Default' or only 'Case's. It is okay for 'lrest' to be
-       empty, because a 'Label' can exist on its own, independent of
-       switch statement labels, and the 'for_all' accepts this case. *)
-    assert (match lrest with
-                  [ Default _ ] -> true
-                | _ -> List.for_all (function Case _ | CaseRange _ -> true | _ -> false) lrest);
-    s.labels <-
-       (if ln <> "" && H.mem labelMap ln then (* We had labels *)
-         (Label(ln, lloc, lorig) :: lrest)
-       else
-         lrest);
-    DoChildren
+    method! vstmt (s : stmt) =
+      let (ln, lloc, lorig), lrest = labelsToKeep s.labels in
+      (* Check our desired invariants for labels: 'lrest' must be either a
+         single 'Default' or only 'Case's. It is okay for 'lrest' to be
+         empty, because a 'Label' can exist on its own, independent of
+         switch statement labels, and the 'for_all' accepts this case. *)
+      assert (
+        match lrest with
+        | [ Default _ ] -> true
+        | _ ->
+            List.for_all
+              (function Case _ | CaseRange _ -> true | _ -> false)
+              lrest);
+      s.labels <-
+        (if ln <> "" && H.mem labelMap ln then
+         (* We had labels *)
+         Label (ln, lloc, lorig) :: lrest
+        else lrest);
+      DoChildren
 
-   (* No need to go into expressions or instructions *)
-  method vexpr _ = SkipChildren
-  method vinst _ = SkipChildren
-  method vtype _ = SkipChildren
-end
+    (* No need to go into expressions or instructions *)
+    method! vexpr _ = SkipChildren
+    method! vinst _ = SkipChildren
+    method! vtype _ = SkipChildren
+  end
 
 (***********************************************************************
  *
@@ -709,86 +648,82 @@ end
  *
  *)
 
-
 (* regular expression matching names of uninteresting locals *)
 let uninteresting =
-  let names = [
-    (* Cil.makeTempVar *)
-    "__cil_tmp";
-    
-    (* sm: I don't know where it comes from but these show up all over. *)
-    (* this doesn't seem to do what I wanted.. *)
-    "iter";
-
-    (* various macros in glibc's <bits/string2.h> *)		   
-    "__result";
-    "__s"; "__s1"; "__s2";
-    "__s1_len"; "__s2_len";
-    "__retval"; "__len";
-
-    (* various macros in glibc's <ctype.h> *)
-    "__c"; "__res";
-
-    (* We remove the __malloc variables *)
-  ] in
+  let names =
+    [
+      (* Cil.makeTempVar *)
+      "__cil_tmp";
+      (* sm: I don't know where it comes from but these show up all over. *)
+      (* this doesn't seem to do what I wanted.. *)
+      "iter";
+      (* various macros in glibc's <bits/string2.h> *)
+      "__result";
+      "__s";
+      "__s1";
+      "__s2";
+      "__s1_len";
+      "__s2_len";
+      "__retval";
+      "__len";
+      (* various macros in glibc's <ctype.h> *)
+      "__c";
+      "__res";
+      (* We remove the __malloc variables *)
+    ]
+  in
 
   (* optional alpha renaming *)
   let alpha = "\\(___[0-9]+\\)?" in
-  
-  let pattern = "\\(" ^ (String.concat "\\|" names) ^ "\\)" ^ alpha ^ "$" in
-  Str.regexp pattern
 
+  let pattern = "\\(" ^ String.concat "\\|" names ^ "\\)" ^ alpha ^ "$" in
+  Str.regexp pattern
 
 let removeUnmarked file =
   let removedLocals = ref [] in
-  
+
   let filterGlobal global =
     match global with
     (* unused global types, variables, and functions are simply removed *)
-    | GType ({treferenced = false}, _)
-    | GCompTag ({creferenced = false}, _)
-    | GCompTagDecl ({creferenced = false}, _)
-    | GEnumTag ({ereferenced = false}, _)
-    | GEnumTagDecl ({ereferenced = false}, _)
-    | GVar ({vreferenced = false}, _, _)
-    | GVarDecl ({vreferenced = false}, _)
-    | GFun ({svar = {vreferenced = false}}, _) ->
-	trace (dprintf "removing global: %a\n" d_shortglobal global);
-	false
-
+    | GType ({ treferenced = false; _ }, _)
+    | GCompTag ({ creferenced = false; _ }, _)
+    | GCompTagDecl ({ creferenced = false; _ }, _)
+    | GEnumTag ({ ereferenced = false; _ }, _)
+    | GEnumTagDecl ({ ereferenced = false; _ }, _)
+    | GVar ({ vreferenced = false; _ }, _, _)
+    | GVarDecl ({ vreferenced = false; _ }, _)
+    | GFun ({ svar = { vreferenced = false; _ }; _ }, _) ->
+        trace (dprintf "removing global: %a\n" d_shortglobal global);
+        false
     (* retained functions may wish to discard some unused locals *)
     | GFun (func, _) ->
-	let rec filterLocal local =
-	  if not local.vreferenced then
-	    begin
-	      (* along the way, record the interesting locals that were removed *)
-	      let name = local.vname in
-	      trace (dprintf "removing local: %s\n" name);
-	      if not (Str.string_match uninteresting name 0) then
-		removedLocals := (func.svar.vname ^ "::" ^ name) :: !removedLocals;
-	    end;
-	  local.vreferenced
-	in
-	func.slocals <- List.filter filterLocal func.slocals;
-        (* We also want to remove unused labels. We do it all here, including 
+        let filterLocal local =
+          if not local.vreferenced then (
+            (* along the way, record the interesting locals that were removed *)
+            let name = local.vname in
+            trace (dprintf "removing local: %s\n" name);
+            if not (Str.string_match uninteresting name 0) then
+              removedLocals := (func.svar.vname ^ "::" ^ name) :: !removedLocals);
+          local.vreferenced
+        in
+        func.slocals <- List.filter filterLocal func.slocals;
+        (* We also want to remove unused labels. We do it all here, including
          * marking the used labels *)
-        let usedLabels:(string, unit) H.t = H.create 13 in
+        let usedLabels : (string, unit) H.t = H.create 13 in
         ignore (visitCilFunction (new removeUnusedGoto) func);
         (* scan the function, not only the body, since there might be
          * AddrOfLabel in initializers *)
         ignore (visitCilFunction (new markUsedLabels usedLabels) func);
         (* And now we scan again and we remove them *)
         ignore (visitCilBlock (new removeUnusedLabels usedLabels) func.sbody);
-	true
-
+        true
     (* all other globals are retained *)
     | _ ->
-	trace (dprintf "keeping global: %a\n" d_shortglobal global);
-	true
+        trace (dprintf "keeping global: %a\n" d_shortglobal global);
+        true
   in
   file.globals <- List.filter filterGlobal file.globals;
   !removedLocals
-
 
 (***********************************************************************
  *
@@ -796,48 +731,42 @@ let removeUnmarked file =
  *
  *)
 
-
 type rootsFilter = global -> bool
 
 let isDefaultRoot = isExportedRoot
 
-let rec removeUnusedTemps ?(isRoot : rootsFilter = isDefaultRoot) file =
+let removeUnusedTemps ?(isRoot : rootsFilter = isDefaultRoot) file =
   if !keepUnused || Trace.traceActive "disableTmpRemoval" then
     Trace.trace "disableTmpRemoval" (dprintf "temp removal disabled\n")
-  else
-    begin
-      if !E.verboseFlag then 
-        ignore (E.log "Removing unused temporaries\n" );
+  else (
+    if !E.verboseFlag then ignore (E.log "Removing unused temporaries\n");
 
-      if Trace.traceActive "printCilTree" then
-	dumpFile defaultCilPrinter stdout "stdout" file;
+    if Trace.traceActive "printCilTree" then
+      dumpFile defaultCilPrinter stdout "stdout" file;
 
-      (* digest any pragmas that would create additional roots *)
-      let keepers = categorizePragmas file in
+    (* digest any pragmas that would create additional roots *)
+    let keepers = categorizePragmas file in
 
-      (* if slicing, remove the bodies of non-kept functions *)
-      if !Cilutil.sliceGlobal then
-	amputateFunctionBodies keepers.defines file;
+    (* if slicing, remove the bodies of non-kept functions *)
+    if !Cilutil.sliceGlobal then amputateFunctionBodies keepers.defines file;
 
-      (* build up the root set *)
-      let isRoot global =
-	isPragmaRoot keepers global ||
-	isRoot global
-      in
+    (* build up the root set *)
+    let isRoot global = isPragmaRoot keepers global || isRoot global in
 
-      (* mark everything reachable from the global roots *)
-      clearReferencedBits file;
-      markReachable file isRoot;
+    (* mark everything reachable from the global roots *)
+    clearReferencedBits file;
+    markReachable file isRoot;
 
-      (* take out the trash *)
-      let removedLocals = removeUnmarked file in
+    (* take out the trash *)
+    let removedLocals = removeUnmarked file in
 
-      (* print which original source variables were removed *)
-      if false && removedLocals != [] then
-	let count = List.length removedLocals in
-	if count > 2000 then 
-	  ignore (E.warn "%d unused local variables removed" count)
-	else
-	  ignore (E.warn "%d unused local variables removed:@!%a"
-		    count (docList ~sep:(chr ',' ++ break) text) removedLocals)
-    end
+    (* print which original source variables were removed *)
+    if false && removedLocals != [] then
+      let count = List.length removedLocals in
+      if count > 2000 then
+        ignore (E.warn "%d unused local variables removed" count)
+      else
+        ignore
+          (E.warn "%d unused local variables removed:@!%a" count
+             (docList ~sep:(chr ',' ++ break) text)
+             removedLocals))

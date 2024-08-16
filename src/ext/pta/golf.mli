@@ -32,6 +32,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *)
+open ProsysCil
+
 type lvalue
 type tau
 type absloc
@@ -57,11 +59,13 @@ val address : lvalue -> tau
 val instantiate : lvalue -> int -> lvalue
 val assign : lvalue -> tau -> unit
 val assign_ret : int -> lvalue -> tau -> unit
-val apply : tau -> tau list -> (tau * int)
-val apply_undefined : tau list -> (tau * int) (* only for compatability with Olf *)
+val apply : tau -> tau list -> tau * int
+val apply_undefined : tau list -> tau * int
+
+(* only for compatability with Olf *)
 val assign_undefined : lvalue -> unit (* only for compatability with Olf *)
-val make_function :  string -> lvalue list -> tau -> tau
-val make_lvalue : bool -> string -> (Cil.varinfo option) -> lvalue
+val make_function : string -> lvalue list -> tau -> tau
+val make_lvalue : bool -> string -> Cil.varinfo option -> lvalue
 val bottom : unit -> tau
 val return : tau -> tau -> unit
 val make_fresh : string -> tau
@@ -72,12 +76,10 @@ val string_of_lvalue : lvalue -> string
 val global_lvalue : lvalue -> bool
 val alias_query : bool -> lvalue list -> int * int
 val alias_frequency : (lvalue * bool) list -> int * int
-
 val may_alias : tau -> tau -> bool
-
 val absloc_points_to : lvalue -> absloc list
 val absloc_epoints_to : tau -> absloc list
 val absloc_of_lvalue : lvalue -> absloc
-val absloc_eq : (absloc * absloc) -> bool
+val absloc_eq : absloc * absloc -> bool
 val d_absloc : unit -> absloc -> Pretty.doc
 val phonyAddrOf : lvalue -> lvalue

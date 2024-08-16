@@ -1,0 +1,4 @@
+(library
+ (public_name prosys-cil.dataslicing)
+ (name dataslicing)
+ (libraries prosys-cil stdlib-shims))

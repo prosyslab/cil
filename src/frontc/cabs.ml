@@ -46,15 +46,11 @@
 ** Types
 *)
 
-type cabsloc = {
- lineno : int;
- filename: string;
- byteno: int;
- ident : int;
-}
+type cabsloc = { lineno : int; filename : string; byteno : int; ident : int }
 
-type typeSpecifier = (* Merge all specifiers into one type *)
-    Tvoid                             (* Type specifier ISO 6.7.2 *)
+type typeSpecifier =
+  | (* Merge all specifiers into one type *)
+    Tvoid (* Type specifier ISO 6.7.2 *)
   | Tchar
   | Tbool
   | Tshort
@@ -64,7 +60,7 @@ type typeSpecifier = (* Merge all specifiers into one type *)
   | Tfloat
   | Tdouble
   | Tsigned
-  | Tsizet    (* used temporarily to translate offsetof() *)
+  | Tsizet (* used temporarily to translate offsetof() *)
   | Tunsigned
   | Tnamed of string
   (* each of the following three kinds of specifiers contains a field
@@ -75,17 +71,12 @@ type typeSpecifier = (* Merge all specifiers into one type *)
   | Tstruct of string * field_group list option * attribute list
   | Tunion of string * field_group list option * attribute list
   | Tenum of string * enum_item list option * attribute list
-  | TtypeofE of expression                      (* GCC __typeof__ *)
-  | TtypeofT of specifier * decl_type       (* GCC __typeof__ *)
+  | TtypeofE of expression (* GCC __typeof__ *)
+  | TtypeofT of specifier * decl_type (* GCC __typeof__ *)
 
-and storage =
-    NO_STORAGE | AUTO | STATIC | EXTERN | REGISTER
-
-and funspec =
-    INLINE | NORETURN | VIRTUAL | EXPLICIT
-
-and cvspec =
-    CV_CONST | CV_VOLATILE | CV_RESTRICT | CV_COMPLEX
+and storage = NO_STORAGE | AUTO | STATIC | EXTERN | REGISTER
+and funspec = INLINE | NORETURN | VIRTUAL | EXPLICIT
+and cvspec = CV_CONST | CV_VOLATILE | CV_RESTRICT | CV_COMPLEX
 
 (* Type specifier elements. These appear at the start of a declaration *)
 (* Everywhere they appear in this file, they appear as a 'spec_elem list', *)
@@ -93,41 +84,40 @@ and cvspec =
 (* on to the compiler.  Thus, we can represent e.g. 'int long float x' even *)
 (* though the compiler will of course choke. *)
 and spec_elem =
-    SpecTypedef
-  | SpecCV of cvspec            (* const/volatile/_Complex *)
-  | SpecAttr of attribute       (* __attribute__ *)
+  | SpecTypedef
+  | SpecCV of cvspec (* const/volatile/_Complex *)
+  | SpecAttr of attribute (* __attribute__ *)
   | SpecStorage of storage
   | SpecInline
   | SpecNoreturn
   | SpecType of typeSpecifier
-  | SpecPattern of string       (* specifier pattern variable *)
+  | SpecPattern of string (* specifier pattern variable *)
 
 (* decided to go ahead and replace 'spec_elem list' with specifier *)
 and specifier = spec_elem list
-
 
 (* Declarator type. They modify the base type given in the specifier. Keep
  * them in the order as they are printed (this means that the top level
  * constructor for ARRAY and PTR is the inner-level in the meaning of the
  * declared type) *)
 and decl_type =
- | JUSTBASE                               (* Prints the declared name *)
- | PARENTYPE of attribute list * decl_type * attribute list
-                                          (* Prints "(attrs1 decl attrs2)".
-                                           * attrs2 are attributes of the
-                                           * declared identifier and it is as
-                                           * if they appeared at the very end
-                                           * of the declarator. attrs1 can
-                                           * contain attributes for the
-                                           * identifier or attributes for the
-                                           * enclosing type.  *)
- | ARRAY of decl_type * attribute list * expression
-                                          (* Prints "decl [ attrs exp ]".
-                                           * decl is never a PTR. *)
- | PTR of attribute list * decl_type      (* Prints "* attrs decl" *)
- | PROTO of decl_type * single_name list * bool
-                                          (* Prints "decl (args[, ...])".
-                                           * decl is never a PTR.*)
+  | JUSTBASE (* Prints the declared name *)
+  | PARENTYPE of attribute list * decl_type * attribute list
+    (* Prints "(attrs1 decl attrs2)".
+     * attrs2 are attributes of the
+     * declared identifier and it is as
+     * if they appeared at the very end
+     * of the declarator. attrs1 can
+     * contain attributes for the
+     * identifier or attributes for the
+     * enclosing type. *)
+  | ARRAY of decl_type * attribute list * expression
+    (* Prints "decl [ attrs exp ]".
+     * decl is never a PTR. *)
+  | PTR of attribute list * decl_type (* Prints "* attrs decl" *)
+  | PROTO of decl_type * single_name list * bool
+(* Prints "decl (args[, ...])".
+ * decl is never a PTR.*)
 
 (* The base type and the storage are common to all names. Each name might
  * contain type or storage modifiers *)
@@ -154,114 +144,142 @@ and init_name = name * init_expression
 (* Single names are for declarations that cannot come in groups, like
  * function parameters and functions *)
 and single_name = specifier * name
-
-
 and enum_item = string * expression * cabsloc
 
 (*
 ** Declaration definition (at toplevel)
 *)
 and definition =
-   FUNDEF of single_name * block * cabsloc * cabsloc
- | DECDEF of init_name_group * cabsloc        (* global variable(s), or function prototype *)
- | TYPEDEF of name_group * cabsloc
- | ONLYTYPEDEF of specifier * cabsloc
- | GLOBASM of string * cabsloc
- | PRAGMA of expression * cabsloc
- | LINKAGE of string * cabsloc * definition list (* extern "C" { ... } *)
- (* toplevel form transformer, from the first definition to the *)
- (* second group of definitions *)
- | TRANSFORMER of definition * definition list * cabsloc
- (* expression transformer: source and destination *)
- | EXPRTRANSFORMER of expression * expression * cabsloc
- | STATIC_ASSERT_DECLARATION of expression * string * cabsloc
+  | FUNDEF of single_name * block * cabsloc * cabsloc
+  | DECDEF of
+      init_name_group * cabsloc (* global variable(s), or function prototype *)
+  | TYPEDEF of name_group * cabsloc
+  | ONLYTYPEDEF of specifier * cabsloc
+  | GLOBASM of string * cabsloc
+  | PRAGMA of expression * cabsloc
+  | LINKAGE of string * cabsloc * definition list (* extern "C" { ... } *)
+  (* toplevel form transformer, from the first definition to the *)
+  (* second group of definitions *)
+  | TRANSFORMER of definition * definition list * cabsloc
+  (* expression transformer: source and destination *)
+  | EXPRTRANSFORMER of expression * expression * cabsloc
+  | STATIC_ASSERT_DECLARATION of expression * string * cabsloc
 
 (* the string is a file name, and then the list of toplevel forms *)
 and file = string * definition list
-
 
 (*
 ** statements
 *)
 
 (* A block contains a list of local label declarations ( GCC's ({ __label__
- * l1, l2; ... }) ) , a list of definitions and a list of statements  *)
-and block =
-    { blabels: string list;
-      battrs: attribute list;
-      bstmts: statement list
-    }
+ * l1, l2; ... }) ) , a list of definitions and a list of statements *)
+and block = {
+  blabels : string list;
+  battrs : attribute list;
+  bstmts : statement list;
+}
 
 (* GCC asm directives have lots of extra information to guide the optimizer *)
-and asm_details =
-    { aoutputs: (string option * string * expression) list; (* optional name, constraints and expressions for outputs *)
-      ainputs: (string option * string * expression) list; (* optional name, constraints and expressions for inputs *)
-      aclobbers: string list (* clobbered registers *)
-    }
+and asm_details = {
+  aoutputs : (string option * string * expression) list;
+      (* optional name, constraints and expressions for outputs *)
+  ainputs : (string option * string * expression) list;
+      (* optional name, constraints and expressions for inputs *)
+  aclobbers : string list (* clobbered registers *);
+}
 
 and statement =
-   NOP of cabsloc
- | COMPUTATION of expression * cabsloc
- | BLOCK of block * cabsloc
- | SEQUENCE of statement * statement * cabsloc
- | IF of expression * statement * statement * cabsloc
- | WHILE of expression * statement * cabsloc
- | DOWHILE of expression * statement * cabsloc
- | FOR of for_clause * expression * expression * statement * cabsloc
- | BREAK of cabsloc
- | CONTINUE of cabsloc
- | RETURN of expression * cabsloc
- | SWITCH of expression * statement * cabsloc
- | CASE of expression * statement * cabsloc
- | CASERANGE of expression * expression * statement * cabsloc
- | DEFAULT of statement * cabsloc
- | LABEL of string * statement * cabsloc
- | GOTO of string * cabsloc
- | COMPGOTO of expression * cabsloc (* GCC's "goto *exp" *)
- | DEFINITION of definition (*definition or declaration of a variable or type*)
+  | NOP of cabsloc
+  | COMPUTATION of expression * cabsloc
+  | BLOCK of block * cabsloc
+  | SEQUENCE of statement * statement * cabsloc
+  | IF of expression * statement * statement * cabsloc
+  | WHILE of expression * statement * cabsloc
+  | DOWHILE of expression * statement * cabsloc
+  | FOR of for_clause * expression * expression * statement * cabsloc
+  | BREAK of cabsloc
+  | CONTINUE of cabsloc
+  | RETURN of expression * cabsloc
+  | SWITCH of expression * statement * cabsloc
+  | CASE of expression * statement * cabsloc
+  | CASERANGE of expression * expression * statement * cabsloc
+  | DEFAULT of statement * cabsloc
+  | LABEL of string * statement * cabsloc
+  | GOTO of string * cabsloc
+  | COMPGOTO of expression * cabsloc (* GCC's "goto *exp" *)
+  | DEFINITION of definition (*definition or declaration of a variable or type*)
+  | ASM of
+      attribute list
+      * (* typically only volatile and const *)
+      string list
+      * (* template *)
+      asm_details option
+      * (* extra details to guide GCC's optimizer *)
+        cabsloc
+  (* MS SEH *)
+  | TRY_EXCEPT of block * expression * block * cabsloc
+  | TRY_FINALLY of block * block * cabsloc
 
- | ASM of attribute list * (* typically only volatile and const *)
-          string list * (* template *)
-          asm_details option * (* extra details to guide GCC's optimizer *)
-          cabsloc
-
-   (** MS SEH *)
- | TRY_EXCEPT of block * expression * block * cabsloc
- | TRY_FINALLY of block * block * cabsloc
-
-and for_clause =
-   FC_EXP of expression
- | FC_DECL of definition
+and for_clause = FC_EXP of expression | FC_DECL of definition
 
 (*
 ** Expressions
 *)
 and binary_operator =
-    ADD | SUB | MUL | DIV | MOD
-  | AND | OR
-  | BAND | BOR | XOR | SHL | SHR
-  | EQ | NE | LT | GT | LE | GE
+  | ADD
+  | SUB
+  | MUL
+  | DIV
+  | MOD
+  | AND
+  | OR
+  | BAND
+  | BOR
+  | XOR
+  | SHL
+  | SHR
+  | EQ
+  | NE
+  | LT
+  | GT
+  | LE
+  | GE
   | ASSIGN
-  | ADD_ASSIGN | SUB_ASSIGN | MUL_ASSIGN | DIV_ASSIGN | MOD_ASSIGN
-  | BAND_ASSIGN | BOR_ASSIGN | XOR_ASSIGN | SHL_ASSIGN | SHR_ASSIGN
+  | ADD_ASSIGN
+  | SUB_ASSIGN
+  | MUL_ASSIGN
+  | DIV_ASSIGN
+  | MOD_ASSIGN
+  | BAND_ASSIGN
+  | BOR_ASSIGN
+  | XOR_ASSIGN
+  | SHL_ASSIGN
+  | SHR_ASSIGN
 
 and unary_operator =
-    MINUS | PLUS | NOT | BNOT | MEMOF | ADDROF
-  | PREINCR | PREDECR | POSINCR | POSDECR
+  | MINUS
+  | PLUS
+  | NOT
+  | BNOT
+  | MEMOF
+  | ADDROF
+  | PREINCR
+  | PREDECR
+  | POSINCR
+  | POSDECR
 
 and expression =
-    NOTHING
+  | NOTHING
   | UNARY of unary_operator * expression
-  | LABELADDR of string  (* GCC's && Label *)
+  | LABELADDR of string (* GCC's && Label *)
   | BINARY of binary_operator * expression * expression
   | QUESTION of expression * expression * expression
-
-   (* A CAST can actually be a constructor expression *)
+  (* A CAST can actually be a constructor expression *)
   | CAST of (specifier * decl_type) * init_expression
-
-    (* There is a special form of CALL in which the function called is
-       __builtin_va_arg and the second argument is sizeof(T). This
-       should be printed as just T *)
+  (* There is a special form of CALL in which the function called is
+     __builtin_va_arg and the second argument is sizeof(T). This
+     should be printed as just T *)
   | CALL of expression * expression list
   | COMMA of expression list
   | CONSTANT of constant
@@ -275,20 +293,20 @@ and expression =
   | MEMBEROF of expression * string
   | MEMBEROFPTR of expression * string
   | GNU_BODY of block
-  | EXPR_PATTERN of string     (* pattern variable, and name *)
+  | EXPR_PATTERN of string (* pattern variable, and name *)
 
 and constant =
-  | CONST_INT of string   (* the textual representation *)
+  | CONST_INT of string (* the textual representation *)
   | CONST_FLOAT of string (* the textual representaton *)
   | CONST_CHAR of int64 list
   | CONST_WCHAR of int64 list
   | CONST_STRING of string
   | CONST_WSTRING of int64 list
-    (* ww: wstrings are stored as an int64 list at this point because
-     * we might need to feed the wide characters piece-wise into an
-     * array initializer (e.g., wchar_t foo[] = L"E\xabcd";). If that
-     * doesn't happen we will convert it to an (escaped) string before
-     * passing it to Cil. *)
+(* ww: wstrings are stored as an int64 list at this point because
+ * we might need to feed the wide characters piece-wise into an
+ * array initializer (e.g., wchar_t foo[] = L"E\xabcd";). If that
+ * doesn't happen we will convert it to an (escaped) string before
+ * passing it to Cil. *)
 
 and init_expression =
   | NO_INIT
@@ -296,12 +314,11 @@ and init_expression =
   | COMPOUND_INIT of (initwhat * init_expression) list
 
 and initwhat =
-    NEXT_INIT
+  | NEXT_INIT
   | INFIELD_INIT of string * initwhat
   | ATINDEX_INIT of expression * initwhat
   | ATINDEXRANGE_INIT of expression * expression
 
-
-                                        (* Each attribute has a name and some
-                                         * optional arguments *)
+(* Each attribute has a name and some
+ * optional arguments *)
 and attribute = string * expression list

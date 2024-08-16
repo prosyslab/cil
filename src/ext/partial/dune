@@ -1,0 +1,4 @@
+(library
+ (public_name prosys-cil.partial)
+ (name partial)
+ (libraries prosys-cil prosys-cil.pta stdlib-shims))

@@ -43,7 +43,6 @@
 {
 open Cparser
 open Pretty
-exception Eof
 exception InternalError of string
 module E = Errormsg
 module H = Hashtbl

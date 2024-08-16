@@ -32,6 +32,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *)
+open ProsysCil
 
 (***********************************************************************)
 (*                                                                     *)
@@ -53,7 +54,6 @@ exception Bad_cache
 exception No_contents
 exception Bad_proj
 exception Bad_type_copy
-exception Instantiation_cycle
 
 module U = Uref
 module S = Setp
@@ -381,14 +381,14 @@ let string_of_tau (t : tau) : string =
   string_of_tau' t
 
 (** Convert an lvalue to a string *)
-let rec string_of_lvalue (lv : lvalue) : string =
+let string_of_lvalue (lv : lvalue) : string =
   let contents = string_of_tau lv.contents in
   let l = string_of_label lv.l in
   assert (pair_or_var lv.contents);
   Printf.sprintf "[%s]^(%s)" contents l
 
 (** Print a list of tau elements, comma separated *)
-let rec print_tau_list (l : tau list) : unit =
+let print_tau_list (l : tau list) : unit =
   let t_strings = Util.list_map string_of_tau l in
   let rec print_t_strings = function
     | h :: [] ->
@@ -546,7 +546,7 @@ let pad_args ((l, l') : tau list ref * tau list ref) : unit =
         padding := - !padding;
         l)
     in
-    for i = 1 to !padding do
+    for _ = 1 to !padding do
       to_pad := !to_pad @ [ fresh_var () ]
     done
 

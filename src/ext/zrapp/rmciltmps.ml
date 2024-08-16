@@ -2,13 +2,13 @@
    temporary variables. Some can be removed immediately,
    others must wait until pretty printing *)
 
+open ProsysCil
 open Cil
-open Pretty
-open Expcompare
+open Cilint
 module E = Errormsg
 module RD = Reachingdefs
 module AELV = Availexpslv
-module UD = Usedef
+module UD = Liveness.UD
 module IH = Inthash
 module S = Stats
 
@@ -43,14 +43,14 @@ class memReadOrAddrOfFinderClass =
   object (self)
     inherit nopCilVisitor
 
-    method vexpr e =
+    method! vexpr e =
       match e with
       | Lval (Mem _, _) ->
           exp_ok := false;
           SkipChildren
       | _ -> DoChildren
 
-    method vvrbl vi =
+    method! vvrbl vi =
       if vi.vglob then (
         if !debug then
           ignore (E.log "memReadOrAddrOfFinder: %s is a global\n" vi.vname);
@@ -88,7 +88,7 @@ class stmtFinderClass sid =
   object (self)
     inherit nopCilVisitor
 
-    method vstmt stm =
+    method! vstmt stm =
       if stm.sid = sid then (
         fsr := stm;
         SkipChildren)
@@ -213,7 +213,7 @@ class defCollectorClass =
   object (self)
     inherit nopCilVisitor
 
-    method vstmt s =
+    method! vstmt s =
       let _, d =
         if IH.mem udDeepSkindHtbl s.sid then IH.find udDeepSkindHtbl s.sid
         else
@@ -307,7 +307,7 @@ class useListerClass (defid : int) (vi : varinfo) =
   object (self)
     inherit RD.rdVisitorClass
 
-    method vexpr e =
+    method! vexpr e =
       match e with
       | Lval (Var vi', off) -> (
           match self#get_cur_iosh () with
@@ -348,17 +348,19 @@ let ok_to_replace_with_incdec curiosh defiosh f id vi r =
     | BinOp
         ( (PlusA | PlusPI | IndexPI),
           Lval (Var vi', NoOffset),
-          Const (CInt64 (one, _, _)),
+          Const (CInt64 (a, _, _)),
           _ ) ->
-        if vi.vid = vi'.vid && one = Int64.one then Some PlusA
-        else if vi.vid = vi'.vid && one = Int64.minus_one then Some MinusA
+        if vi.vid = vi'.vid && compare_cilint a one_cilint = 0 then Some PlusA
+        else if vi.vid = vi'.vid && compare_cilint a mone_cilint = 0 then
+          Some MinusA
         else None
     | BinOp
         ( (MinusA | MinusPI),
           Lval (Var vi', NoOffset),
-          Const (CInt64 (one, _, _)),
+          Const (CInt64 (a, _, _)),
           _ ) ->
-        if vi.vid = vi'.vid && one = Int64.one then Some MinusA else None
+        if vi.vid = vi'.vid && compare_cilint a one_cilint = 0 then Some MinusA
+        else None
     | _ -> None
   in
 
@@ -531,7 +533,7 @@ let varXformClass action data sid fd nofrm =
   object (self)
     inherit nopCilVisitor
 
-    method vexpr e =
+    method! vexpr e =
       match e with
       | Lval (Var vi, NoOffset) -> (
           match action data sid vi fd nofrm with
@@ -562,7 +564,7 @@ let lvalXformClass action data sid fd nofrm =
   object (self)
     inherit nopCilVisitor
 
-    method vexpr e =
+    method! vexpr e =
       let castrm e = e (*stripCastsForPtrArith e*) in
       match e with
       | Lval ((Mem e', off) as lv) -> (
@@ -822,7 +824,7 @@ class expTempElimClass (fd : fundec) =
   object (self)
     inherit RD.rdVisitorClass
 
-    method vexpr e =
+    method! vexpr e =
       let do_change iosh vi =
         let ido = RD.iosh_singleton_lookup iosh vi in
         match ido with
@@ -869,7 +871,7 @@ class expLvTmpElimClass (fd : fundec) =
   object (self)
     inherit AELV.aeVisitorClass
 
-    method vexpr e =
+    method! vexpr e =
       match self#get_cur_eh () with
       | None -> DoChildren
       | Some eh ->
@@ -881,7 +883,7 @@ class incdecTempElimClass (fd : fundec) =
   object (self)
     inherit RD.rdVisitorClass
 
-    method vexpr e =
+    method! vexpr e =
       let do_change iosh vi =
         let ido = RD.iosh_singleton_lookup iosh vi in
         match ido with
@@ -935,7 +937,7 @@ class callTempElimClass (fd : fundec) =
   object (self)
     inherit RD.rdVisitorClass
 
-    method vexpr e =
+    method! vexpr e =
       let do_change iosh vi =
         let ido = RD.iosh_singleton_lookup iosh vi in
         match ido with
@@ -987,7 +989,7 @@ class callTempElimClass (fd : fundec) =
        unless they are found and the replacement prevented.
        It will be possible to replace more temps if dead
        code elimination is performed before printing. *)
-    method vinst i =
+    method! vinst i =
       (* Need to copy this from rdVisitorClass because we are overriding *)
       if !debug then
         ignore
@@ -1054,7 +1056,7 @@ class unusedRemoverClass : cilVisitor =
     val mutable cur_func = dummyFunDec
 
     (* figure out which locals aren't used *)
-    method vfunc f =
+    method! vfunc f =
       cur_func <- f;
       (* the set of used variables *)
       let used =
@@ -1102,7 +1104,7 @@ class unusedRemoverClass : cilVisitor =
     (* remove instructions that set variables
        that aren't used. Also remove instructions
        that set variables mentioned in iioh *)
-    method vstmt stm =
+    method! vstmt stm =
       (* return the list of pairs with fst = f *)
       let findf_in_pl f pl =
         List.filter (fun (fst, snd) -> if fst = f then true else false) pl
@@ -1237,7 +1239,7 @@ class removeBrackets =
   object (self)
     inherit nopCilVisitor
 
-    method vblock b =
+    method! vblock b =
       fold_blocks b;
       DoChildren
   end

@@ -240,7 +240,7 @@ let computeDomTree ?(doCFG : bool = true) (f : fundec) : stmt option IH.t * tree
         List.iter fillOneIdom f.sallstmts
   in
   try (idomData, (Some (List.hd f.sbody.bstmts), treeData))
-  with Failure "hd" -> (idomData, (None, treeData))
+  with Failure _ -> (idomData, (None, treeData))
 
 type order = PreOrder | PostOrder
 

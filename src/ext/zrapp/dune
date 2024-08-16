@@ -1,0 +1,4 @@
+(library
+ (public_name prosys-cil.zrapp)
+ (name zrapp)
+ (libraries prosys-cil prosys-cil.liveness stdlib-shims))

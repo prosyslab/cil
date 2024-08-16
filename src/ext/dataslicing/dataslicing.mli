@@ -1,10 +1,10 @@
 (*
  *
- * Copyright (c) 2001-2002, 
+ * Copyright (c) 2001-2002,
  *  Jeremy Condit       <jcondit@cs.berkeley.edu>
  *  George C. Necula    <necula@cs.berkeley.edu>
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
@@ -33,9 +33,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *)
+open ProsysCil
 
 (* This feature implements data slicing.  The user annotates base types
  * and function types with region(i) annotations, and this transformation
  * will separate the fields into parallel data structures accordingly. *)
 
-val feature: Feature.t
+val feature : Feature.t

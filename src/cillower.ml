@@ -6,7 +6,7 @@
  *  Wes Weimer          <weimer@cs.berkeley.edu>
  *  Ben Liblit          <liblit@cs.berkeley.edu>
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
@@ -36,22 +36,21 @@
  *
  *)
 
-(** A number of lowering passes over CIL *)
 open Cil
-open Pretty
+(** A number of lowering passes over CIL *)
+
 module E = Errormsg
 
 (** Lower CEnum constants *)
-class lowerEnumVisitorClass : cilVisitor = object (self)
-  inherit nopCilVisitor 
+class lowerEnumVisitorClass : cilVisitor =
+  object (self)
+    inherit nopCilVisitor
 
-  method vexpr (e: exp) =
-    match e with
-      Const (CEnum(v, s, ei)) -> 
-        ChangeTo (visitCilExpr (self :>cilVisitor) v)
-
-    | _ -> DoChildren
-
-end
+    method! vexpr (e : exp) =
+      match e with
+      | Const (CEnum (v, s, ei)) ->
+          ChangeTo (visitCilExpr (self :> cilVisitor) v)
+      | _ -> DoChildren
+  end
 
 let lowerEnumVisitor = new lowerEnumVisitorClass
