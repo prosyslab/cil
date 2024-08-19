@@ -1,55 +1,5 @@
 # /
-/camlprim0.obj
-/*.a
-/*.o
-/*.obj
-/*.i
-/*.pdb
-/*.s
-/*.asm
-/*.out
-/allheaders
-/allcfiles
-/allmlfiles
-/.emacs.desktop
-/out
-/site-config.mk
-/__scalar2pointer.txt
-/*.log
-/tmp*
-/*.log.prev
-/make.out*
-/odoc
-/Makefile
-/Makefile.features
-/config.status
-/*.tar.gz
-/.ccuredrc
-/allsrcs
-/TEMP_cil-distrib
-/TEMP_ccured_distrib
-/.gdbinit
-/autom4te*.cache
-/config.h
-/cil.spec
-/cvss.txt
-/configure.lineno
-/confstat*
-/config.mk
-/TEMP_cil-bindistrib
 /_build
-/_log
-/README
-/index.html
-/stamp-h
-/META
-
-# /debian/
-/debian/build-stamp
-/debian/cil
-/debian/cil-dev
-/debian/files
-/debian/tmp
 
 # /doc/
 /doc/*.mfj
@@ -102,8 +52,6 @@
 # /src/
 /src/*.output
 /src/ChangeLog
-/src/machdep-ml.c
-/src/cilversion.ml
 /src/feature_config.ml
 /src/machdep.ml
 
